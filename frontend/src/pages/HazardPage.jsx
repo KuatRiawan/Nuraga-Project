@@ -49,7 +49,7 @@ const HazardPage = () => {
         setAnalyzing(true);
         try {
             const res = await api.post('/ai/analyze', { deskripsi: formData.deskripsi, lokasi: formData.lokasi });
-            const risk = res.data.predicted_risk === 'Extreme' ? 'Critical' : res.data.predicted_risk;
+            const risk = res.data.predicted_risk || formData.risiko;
             setFormData(prev => ({ ...prev, risiko: risk }));
         } catch (err) {
             console.error('AI analyze failed:', err);
