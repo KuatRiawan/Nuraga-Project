@@ -292,8 +292,8 @@ const SettingsPage = () => {
                     <button
                         onClick={() => setActiveTab('account')}
                         className={`pb-3 text-xs font-black uppercase tracking-wider transition-all border-b-2 ${activeTab === 'account'
-                                ? 'border-blue-600 text-blue-600 dark:text-white font-black'
-                                : 'border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                            ? 'border-blue-600 text-blue-600 dark:text-white font-black'
+                            : 'border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
                             }`}
                     >
                         Pengaturan Akun
@@ -301,8 +301,8 @@ const SettingsPage = () => {
                     <button
                         onClick={() => setActiveTab('integration')}
                         className={`pb-3 text-xs font-black uppercase tracking-wider transition-all border-b-2 ${activeTab === 'integration'
-                                ? 'border-blue-600 text-blue-600 dark:text-white font-black'
-                                : 'border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                            ? 'border-blue-600 text-blue-600 dark:text-white font-black'
+                            : 'border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
                             }`}
                     >
                         Integrasi Sistem
@@ -674,11 +674,11 @@ const SettingsPage = () => {
 
             {/* Edit Profile Modal */}
             {showProfileModal && (
-                <div 
+                <div
                     onClick={() => setShowProfileModal(false)}
                     className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
                 >
-                    <div 
+                    <div
                         onClick={(e) => e.stopPropagation()}
                         className="bg-white dark:bg-slate-900 border-t-8 border-blue-600 w-full max-w-md rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200"
                     >
@@ -799,11 +799,11 @@ const SettingsPage = () => {
 
             {/* Change Password Modal */}
             {showPasswordModal && (
-                <div 
+                <div
                     onClick={() => setShowPasswordModal(false)}
                     className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
                 >
-                    <div 
+                    <div
                         onClick={(e) => e.stopPropagation()}
                         className="bg-white dark:bg-slate-900 border-t-8 border-blue-600 w-full max-w-md rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200"
                     >
