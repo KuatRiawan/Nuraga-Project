@@ -3,6 +3,7 @@ const EmergencyCall = require('../models/EmergencyCall');
 const User = require('../models/User');
 const Certification = require('../models/Certification');
 const WorkPermit = require('../models/WorkPermit');
+const wa = require('../services/whatsappService');
 
 // SSE client pool
 let sseClients = [];
@@ -65,7 +66,7 @@ const triggerEmergency = async (req, res) => {
                 workers = typeof permit.daftar_pekerja === 'string'
                     ? JSON.parse(permit.daftar_pekerja)
                     : permit.daftar_pekerja;
-            } catch (e) {}
+            } catch (e) { }
             return Array.isArray(workers) && workers.some(w => w.toLowerCase() === victimName.toLowerCase());
         });
 
@@ -111,7 +112,7 @@ const triggerEmergency = async (req, res) => {
         for (const responder of allResponders) {
             const responderPermit = activePermits.find(permit => {
                 const zoneMatch = permit.lokasi.toLowerCase().includes(victimZone.toLowerCase()) ||
-                                  victimZone.toLowerCase().includes(permit.lokasi.toLowerCase());
+                    victimZone.toLowerCase().includes(permit.lokasi.toLowerCase());
                 if (!zoneMatch) return false;
                 if (permit.id_user === responder.id_user) return true;
 
@@ -120,7 +121,7 @@ const triggerEmergency = async (req, res) => {
                     workers = typeof permit.daftar_pekerja === 'string'
                         ? JSON.parse(permit.daftar_pekerja)
                         : permit.daftar_pekerja;
-                } catch (e) {}
+                } catch (e) { }
                 return Array.isArray(workers) && workers.some(w => w.toLowerCase() === responder.nama.toLowerCase());
             });
 
@@ -145,6 +146,40 @@ const triggerEmergency = async (req, res) => {
             },
             responders: finalResponders
         });
+
+        // WA: blast to all HSE / Admin / Manager
+        try {
+            const responderNames = finalResponders.map(r => `• ${r.nama} (${r.role})`).join('\n') || '• Belum ada responder ditemukan';
+            const waMessage =
+                `🚨 *[NURAGA HSE — DARURAT SOS!]*\n\n` +
+                `⚠️ Jenis Kejadian: *${jenis_kejadian}*\n` +
+                `📍 Lokasi: *${victimZone}*\n` +
+                `👤 Pelapor: *${victimName || 'Tidak diketahui'}*\n` +
+                `🕐 Waktu: ${new Date().toLocaleString('id-ID')}\n\n` +
+                `👷 Responder yang Diarahkan:\n${responderNames}\n\n` +
+                `Segera lakukan koordinasi respons darurat!`;
+
+            const hsePics = await User.findAll({ where: { role: ['HSE', 'Admin', 'Manager'] } });
+            for (const u of hsePics) {
+                if (u.no_whatsapp) await wa.sendMessage(u.no_whatsapp, waMessage);
+            }
+
+            // Also notify responders directly
+            for (const responder of finalResponders) {
+                const responderUser = await User.findByPk(responder.id_user);
+                if (responderUser && responderUser.no_whatsapp) {
+                    await wa.sendMessage(responderUser.no_whatsapp,
+                        `🚨 *[NURAGA HSE — ANDA DITUGASKAN SEBAGAI RESPONDER]*\n\n` +
+                        `Jenis Kejadian: *${jenis_kejadian}*\n` +
+                        `Lokasi: *${victimZone}*\n` +
+                        `Pelapor: ${victimName || 'Tidak diketahui'}\n\n` +
+                        `Segera bergerak ke lokasi kejadian!`
+                    );
+                }
+            }
+        } catch (waErr) {
+            console.error('[WhatsApp] Emergency notification failed:', waErr.message);
+        }
 
         res.status(201).json({
             message: 'Darurat dipicu dan personil bersertifikat telah diberitahu',

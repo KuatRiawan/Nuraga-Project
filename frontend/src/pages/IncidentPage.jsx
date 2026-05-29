@@ -28,7 +28,7 @@ const IncidentPage = () => {
         five_whys: { why1: '', why2: '', why3: '', why4: '', why5: '' }
     });
 
-    const isFieldRole = user?.role === 'Operator' || user?.role === 'Kontraktor';
+    const isFieldRole = ['Staff', 'Operator', 'Vendor', 'Kontraktor'].includes(user?.role);
     const canEditInvestigation = user?.role === 'HSE' || user?.role === 'Admin';
 
     // Auto open form if redirected from dashboard quick action
@@ -121,8 +121,14 @@ const IncidentPage = () => {
             </div>
 
             {showForm && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-800 border-t-8 border-red-600 w-full max-w-2xl rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+                <div 
+                    onClick={() => setShowForm(false)}
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                >
+                    <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white dark:bg-slate-800 border-t-8 border-red-600 w-full max-w-2xl rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
+                    >
                         <h2 className="text-xl font-black mb-6 text-red-600 dark:text-red-500 uppercase tracking-tighter">Investigasi Insiden Digital</h2>
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className={isFieldRole ? "grid grid-cols-1 gap-5" : "grid grid-cols-1 md:grid-cols-2 gap-5"}>
@@ -264,8 +270,14 @@ const IncidentPage = () => {
 
             {/* selectedIncident Detail Modal */}
             {selectedIncident && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-800 border-t-8 border-red-600 w-full max-w-2xl rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+                <div 
+                    onClick={() => setSelectedIncident(null)}
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                >
+                    <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white dark:bg-slate-800 border-t-8 border-red-600 w-full max-w-2xl rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
+                    >
                         <div className="flex justify-between items-start mb-6">
                             <div>
                                 <span className="px-3 py-1 bg-red-500/10 text-red-600 dark:text-red-500 rounded-full text-[10px] font-bold uppercase tracking-widest">

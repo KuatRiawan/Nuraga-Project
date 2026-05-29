@@ -16,6 +16,7 @@ const Voucher = require('./models/Voucher');
 const AuditLog = require('./models/AuditLog');
 const SystemConfig = require('./models/SystemConfig');
 const { autoExpirePermits } = require('./controllers/workPermitController');
+const whatsappService = require('./services/whatsappService');
 
 dotenv.config();
 
@@ -72,6 +73,7 @@ app.use('/api/ai', require('./routes/aiRoutes'));
 app.use('/api/vouchers', require('./routes/voucherRoutes'));
 app.use('/api/logs', require('./routes/logRoutes'));
 app.use('/api/config', require('./routes/configRoutes'));
+app.use('/api/wa', require('./routes/whatsappRoutes'));
 
 
 app.get('/', (req, res) => {
@@ -149,6 +151,38 @@ sequelize.sync({ force: false }).then(async () => {
         console.warn('Postgres enum alteration warning:', err.message);
     }
 
+    // Add Staff to enum role in database (PostgreSQL specific)
+    try {
+        await sequelize.query('ALTER TYPE "enum_Users_role" ADD VALUE IF NOT EXISTS \'Staff\';');
+        console.log('Users role enum verified successfully');
+    } catch (err) {
+        console.warn('Postgres role enum alteration warning:', err.message);
+    }
+
+    // Add Vendor to enum role in database (PostgreSQL specific)
+    try {
+        await sequelize.query('ALTER TYPE "enum_Users_role" ADD VALUE IF NOT EXISTS \'Vendor\';');
+        console.log('Users role enum Vendor verified successfully');
+    } catch (err) {
+        console.warn('Postgres role enum Vendor alteration warning:', err.message);
+    }
+
+    // Migrate any Operator role to Staff
+    try {
+        await sequelize.query('UPDATE "Users" SET role = \'Staff\' WHERE role = \'Operator\';');
+        console.log('Migrated all Operator users to Staff successfully');
+    } catch (err) {
+        console.warn('Operator to Staff migration warning:', err.message);
+    }
+
+    // Add jenis_kelamin column to Users if not exists
+    try {
+        await sequelize.query('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "jenis_kelamin" VARCHAR(30) DEFAULT \'Laki-laki\';');
+        console.log('Users jenis_kelamin column verified successfully');
+    } catch (err) {
+        console.warn('Postgres Users jenis_kelamin column alteration warning:', err.message);
+    }
+
     // Run auto-expiration check immediately and start the 60-second periodic interval
     try {
         await autoExpirePermits();
@@ -175,6 +209,15 @@ sequelize.sync({ force: false }).then(async () => {
     }
 
     startServer(PORT);
+
+    // Start WhatsApp Baileys connection
+    try {
+        whatsappService.connect();
+        console.log('[WhatsApp] Baileys connection initiated. Check terminal for QR code.');
+    } catch (err) {
+        console.error('[WhatsApp] Failed to start Baileys:', err.message);
+    }
+
 }).catch(err => {
     console.error('Failed to sync database: ' + err.message);
     process.exit(1);

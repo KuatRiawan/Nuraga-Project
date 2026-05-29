@@ -44,7 +44,7 @@ const incidentChronologies = [
     'Pekerja terpeleset di tangga besi basah saat hujan, mengalami terkilir ringan pada pergelangan tangan.'
 ];
 const victims = [
-    'Main Operator', 'PT Petro Kimia Contractor', 'CV Bangun Jaya Worker', 'Workshop Technician'
+    'Main Staff', 'PT Petro Kimia Contractor', 'CV Bangun Jaya Worker', 'Workshop Technician'
 ];
 const templates = ['APAR', 'Perancah', 'Forklift', 'Panel Listrik'];
 const checklistScore = ['5/5', '4/5', '4/4', '3/4'];
@@ -74,24 +74,24 @@ const apdLists = [
 
 // Data PTW tetap - mencakup semua status lifecycle
 const fixedPermits = [
-    { daysAgo: 0, type: 'Hot Work', status: 'Pending', approvalStep: 1, company: 'PT Petro Kimia', supervisor: 'Andi Pratama', workers: 0, apd: 0, useKontraktor: false },
-    { daysAgo: 1, type: 'Working at Height', status: 'Pending', approvalStep: 1, company: 'CV Bangun Jaya', supervisor: 'Budi Santoso', workers: 1, apd: 1, useKontraktor: true },
-    { daysAgo: 2, type: 'Electrical Work', status: 'Approved', approvalStep: 3, company: 'PT Mitra Teknik Utama', supervisor: 'Rudi Hartono', workers: 2, apd: 3, useKontraktor: false },
-    { daysAgo: 2, type: 'Cold Work', status: 'Approved', approvalStep: 3, company: 'PT Petro Kimia', supervisor: 'Wahyu Nugroho', workers: 3, apd: 0, useKontraktor: true },
-    { daysAgo: 3, type: 'Confined Space', status: 'Active', approvalStep: 3, company: 'PT Logistik Abadi', supervisor: 'Andi Pratama', workers: 0, apd: 2, useKontraktor: false },
-    { daysAgo: 4, type: 'Hot Work', status: 'Active', approvalStep: 3, company: 'CV Bangun Jaya', supervisor: 'Budi Santoso', workers: 1, apd: 0, useKontraktor: true },
-    { daysAgo: 5, type: 'Excavation', status: 'Active', approvalStep: 3, company: 'PT Mitra Teknik Utama', supervisor: 'Rudi Hartono', workers: 2, apd: 1, useKontraktor: false },
-    { daysAgo: 7, type: 'Electrical Work', status: 'Rejected', approvalStep: 2, company: 'PT Logistik Abadi', supervisor: 'Wahyu Nugroho', workers: 3, apd: 3, useKontraktor: true },
-    { daysAgo: 8, type: 'Working at Height', status: 'Closed', approvalStep: 4, company: 'PT Petro Kimia', supervisor: 'Andi Pratama', workers: 0, apd: 1, useKontraktor: false },
-    { daysAgo: 9, type: 'Hot Work', status: 'Closed', approvalStep: 4, company: 'CV Bangun Jaya', supervisor: 'Budi Santoso', workers: 1, apd: 0, useKontraktor: true },
-    { daysAgo: 10, type: 'Confined Space', status: 'Closed', approvalStep: 4, company: 'PT Logistik Abadi', supervisor: 'Rudi Hartono', workers: 2, apd: 2, useKontraktor: false },
-    { daysAgo: 12, type: 'Cold Work', status: 'Expired', approvalStep: 3, company: 'PT Petro Kimia', supervisor: 'Wahyu Nugroho', workers: 3, apd: 3, useKontraktor: true },
-    { daysAgo: 14, type: 'Excavation', status: 'Closed', approvalStep: 4, company: 'CV Bangun Jaya', supervisor: 'Andi Pratama', workers: 0, apd: 0, useKontraktor: false },
-    { daysAgo: 16, type: 'Hot Work', status: 'Closed', approvalStep: 4, company: 'PT Mitra Teknik Utama', supervisor: 'Budi Santoso', workers: 1, apd: 1, useKontraktor: true },
-    { daysAgo: 18, type: 'Electrical Work', status: 'Closed', approvalStep: 4, company: 'PT Petro Kimia', supervisor: 'Rudi Hartono', workers: 2, apd: 3, useKontraktor: false },
-    { daysAgo: 20, type: 'Working at Height', status: 'Expired', approvalStep: 3, company: 'PT Logistik Abadi', supervisor: 'Wahyu Nugroho', workers: 3, apd: 2, useKontraktor: true },
-    { daysAgo: 22, type: 'Confined Space', status: 'Closed', approvalStep: 4, company: 'CV Bangun Jaya', supervisor: 'Andi Pratama', workers: 0, apd: 0, useKontraktor: false },
-    { daysAgo: 25, type: 'Excavation', status: 'Closed', approvalStep: 4, company: 'PT Mitra Teknik Utama', supervisor: 'Budi Santoso', workers: 1, apd: 1, useKontraktor: true },
+    { daysAgo: 0, type: 'Hot Work', status: 'Pending', approvalStep: 1, company: 'PT Petro Kimia', supervisor: 'Andi Pratama', workers: 0, apd: 0, useVendor: false },
+    { daysAgo: 1, type: 'Working at Height', status: 'Pending', approvalStep: 1, company: 'CV Bangun Jaya', supervisor: 'Budi Santoso', workers: 1, apd: 1, useVendor: true },
+    { daysAgo: 2, type: 'Electrical Work', status: 'Approved', approvalStep: 3, company: 'PT Mitra Teknik Utama', supervisor: 'Rudi Hartono', workers: 2, apd: 3, useVendor: false },
+    { daysAgo: 2, type: 'Cold Work', status: 'Approved', approvalStep: 3, company: 'PT Petro Kimia', supervisor: 'Wahyu Nugroho', workers: 3, apd: 0, useVendor: true },
+    { daysAgo: 3, type: 'Confined Space', status: 'Active', approvalStep: 3, company: 'PT Logistik Abadi', supervisor: 'Andi Pratama', workers: 0, apd: 2, useVendor: false },
+    { daysAgo: 4, type: 'Hot Work', status: 'Active', approvalStep: 3, company: 'CV Bangun Jaya', supervisor: 'Budi Santoso', workers: 1, apd: 0, useVendor: true },
+    { daysAgo: 5, type: 'Excavation', status: 'Active', approvalStep: 3, company: 'PT Mitra Teknik Utama', supervisor: 'Rudi Hartono', workers: 2, apd: 1, useVendor: false },
+    { daysAgo: 7, type: 'Electrical Work', status: 'Rejected', approvalStep: 2, company: 'PT Logistik Abadi', supervisor: 'Wahyu Nugroho', workers: 3, apd: 3, useVendor: true },
+    { daysAgo: 8, type: 'Working at Height', status: 'Closed', approvalStep: 4, company: 'PT Petro Kimia', supervisor: 'Andi Pratama', workers: 0, apd: 1, useVendor: false },
+    { daysAgo: 9, type: 'Hot Work', status: 'Closed', approvalStep: 4, company: 'CV Bangun Jaya', supervisor: 'Budi Santoso', workers: 1, apd: 0, useVendor: true },
+    { daysAgo: 10, type: 'Confined Space', status: 'Closed', approvalStep: 4, company: 'PT Logistik Abadi', supervisor: 'Rudi Hartono', workers: 2, apd: 2, useVendor: false },
+    { daysAgo: 12, type: 'Cold Work', status: 'Expired', approvalStep: 3, company: 'PT Petro Kimia', supervisor: 'Wahyu Nugroho', workers: 3, apd: 3, useVendor: true },
+    { daysAgo: 14, type: 'Excavation', status: 'Closed', approvalStep: 4, company: 'CV Bangun Jaya', supervisor: 'Andi Pratama', workers: 0, apd: 0, useVendor: false },
+    { daysAgo: 16, type: 'Hot Work', status: 'Closed', approvalStep: 4, company: 'PT Mitra Teknik Utama', supervisor: 'Budi Santoso', workers: 1, apd: 1, useVendor: true },
+    { daysAgo: 18, type: 'Electrical Work', status: 'Closed', approvalStep: 4, company: 'PT Petro Kimia', supervisor: 'Rudi Hartono', workers: 2, apd: 3, useVendor: false },
+    { daysAgo: 20, type: 'Working at Height', status: 'Expired', approvalStep: 3, company: 'PT Logistik Abadi', supervisor: 'Wahyu Nugroho', workers: 3, apd: 2, useVendor: true },
+    { daysAgo: 22, type: 'Confined Space', status: 'Closed', approvalStep: 4, company: 'CV Bangun Jaya', supervisor: 'Andi Pratama', workers: 0, apd: 0, useVendor: false },
+    { daysAgo: 25, type: 'Excavation', status: 'Closed', approvalStep: 4, company: 'PT Mitra Teknik Utama', supervisor: 'Budi Santoso', workers: 1, apd: 1, useVendor: true },
 ];
 
 const seed = async () => {
@@ -111,6 +111,7 @@ const seed = async () => {
             jabatan: 'System Administrator',
             area_kerja: 'Head Office',
             no_whatsapp: '+6281200000001',
+            jenis_kelamin: 'Laki-laki',
         });
         const hse = await User.create({
             nama: 'HSE Officer',
@@ -122,17 +123,19 @@ const seed = async () => {
             jabatan: 'Safety Officer',
             area_kerja: 'Main Factory',
             no_whatsapp: '+6281200000002',
+            jenis_kelamin: 'Laki-laki',
         });
-        const operator = await User.create({
-            nama: 'Main Operator',
-            email: 'operator@nuraga.com',
+        const staff = await User.create({
+            nama: 'Main Staff',
+            email: 'staff@nuraga.com',
             password,
-            role: 'Operator',
+            role: 'Staff',
             points: 1200,
-            nik: 'OPR-003',
-            jabatan: 'Senior Operator Mesin',
+            nik: 'STF-003',
+            jabatan: 'Staff Lapangan',
             area_kerja: 'Lantai Produksi 1',
             no_whatsapp: '+6281200000003',
+            jenis_kelamin: 'Laki-laki',
         });
         const supervisor = await User.create({
             nama: 'Supervisor Lapangan',
@@ -144,6 +147,7 @@ const seed = async () => {
             jabatan: 'Field Supervisor',
             area_kerja: 'Mechanical Workshop',
             no_whatsapp: '+6281200000004',
+            jenis_kelamin: 'Laki-laki',
         });
         const manager = await User.create({
             nama: 'Safety Manager',
@@ -155,17 +159,19 @@ const seed = async () => {
             jabatan: 'HSE Manager',
             area_kerja: 'Main Office',
             no_whatsapp: '+6281200000005',
+            jenis_kelamin: 'Laki-laki',
         });
-        const kontraktor = await User.create({
-            nama: 'Kontraktor CV Bangun',
-            email: 'kontraktor@cvbangun.com',
+        const vendor = await User.create({
+            nama: 'Vendor CV Bangun',
+            email: 'vendor@cvbangun.com',
             password,
-            role: 'Kontraktor',
+            role: 'Vendor',
             points: 400,
-            nik: 'KTR-006',
+            nik: 'VND-006',
             jabatan: 'Project Coordinator',
             area_kerja: 'Loading Dock C',
             no_whatsapp: '+6281200000006',
+            jenis_kelamin: 'Laki-laki',
         });
 
         const today = new Date();
@@ -186,7 +192,7 @@ const seed = async () => {
                     const status = i > 7 ? (Math.random() < 0.85 ? 'Closed' : 'Open') : (Math.random() < 0.4 ? 'Closed' : 'Open');
 
                     const hazard = await HazardReport.create({
-                        id_user: operator.id_user,
+                        id_user: staff.id_user,
                         lokasi: loc,
                         deskripsi: desc,
                         risiko: risk,
@@ -199,11 +205,11 @@ const seed = async () => {
                     if (risk === 'High' || risk === 'Critical') {
                         const capaStatus = status === 'Closed' ? 'Closed' : (Math.random() < 0.5 ? 'In Progress' : 'Open');
 
-                        // Distribute assignments across HSE, Operator, and Supervisor
+                        // Distribute assignments across HSE, Staff, and Supervisor
                         let assignedUserId = hse.id_user;
                         const rand = Math.random();
                         if (rand < 0.4) {
-                            assignedUserId = operator.id_user;
+                            assignedUserId = staff.id_user;
                         } else if (rand < 0.6) {
                             assignedUserId = supervisor.id_user;
                         }
@@ -227,7 +233,7 @@ const seed = async () => {
                 const chron = incidentChronologies[Math.floor(Math.random() * incidentChronologies.length)];
                 const vic = victims[Math.floor(Math.random() * victims.length)];
                 await IncidentReport.create({
-                    id_user: operator.id_user,
+                    id_user: staff.id_user,
                     kategori: cat,
                     kronologi: chron,
                     korban: vic,
@@ -268,7 +274,7 @@ const seed = async () => {
             const isClosed = p.status === 'Closed';
             const isExpired = p.status === 'Expired';
 
-            const userId = p.useKontraktor ? kontraktor.id_user : operator.id_user;
+            const userId = p.useVendor ? vendor.id_user : staff.id_user;
 
             await WorkPermit.create({
                 id_user: userId,
@@ -308,8 +314,8 @@ const seed = async () => {
 
         // 4. Create Certifications
         await Certification.create({
-            id_user: operator.id_user,
-            nama_personil: 'Main Operator',
+            id_user: staff.id_user,
+            nama_personil: 'Main Staff',
             jenis_sertifikasi: 'General K3 Specialist',
             nomor_sertifikat: 'K3-2026-089A',
             tanggal_terbit: new Date('2026-01-10'),
@@ -317,8 +323,8 @@ const seed = async () => {
             status: 'Active'
         });
         await Certification.create({
-            id_user: operator.id_user,
-            nama_personil: 'Main Operator',
+            id_user: staff.id_user,
+            nama_personil: 'Main Staff',
             jenis_sertifikasi: 'Scaffolding Inspector',
             nomor_sertifikat: 'SCAF-2026-112B',
             tanggal_terbit: new Date('2026-03-05'),
@@ -326,8 +332,8 @@ const seed = async () => {
             status: 'Active'
         });
         await Certification.create({
-            id_user: kontraktor.id_user,
-            nama_personil: 'Kontraktor CV Bangun',
+            id_user: vendor.id_user,
+            nama_personil: 'Vendor CV Bangun',
             jenis_sertifikasi: 'Confined Space Entry',
             nomor_sertifikat: 'CSE-2025-034C',
             tanggal_terbit: new Date('2025-06-01'),
@@ -395,8 +401,8 @@ const seed = async () => {
         console.log('HSE        : hse@nuraga.com         / password123');
         console.log('Supervisor : supervisor@nuraga.com  / password123');
         console.log('Manager    : manager@nuraga.com     / password123');
-        console.log('Operator   : operator@nuraga.com    / password123');
-        console.log('Kontraktor : kontraktor@cvbangun.com / password123');
+        console.log('Staff      : staff@nuraga.com       / password123');
+        console.log('Vendor     : vendor@cvbangun.com     / password123');
         console.log('');
         console.log('--- Ringkasan Data PTW ---');
         console.log('Pending  : 2 permit (Hot Work, Working at Height)');

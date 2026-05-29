@@ -86,7 +86,7 @@ const GamificationPage = () => {
         name: user?.nama || 'Anda',
         dept: user?.role || 'Safety Team',
         points: myPoints,
-        reports: user?.role === 'Operator' ? 13 : 5,
+        reports: ['Staff', 'Operator'].includes(user?.role) ? 13 : 5,
         badge: myPoints > 1000 ? 'Safety Champion' : myPoints > 500 ? 'Hazard Hunter' : ''
     };
 
@@ -146,7 +146,7 @@ const GamificationPage = () => {
 
                     <div className="grid grid-cols-2 gap-4 w-full md:w-auto">
                         {[
-                            { label: 'Laporan Valid', value: user?.role === 'Operator' ? '13' : '5', icon: <CheckCircle size={20} /> },
+                            { label: 'Laporan Valid', value: ['Staff', 'Operator'].includes(user?.role) ? '13' : '5', icon: <CheckCircle size={20} /> },
                             { label: 'Poin Bulan Ini', value: `+${myPoints}`, icon: <TrendingUp size={20} /> },
                             { label: 'Badge Diraih', value: myPoints > 1000 ? '2' : myPoints > 500 ? '1' : '0', icon: <Award size={20} /> },
                             { label: 'Rewards Ditukar', value: myPoints < 1200 ? '1' : '0', icon: <Gift size={20} /> },
@@ -202,8 +202,14 @@ const GamificationPage = () => {
 
             {/* Rewards Modal */}
             {showRewards && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-md rounded-3xl p-8 shadow-2xl animate-in zoom-in-95 duration-200">
+                <div 
+                    onClick={() => setShowRewards(false)}
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                >
+                    <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-md rounded-3xl p-8 shadow-2xl animate-in zoom-in-95 duration-200"
+                    >
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-xl font-black uppercase tracking-tighter text-slate-900 dark:text-white flex items-center gap-2">
                                 <Gift size={22} className="text-amber-500" /> Tukar Poin

@@ -14,12 +14,12 @@ const getAllUsers = async (req, res) => {
 
 const createUser = async (req, res) => {
     try {
-        const { nama, email, password, role } = req.body;
+        const { nama, email, password, role, nik, jabatan, area_kerja, no_whatsapp, jenis_kelamin } = req.body;
         const userExists = await User.findOne({ where: { email } });
         if (userExists) {
             return res.status(400).json({ message: 'User already exists' });
         }
-        const user = await User.create({ nama, email, password, role });
+        const user = await User.create({ nama, email, password, role, nik, jabatan, area_kerja, no_whatsapp, jenis_kelamin });
         const userResponse = user.toJSON();
         delete userResponse.password;
         await recordLog(req, 'CREATE_USER', `Admin mendaftarkan user baru: ${nama} (${email}) dengan peran ${role}.`);
@@ -31,7 +31,7 @@ const createUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
     try {
-        const { nama, email, password, role, nik, jabatan, area_kerja } = req.body;
+        const { nama, email, password, role, nik, jabatan, area_kerja, no_whatsapp, jenis_kelamin } = req.body;
         const user = await User.findByPk(req.params.id);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
@@ -54,6 +54,8 @@ const updateUser = async (req, res) => {
         if (nik !== undefined) user.nik = nik;
         if (jabatan !== undefined) user.jabatan = jabatan;
         if (area_kerja !== undefined) user.area_kerja = area_kerja;
+        if (no_whatsapp !== undefined) user.no_whatsapp = no_whatsapp;
+        if (jenis_kelamin !== undefined) user.jenis_kelamin = jenis_kelamin;
 
         await user.save();
 

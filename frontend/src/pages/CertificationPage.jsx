@@ -25,6 +25,86 @@ const getWhatsAppLink = (cert, daysLeft) => {
     return `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
 };
 
+const K3_CERTIFICATE_LIST = [
+    // Ahli K3 (AK3) Umum & Spesialis
+    "Ahli K3 Umum (AK3U)",
+    "Ahli K3 Spesialis Listrik",
+    "Ahli K3 Spesialis Penanggulangan Kebakaran",
+    "Ahli K3 Pesawat Angkat dan Angkut (PAA)",
+    "Ahli K3 Pesawat Uap dan Bejana Tekan (PUBT)",
+    "Ahli K3 Kimia",
+    "Ahli K3 Lingkungan Kerja",
+    "Ahli K3 Spesialis Konstruksi Muda",
+    "Ahli K3 Spesialis Konstruksi Madya",
+    "Ahli K3 Spesialis Konstruksi Utama",
+
+    // K3 Penanggulangan Kebakaran
+    "Petugas Peran Kebakaran (Tingkat D)",
+    "Regu Penanggulangan Kebakaran (Tingkat C)",
+    "Koordinator Unit Penanggulangan Kebakaran (Tingkat B)",
+    "Ahli K3 Spesialis Penanggulangan Kebakaran (Tingkat A)",
+
+    // K3 Ketinggian
+    "Tenaga Kerja Bangunan Tinggi (TKBT) Tingkat 1",
+    "Tenaga Kerja Bangunan Tinggi (TKBT) Tingkat 2",
+    "Tenaga Kerja Pada Ketinggian (TKPK) Tingkat 1",
+    "Tenaga Kerja Pada Ketinggian (TKPK) Tingkat 2",
+    "Tenaga Kerja Pada Ketinggian (TKPK) Tingkat 3",
+
+    // K3 Ruang Terbatas (Confined Space)
+    "Petugas Gas Tester",
+    "Teknisi Ruang Terbatas",
+    "Rescuer Ruang Terbatas",
+
+    // K3 Pesawat Angkat dan Angkut (PAA)
+    "Operator Forklift Kelas I",
+    "Operator Forklift Kelas II",
+    "Operator Mobile Crane Kelas I",
+    "Operator Mobile Crane Kelas II",
+    "Operator Mobile Crane Kelas III",
+    "Operator Overhead Crane Kelas I",
+    "Operator Overhead Crane Kelas II",
+    "Operator Overhead Crane Kelas III",
+    "Operator Tower Crane Kelas I",
+    "Operator Tower Crane Kelas II",
+    "Operator Tower Crane Kelas III",
+    "Operator Loader / Excavator / Bulldozer",
+    "Rigger (Juru Ikat Beban)",
+    "Teknisi Pesawat Angkat dan Angkut",
+
+    // K3 Pesawat Tenaga dan Produksi (PTP)
+    "Operator Genset",
+    "Operator Mesin Produksi dan Perkakas",
+    "Operator Tanur (Furnace)",
+    "Teknisi PTP",
+
+    // K3 Pesawat Uap dan Bejana Tekan (PUBT)
+    "Operator Ketel Uap (Boiler) Kelas I",
+    "Operator Ketel Uap (Boiler) Kelas II",
+    "Teknisi Pesawat Uap dan Bejana Tekan",
+
+    // K3 Pengelasan (Welder)
+    "Juru Las (Welder) Kelas I",
+    "Juru Las (Welder) Kelas II",
+    "Juru Las (Welder) Kelas III",
+
+    // K3 Listrik & Perancah (Scaffolding)
+    "Teknisi K3 Listrik",
+    "Teknisi Perancah (Scaffolder)",
+    "Supervisi Perancah (Inspector Scaffolding)",
+    "Petugas K3 Konstruksi",
+
+    // Kesehatan Kerja & Lingkungan
+    "Petugas P3K (First Aider)",
+    "Petugas K3 Kimia",
+    "Paramedis K3",
+    "Dokter Pemeriksa Kesehatan Tenaga Kerja (Dokter Hiperkes)",
+
+    // Sistem Manajemen K3 (SMK3)
+    "Auditor Internal SMK3",
+    "Auditor Eksternal SMK3"
+];
+
 const CertificationPage = () => {
     const { user } = useAuth();
     const isAdmin = user?.role === 'Admin';
@@ -32,6 +112,7 @@ const CertificationPage = () => {
     const [certs, setCerts] = useState([]);
     const [users, setUsers] = useState([]);
     const [showForm, setShowForm] = useState(false);
+    const [showSuggestions, setShowSuggestions] = useState(false);
     const [editingCert, setEditingCert] = useState(null);
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
@@ -42,6 +123,13 @@ const CertificationPage = () => {
         tanggal_terbit: '',
         tanggal_expired: '',
     });
+
+    const query = formData.jenis_sertifikasi || '';
+    const filteredSuggestions = query.trim() === ''
+        ? []
+        : K3_CERTIFICATE_LIST.filter(item =>
+            item.toLowerCase().includes(query.toLowerCase())
+          );
 
     useEffect(() => {
         fetchCerts();
@@ -158,8 +246,14 @@ const CertificationPage = () => {
 
             {/* Add/Edit Certification Modal */}
             {showForm && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-800 border-t-8 border-blue-600 w-full max-w-lg rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
+                <div 
+                    onClick={handleCloseForm}
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                >
+                    <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white dark:bg-slate-800 border-t-8 border-blue-600 w-full max-w-lg rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200"
+                    >
                         <button onClick={handleCloseForm} className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
                             <X size={20} />
                         </button>
@@ -199,13 +293,42 @@ const CertificationPage = () => {
                                 />
                             )}
 
-                            <Input
-                                label="Jenis Sertifikasi"
-                                placeholder="Contoh: SIO Forklift, Ahli K3 Umum, P3K"
-                                value={formData.jenis_sertifikasi}
-                                onChange={(e) => setFormData({ ...formData, jenis_sertifikasi: e.target.value })}
-                                required
-                            />
+                            <div className="flex flex-col gap-1.5 w-full relative">
+                                <label className="text-sm font-medium text-slate-600 dark:text-slate-300">Jenis Sertifikasi</label>
+                                <div className="relative group">
+                                    <input
+                                        type="text"
+                                        placeholder="Contoh: SIO Forklift, Ahli K3 Umum, P3K"
+                                        value={formData.jenis_sertifikasi}
+                                        onChange={(e) => setFormData({ ...formData, jenis_sertifikasi: e.target.value })}
+                                        onFocus={() => setShowSuggestions(true)}
+                                        onBlur={() => {
+                                            // Delay closing suggestions so clicks on suggestions can register
+                                            setTimeout(() => setShowSuggestions(false), 200);
+                                        }}
+                                        required
+                                        className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all pr-12 text-sm font-medium"
+                                    />
+                                    {showSuggestions && filteredSuggestions.length > 0 && (
+                                        <div className="absolute left-0 right-0 top-full mt-1.5 max-h-48 overflow-y-auto bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 divide-y divide-slate-100 dark:divide-slate-700">
+                                            {filteredSuggestions.map((suggestion) => (
+                                                <button
+                                                    key={suggestion}
+                                                    type="button"
+                                                    onMouseDown={() => {
+                                                        setFormData({ ...formData, jenis_sertifikasi: suggestion });
+                                                        setShowSuggestions(false);
+                                                    }}
+                                                    className="w-full text-left px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/50 text-slate-800 dark:text-slate-200 text-xs font-semibold transition-colors flex items-center justify-between"
+                                                >
+                                                    <span>{suggestion}</span>
+                                                    <span className="text-[10px] text-blue-500 font-bold bg-blue-500/10 px-2 py-0.5 rounded-full">Pilih</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                             <Input
                                 label="Nomor Sertifikat"
                                 placeholder="Contoh: SKP-2024-0012"

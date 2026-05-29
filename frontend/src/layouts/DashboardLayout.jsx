@@ -23,7 +23,7 @@ const compileNotifications = (permits, hazards, actions, activeUser) => {
                     id: permitId,
                     type: 'permit',
                     title: 'Persetujuan e-PTW Baru (SPV)',
-                    message: `e-PTW baru di ${p.lokasi} oleh ${p.User?.nama || 'Operator'} memerlukan persetujuan Anda.`,
+                    message: `e-PTW baru di ${p.lokasi} oleh ${p.User?.nama || 'Staff'} memerlukan persetujuan Anda.`,
                     time: new Date(p.createdAt),
                     link: '/permits'
                 });
@@ -32,7 +32,7 @@ const compileNotifications = (permits, hazards, actions, activeUser) => {
                     id: permitId,
                     type: 'permit',
                     title: 'Persetujuan e-PTW Baru (HSE)',
-                    message: `e-PTW baru di ${p.lokasi} oleh ${p.User?.nama || 'Operator'} memerlukan persetujuan Anda.`,
+                    message: `e-PTW baru di ${p.lokasi} oleh ${p.User?.nama || 'Staff'} memerlukan persetujuan Anda.`,
                     time: new Date(p.createdAt),
                     link: '/permits'
                 });
@@ -41,7 +41,7 @@ const compileNotifications = (permits, hazards, actions, activeUser) => {
                     id: permitId,
                     type: 'permit',
                     title: 'Persetujuan e-PTW Baru (Manager)',
-                    message: `e-PTW baru di ${p.lokasi} oleh ${p.User?.nama || 'Operator'} memerlukan persetujuan Anda.`,
+                    message: `e-PTW baru di ${p.lokasi} oleh ${p.User?.nama || 'Staff'} memerlukan persetujuan Anda.`,
                     time: new Date(p.createdAt),
                     link: '/permits'
                 });
@@ -50,7 +50,7 @@ const compileNotifications = (permits, hazards, actions, activeUser) => {
                     id: permitId,
                     type: 'permit',
                     title: `Persetujuan e-PTW Baru (Step ${p.approval_step})`,
-                    message: `e-PTW baru di ${p.lokasi} oleh ${p.User?.nama || 'Operator'} membutuhkan persetujuan.`,
+                    message: `e-PTW baru di ${p.lokasi} oleh ${p.User?.nama || 'Staff'} membutuhkan persetujuan.`,
                     time: new Date(p.createdAt),
                     link: '/permits'
                 });

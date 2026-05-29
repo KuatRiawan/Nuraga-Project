@@ -185,7 +185,7 @@ const PermitForm = ({ onSubmit, onCancel }) => {
                 {step === 3 && (
                     <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <Input label="Nama Perusahaan/Kontraktor" value={formData.perusahaan} onChange={e => setFormData({ ...formData, perusahaan: e.target.value })} required />
+                            <Input label="Nama Perusahaan/Vendor" value={formData.perusahaan} onChange={e => setFormData({ ...formData, perusahaan: e.target.value })} required />
                             <Input label="Lokasi Spesifik" value={formData.lokasi} onChange={e => setFormData({ ...formData, lokasi: e.target.value })} required icon={<MapPin size={18} />} />
                             <Input label="Waktu Mulai" type="datetime-local" value={formData.waktu_mulai} onChange={e => setFormData({ ...formData, waktu_mulai: e.target.value })} required icon={<Clock size={18} />} />
                             <Input label="Waktu Selesai" type="datetime-local" value={formData.waktu_selesai} onChange={e => setFormData({ ...formData, waktu_selesai: e.target.value })} required icon={<Clock size={18} />} />

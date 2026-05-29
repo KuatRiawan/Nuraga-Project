@@ -204,8 +204,14 @@ const CorrectiveActionPage = () => {
 
             {/* Corrective Action Detail Modal */}
             {selectedAction && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-900 border-t-8 border-blue-600 w-full max-w-xl rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto space-y-6">
+                <div 
+                    onClick={() => setSelectedAction(null)}
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                >
+                    <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white dark:bg-slate-900 border-t-8 border-blue-600 w-full max-w-xl rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto space-y-6"
+                    >
                         <div className="flex justify-between items-start">
                             <div>
                                 <span className="px-2.5 py-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-lg text-[10px] font-black uppercase tracking-wider">Detail CAPA</span>

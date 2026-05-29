@@ -5,7 +5,7 @@ import api from '../api/axios';
 import {
     User, Shield, Moon, Sun, Monitor, Bell, Lock, X, Camera,
     Check, AlertCircle, Phone, BadgeCheck, Briefcase, MapPin, Lock as LockIcon,
-    Globe, Key, Brain, CloudSun, Cpu
+    Globe, Key, Brain, CloudSun, Cpu, MessageCircle, QrCode, RefreshCw, Send, Wifi, WifiOff, ChevronDown
 } from 'lucide-react';
 import Button from '../components/Button';
 import Input from '../components/Input';
@@ -38,6 +38,7 @@ const SettingsPage = () => {
     const [showProfileModal, setShowProfileModal] = useState(false);
     const [email, setEmail] = useState(user?.email || '');
     const [noWhatsapp, setNoWhatsapp] = useState(user?.no_whatsapp || '');
+    const [jenisKelamin, setJenisKelamin] = useState(user?.jenis_kelamin || 'Laki-laki');
     const [file, setFile] = useState(null);
     const [preview, setPreview] = useState(null);
     const [profileLoading, setProfileLoading] = useState(false);
@@ -65,11 +66,83 @@ const SettingsPage = () => {
     const [configSuccess, setConfigSuccess] = useState('');
     const [configError, setConfigError] = useState('');
 
+    // WhatsApp Baileys State
+    const [waStatus, setWaStatus] = useState('disconnected'); // 'disconnected' | 'qr_ready' | 'connected'
+    const [waQR, setWaQR] = useState(null);
+    const [waNumber, setWaNumber] = useState('');
+    const [waTestPhone, setWaTestPhone] = useState('');
+    const [waTestLoading, setWaTestLoading] = useState(false);
+    const [waTestMsg, setWaTestMsg] = useState('');
+    const [waLogoutLoading, setWaLogoutLoading] = useState(false);
+    const eventSourceRef = useRef(null);
+
     useEffect(() => {
         if (user?.role === 'Admin') {
             fetchConfigs();
+            initWaStream();
         }
+        return () => {
+            if (eventSourceRef.current) eventSourceRef.current.close();
+        };
     }, [user]);
+
+    const initWaStream = () => {
+        // Close any existing stream
+        if (eventSourceRef.current) eventSourceRef.current.close();
+
+        const token = localStorage.getItem('token');
+        const es = new EventSource(
+            `/api/wa/stream?token=${encodeURIComponent(token)}`
+        );
+        eventSourceRef.current = es;
+
+        es.onmessage = (e) => {
+            try {
+                const data = JSON.parse(e.data);
+                if (data.type === 'qr') {
+                    setWaQR(data.qr);
+                    setWaStatus('qr_ready');
+                } else if (data.type === 'status') {
+                    setWaStatus(data.status);
+                    setWaNumber(data.number || '');
+                    if (data.status !== 'qr_ready') setWaQR(null);
+                }
+            } catch (_) { }
+        };
+
+        es.onerror = () => {
+            // SSE will auto-reconnect; just keep trying
+        };
+    };
+
+    const handleWaLogout = async () => {
+        setWaLogoutLoading(true);
+        try {
+            await api.post('/wa/logout');
+            setWaStatus('disconnected');
+            setWaQR(null);
+            setWaNumber('');
+        } catch (err) {
+            console.error('[WA] Logout error:', err);
+        } finally {
+            setWaLogoutLoading(false);
+        }
+    };
+
+    const handleWaTest = async () => {
+        if (!waTestPhone) return;
+        setWaTestLoading(true);
+        setWaTestMsg('');
+        try {
+            await api.post('/wa/test', { phone: waTestPhone });
+            setWaTestMsg('✅ Test message berhasil dikirim!');
+        } catch (err) {
+            setWaTestMsg('❌ ' + (err.response?.data?.message || 'Gagal mengirim pesan.'));
+        } finally {
+            setWaTestLoading(false);
+            setTimeout(() => setWaTestMsg(''), 4000);
+        }
+    };
 
     const fetchConfigs = async () => {
         setConfigLoading(true);
@@ -131,6 +204,7 @@ const SettingsPage = () => {
         const formData = new FormData();
         formData.append('email', email);
         formData.append('no_whatsapp', noWhatsapp);
+        formData.append('jenis_kelamin', jenisKelamin);
         if (file) {
             formData.append('foto', file);
         }
@@ -184,6 +258,7 @@ const SettingsPage = () => {
     const openProfileModal = () => {
         setEmail(user?.email || '');
         setNoWhatsapp(user?.no_whatsapp || '');
+        setJenisKelamin(user?.jenis_kelamin || 'Laki-laki');
         setPreview(null);
         setFile(null);
         setProfileError('');
@@ -216,21 +291,19 @@ const SettingsPage = () => {
                 <div className="flex border-b border-slate-200 dark:border-slate-800 gap-6">
                     <button
                         onClick={() => setActiveTab('account')}
-                        className={`pb-3 text-xs font-black uppercase tracking-wider transition-all border-b-2 ${
-                            activeTab === 'account'
+                        className={`pb-3 text-xs font-black uppercase tracking-wider transition-all border-b-2 ${activeTab === 'account'
                                 ? 'border-blue-600 text-blue-600 dark:text-white font-black'
                                 : 'border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
-                        }`}
+                            }`}
                     >
                         Pengaturan Akun
                     </button>
                     <button
                         onClick={() => setActiveTab('integration')}
-                        className={`pb-3 text-xs font-black uppercase tracking-wider transition-all border-b-2 ${
-                            activeTab === 'integration'
+                        className={`pb-3 text-xs font-black uppercase tracking-wider transition-all border-b-2 ${activeTab === 'integration'
                                 ? 'border-blue-600 text-blue-600 dark:text-white font-black'
                                 : 'border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
-                        }`}
+                            }`}
                     >
                         Integrasi Sistem
                     </button>
@@ -312,23 +385,43 @@ const SettingsPage = () => {
 
                             {/* Contact - partially editable */}
                             <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Data Kontak</p>
-                                <div className="flex items-start gap-3 p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-200 dark:border-emerald-800/30">
-                                    <div className="p-1.5 bg-emerald-500/10 rounded-xl shrink-0 mt-0.5">
-                                        <Phone size={14} className="text-emerald-600 dark:text-emerald-400" />
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Informasi Personal & Kontak</p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="flex items-start gap-3 p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-200 dark:border-emerald-800/30">
+                                        <div className="p-1.5 bg-emerald-500/10 rounded-xl shrink-0 mt-0.5">
+                                            <Phone size={14} className="text-emerald-600 dark:text-emerald-400" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-0.5">WhatsApp</p>
+                                            <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                                                {user?.no_whatsapp || <span className="text-slate-400 italic font-normal">Belum diisi — penting untuk alert SOS!</span>}
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={openProfileModal}
+                                            className="shrink-0 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline"
+                                        >
+                                            Edit
+                                        </button>
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-0.5">WhatsApp</p>
-                                        <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                            {user?.no_whatsapp || <span className="text-slate-400 italic font-normal">Belum diisi — penting untuk alert SOS!</span>}
-                                        </p>
+
+                                    <div className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-900/10 rounded-2xl border border-blue-200 dark:border-blue-800/30">
+                                        <div className="p-1.5 bg-blue-500/10 rounded-xl shrink-0 mt-0.5">
+                                            <User size={14} className="text-blue-600 dark:text-blue-400" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-0.5">Jenis Kelamin</p>
+                                            <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                                                {user?.jenis_kelamin || 'Laki-laki'}
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={openProfileModal}
+                                            className="shrink-0 text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                                        >
+                                            Edit
+                                        </button>
                                     </div>
-                                    <button
-                                        onClick={openProfileModal}
-                                        className="shrink-0 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline"
-                                    >
-                                        Edit
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -498,13 +591,97 @@ const SettingsPage = () => {
                             </div>
                         </form>
                     </div>
+
+                    {/* ── WhatsApp Baileys Connection Panel ── */}
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm mt-6">
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg">
+                                    <MessageCircle size={20} />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tighter">WhatsApp Baileys</h3>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Koneksi langsung via scan QR — tanpa biaya API</p>
+                                </div>
+                            </div>
+                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${waStatus === 'connected' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' : waStatus === 'qr_ready' ? 'bg-amber-500/10 text-amber-600 border-amber-500/30' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'}`}>
+                                {waStatus === 'connected' ? <Wifi size={11} /> : <WifiOff size={11} />}
+                                <span className="ml-1">{waStatus === 'connected' ? 'Terhubung' : waStatus === 'qr_ready' ? 'Scan QR' : 'Terputus'}</span>
+                            </div>
+                        </div>
+
+                        {waStatus === 'connected' && (
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
+                                    <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse" />
+                                    <div>
+                                        <p className="text-sm font-bold text-emerald-800 dark:text-emerald-400">WhatsApp Aktif & Terhubung</p>
+                                        {waNumber && <p className="text-xs text-emerald-600 dark:text-emerald-500">Nomor: {waNumber}</p>}
+                                    </div>
+                                </div>
+                                <div className="flex gap-3">
+                                    <input type="tel" placeholder="Nomor test: +62812..." value={waTestPhone} onChange={(e) => setWaTestPhone(e.target.value)} className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                                    <button onClick={handleWaTest} disabled={waTestLoading || !waTestPhone} className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-colors">
+                                        {waTestLoading ? <RefreshCw size={14} className="animate-spin" /> : <Send size={14} />} Test Kirim
+                                    </button>
+                                </div>
+                                {waTestMsg && <p className="text-xs font-bold text-center py-2">{waTestMsg}</p>}
+                                <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                                    <Button variant="ghost" className="w-full text-red-600 dark:text-red-400 hover:bg-red-500/10 rounded-2xl py-3 text-xs" onClick={handleWaLogout} loading={waLogoutLoading}>Putuskan Sesi & Reset QR</Button>
+                                </div>
+                            </div>
+                        )}
+
+                        {waStatus === 'qr_ready' && waQR && (
+                            <div className="text-center space-y-4">
+                                <div className="inline-block p-4 bg-white dark:bg-slate-800 border-4 border-amber-400/40 rounded-3xl shadow-xl">
+                                    <img src={waQR} alt="WhatsApp QR Code" className="w-56 h-56 mx-auto" />
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200">Scan QR ini dengan HP Anda</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">WhatsApp → Perangkat Tertaut → Tautkan Perangkat → Scan</p>
+                                    <p className="text-[10px] text-amber-600 font-bold animate-pulse">QR diperbarui otomatis setiap ~30 detik</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {waStatus === 'disconnected' && !waQR && (
+                            <div className="text-center py-8 space-y-3">
+                                <WifiOff size={48} className="mx-auto text-slate-200 dark:text-slate-700" />
+                                <p className="text-sm font-bold text-slate-500">WhatsApp tidak terhubung</p>
+                                <p className="text-xs text-slate-400">Backend sedang mencoba menyambung... QR akan muncul otomatis.</p>
+                                <button onClick={initWaStream} className="flex items-center gap-2 mx-auto text-xs font-bold text-blue-600 hover:text-blue-700">
+                                    <RefreshCw size={12} /> Refresh Status
+                                </button>
+                            </div>
+                        )}
+
+                        <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Cara Kerja</p>
+                            <div className="grid grid-cols-3 gap-3 text-center">
+                                {[{ n: '1', t: 'Scan QR', d: 'WA → Perangkat Tertaut' }, { n: '2', t: 'Session Tersimpan', d: 'Tidak perlu scan ulang' }, { n: '3', t: 'Notif Otomatis', d: 'PTW, SOS, Insiden terkirim' }].map(s => (
+                                    <div key={s.n} className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
+                                        <div className="w-7 h-7 bg-emerald-500/10 text-emerald-600 font-black text-xs rounded-full flex items-center justify-center mx-auto mb-2">{s.n}</div>
+                                        <p className="text-[10px] font-bold text-slate-700 dark:text-slate-300">{s.t}</p>
+                                        <p className="text-[9px] text-slate-400 mt-0.5">{s.d}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
 
             {/* Edit Profile Modal */}
             {showProfileModal && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-900 border-t-8 border-blue-600 w-full max-w-md rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200">
+                <div 
+                    onClick={() => setShowProfileModal(false)}
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                >
+                    <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white dark:bg-slate-900 border-t-8 border-blue-600 w-full max-w-md rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200"
+                    >
                         <div className="flex justify-between items-start mb-6">
                             <div>
                                 <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Edit Profil</h2>
@@ -577,6 +754,24 @@ const SettingsPage = () => {
                                 <p className="text-[10px] text-slate-400 pl-1">Format wajib: +62xxx (kode negara Indonesia)</p>
                             </div>
 
+                            <div className="flex flex-col gap-1.5 w-full">
+                                <label className="text-sm font-medium text-slate-600 dark:text-slate-300">Jenis Kelamin</label>
+                                <div className="relative w-full">
+                                    <select
+                                        value={jenisKelamin}
+                                        onChange={(e) => setJenisKelamin(e.target.value)}
+                                        required
+                                        className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none pr-10 font-medium"
+                                    >
+                                        <option value="Laki-laki">Laki-laki</option>
+                                        <option value="Perempuan">Perempuan</option>
+                                    </select>
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 dark:text-slate-500">
+                                        <ChevronDown size={18} />
+                                    </div>
+                                </div>
+                            </div>
+
                             {profileError && (
                                 <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 text-red-600 text-xs font-bold rounded-xl">
                                     <AlertCircle size={14} />
@@ -604,8 +799,14 @@ const SettingsPage = () => {
 
             {/* Change Password Modal */}
             {showPasswordModal && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-900 border-t-8 border-blue-600 w-full max-w-md rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200">
+                <div 
+                    onClick={() => setShowPasswordModal(false)}
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                >
+                    <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white dark:bg-slate-900 border-t-8 border-blue-600 w-full max-w-md rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200"
+                    >
                         <div className="flex justify-between items-start mb-6">
                             <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Ganti Password</h2>
                             <button onClick={() => setShowPasswordModal(false)} className="p-2 text-slate-400 hover:text-slate-600 transition-colors">

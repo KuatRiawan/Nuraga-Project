@@ -22,7 +22,7 @@ const User = sequelize.define('User', {
         allowNull: false,
     },
     role: {
-        type: DataTypes.ENUM('Admin', 'HSE', 'Supervisor', 'Manager', 'Operator', 'Kontraktor'),
+        type: DataTypes.ENUM('Admin', 'HSE', 'Supervisor', 'Manager', 'Staff', 'Vendor'),
         allowNull: false,
     },
     foto: {
@@ -48,6 +48,12 @@ const User = sequelize.define('User', {
         type: DataTypes.STRING,
         allowNull: true,
         comment: 'Area Kerja / Departemen — digunakan untuk SOS zone routing (Hanya Admin)',
+    },
+    jenis_kelamin: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: 'Laki-laki',
+        comment: 'Jenis Kelamin: Laki-laki / Perempuan',
     },
     points: {
         type: DataTypes.INTEGER,

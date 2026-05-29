@@ -192,7 +192,7 @@ const DashboardPage = () => {
 
         const fetchStats = async () => {
             try {
-                const certsUrl = (user?.role === 'Operator' || user?.role === 'Kontraktor')
+                const certsUrl = (['Staff', 'Operator', 'Vendor', 'Kontraktor'].includes(user?.role))
                     ? '/certifications/my'
                     : '/certifications/all';
 
@@ -402,7 +402,7 @@ const DashboardPage = () => {
         </div>
     );
 
-    const isFieldRole = user?.role === 'Operator' || user?.role === 'Kontraktor';
+    const isFieldRole = ['Staff', 'Operator', 'Vendor', 'Kontraktor'].includes(user?.role);
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">            {/* === FIT FOR DUTY CHECK-IN === */}
@@ -633,7 +633,7 @@ const DashboardPage = () => {
 
             {isFieldRole ? (
                 // ==========================================
-                // === OPERATOR & KONTRAKTOR LAYOUT (TAKTIK) ===
+                // === STAFF & VENDOR LAYOUT (TAKTIK) ===
                 // ==========================================
                 <>
                     {/* Greeting & Quick Emergency */}
@@ -642,7 +642,7 @@ const DashboardPage = () => {
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                 <div>
                                     <h1 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">
-                                        {getGreeting()}, {user?.nama || 'Operator'}!
+                                        {getGreeting()}, {user?.nama || 'Staff'}!
                                     </h1>
                                     <p className="text-slate-500 dark:text-slate-400 font-semibold mt-1 leading-relaxed">
                                         Monitor status perizinan kerja, tugas perbaikan (*Corrective Actions*), dan kirimkan laporan keselamatan secara langsung dari lapangan.
@@ -1013,7 +1013,7 @@ const DashboardPage = () => {
                                     <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tighter flex items-center gap-2">
                                         <Shield className="text-amber-500" size={22} /> Kesiapan Personel & Alat
                                     </h3>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Memantau kelayakan izin lisensi operator (SIO) dan sertifikasi.</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Memantau kelayakan izin lisensi staff (SIO) dan sertifikasi.</p>
                                 </div>
 
                                 {/* License Expiration Alerts */}
@@ -1177,7 +1177,7 @@ const DashboardPage = () => {
                         <div className="lg:col-span-2 p-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm overflow-hidden">
                             <div className="flex justify-between items-center mb-6">
                                 <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tighter flex items-center gap-3">
-                                    <Trophy size={20} className="text-amber-500" /> Contractor Safety Leaderboard
+                                    <Trophy size={20} className="text-amber-500" /> Vendor Safety Leaderboard
                                 </h3>
                                 <span className="text-xs font-bold text-slate-400 bg-slate-50 dark:bg-slate-800 px-3 py-1 rounded-full">Updated Hourly</span>
                             </div>
@@ -1186,7 +1186,7 @@ const DashboardPage = () => {
                                     <thead>
                                         <tr className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800">
                                             <th className="pb-4">Rank</th>
-                                            <th className="pb-4">Kontraktor</th>
+                                            <th className="pb-4">Vendor</th>
                                             <th className="pb-4">Safety Score</th>
                                             <th className="pb-4">Permit Aktif</th>
                                             <th className="pb-4">Insiden</th>

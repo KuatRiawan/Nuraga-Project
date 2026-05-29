@@ -2,6 +2,7 @@ const IncidentReport = require('../models/IncidentReport');
 const User = require('../models/User');
 const sequelize = require('../config/db');
 const { clearStatsCache } = require('./statsController');
+const wa = require('../services/whatsappService');
 
 const createIncident = async (req, res) => {
     const t = await sequelize.transaction();
@@ -19,12 +20,31 @@ const createIncident = async (req, res) => {
         
         await t.commit();
         clearStatsCache();
+
+        // WA: notify HSE/Admin about new incident
+        try {
+            const hsePics = await User.findAll({ where: { role: ['HSE', 'Admin', 'Manager'] } });
+            const msg =
+                `⚠️ *[NURAGA HSE — Laporan Insiden Baru]*\n\n` +
+                `Kategori: *${kategori}*\n` +
+                `Pelapor: *${req.user.nama}* (${req.user.role})\n` +
+                `Korban: ${korban || '-'}\n` +
+                `Kronologi: ${(kronologi || '').slice(0, 150)}...\n\n` +
+                `Segera investigasi di sistem Nuraga HSE.`;
+            for (const u of hsePics) {
+                if (u.no_whatsapp) await wa.sendMessage(u.no_whatsapp, msg);
+            }
+        } catch (waErr) {
+            console.error('[WhatsApp] Incident notification failed:', waErr.message);
+        }
+
         res.status(201).json(incident);
     } catch (error) {
         await t.rollback();
         res.status(500).json({ message: error.message });
     }
 };
+
 
 const getIncidents = async (req, res) => {
     try {

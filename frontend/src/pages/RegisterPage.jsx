@@ -3,10 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import Input from '../components/Input';
 import Button from '../components/Button';
-import { Shield, UserPlus } from 'lucide-react';
+import { Shield, UserPlus, ChevronDown } from 'lucide-react';
 
 const RegisterPage = () => {
-    const [formData, setFormData] = useState({ nama: '', email: '', password: '', role: 'Operator' });
+    const [formData, setFormData] = useState({ nama: '', email: '', password: '', role: 'Staff', no_whatsapp: '', jenis_kelamin: 'Laki-laki' });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const navigate = useNavigate();
@@ -15,6 +15,13 @@ const RegisterPage = () => {
         e.preventDefault();
         setLoading(true);
         setError('');
+
+        if (formData.no_whatsapp && !formData.no_whatsapp.startsWith('+62')) {
+            setError('Nomor WhatsApp harus dimulai dengan +62 (contoh: +6281234567890)');
+            setLoading(false);
+            return;
+        }
+
         try {
             await api.post('/auth/register', formData);
             navigate('/login', { state: { message: 'Registration successful! Please login.' } });
@@ -70,19 +77,50 @@ const RegisterPage = () => {
                             required
                         />
 
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-sm font-medium text-slate-600 dark:text-slate-300">Assign Role</label>
-                            <select
-                                className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
-                                value={formData.role}
-                                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                            >
-                                <option value="Operator">Operator</option>
-                                <option value="Supervisor">Supervisor</option>
-                                <option value="HSE">HSE Officer</option>
-                                <option value="Manager">Manager</option>
-                                <option value="Admin">Administrator</option>
-                            </select>
+                        <Input
+                            label="WhatsApp Number"
+                            placeholder="Example: +6281234567890"
+                            value={formData.no_whatsapp}
+                            onChange={(e) => setFormData({ ...formData, no_whatsapp: e.target.value })}
+                        />
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="flex flex-col gap-1.5 w-full">
+                                <label className="text-sm font-medium text-slate-600 dark:text-slate-300">Assign Role</label>
+                                <div className="relative w-full">
+                                    <select
+                                        className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium appearance-none pr-10"
+                                        value={formData.role}
+                                        onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                                    >
+                                        <option value="Staff">Staff</option>
+                                        <option value="Supervisor">Supervisor</option>
+                                        <option value="HSE">HSE Officer</option>
+                                        <option value="Manager">Manager</option>
+                                        <option value="Admin">Administrator</option>
+                                    </select>
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 dark:text-slate-500">
+                                        <ChevronDown size={18} />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col gap-1.5 w-full">
+                                <label className="text-sm font-medium text-slate-600 dark:text-slate-300">Jenis Kelamin</label>
+                                <div className="relative w-full">
+                                    <select
+                                        className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium appearance-none pr-10"
+                                        value={formData.jenis_kelamin}
+                                        onChange={(e) => setFormData({ ...formData, jenis_kelamin: e.target.value })}
+                                    >
+                                        <option value="Laki-laki">Laki-laki</option>
+                                        <option value="Perempuan">Perempuan</option>
+                                    </select>
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 dark:text-slate-500">
+                                        <ChevronDown size={18} />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <Button type="submit" className="w-full h-12 flex items-center justify-center gap-2 mt-4" loading={loading}>

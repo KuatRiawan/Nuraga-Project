@@ -181,7 +181,7 @@ const EmergencyPage = () => {
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-end gap-2">
-                                    <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${e.status === 'Triggered' ? 'bg-red-650 text-white shadow-lg shadow-red-500/20' : 'bg-blue-650 text-white'}`}>
+                                    <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${e.status === 'Triggered' ? 'bg-red-600 text-white shadow-lg shadow-red-500/20' : 'bg-blue-600 text-white'}`}>
                                         {e.status}
                                     </span>
                                     <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tighter">Responder: <span className="text-slate-700 dark:text-slate-350">{e.responder?.nama || 'Awaiting Dispatch'}</span></span>

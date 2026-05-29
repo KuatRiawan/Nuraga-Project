@@ -25,7 +25,9 @@ const ROLE_COLORS = {
     HSE: 'bg-emerald-550/15 text-emerald-655 dark:text-emerald-400 border border-emerald-500/10',
     Supervisor: 'bg-indigo-550/15 text-indigo-655 dark:text-indigo-400 border border-indigo-500/10',
     Manager: 'bg-blue-550/15 text-blue-655 dark:text-blue-400 border border-blue-500/10',
+    Staff: 'bg-amber-550/15 text-amber-655 dark:text-amber-450 border border-amber-500/10',
     Operator: 'bg-amber-550/15 text-amber-655 dark:text-amber-450 border border-amber-500/10',
+    Vendor: 'bg-slate-550/15 text-slate-655 dark:text-slate-400 border border-slate-500/10',
     Kontraktor: 'bg-slate-550/15 text-slate-655 dark:text-slate-400 border border-slate-500/10',
     SYSTEM: 'bg-violet-550/15 text-violet-655 dark:text-violet-400 border border-violet-500/10',
 };
@@ -76,7 +78,9 @@ const AuditLogPage = () => {
         { value: 'HSE', label: 'HSE' },
         { value: 'Supervisor', label: 'Supervisor' },
         { value: 'Manager', label: 'Manager' },
+        { value: 'Staff', label: 'Staff' },
         { value: 'Operator', label: 'Operator' },
+        { value: 'Vendor', label: 'Vendor' },
         { value: 'Kontraktor', label: 'Kontraktor' },
         { value: 'SYSTEM', label: 'System' }
     ];

@@ -3,14 +3,16 @@ import api from '../api/axios';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import { useAuth } from '../store/AuthContext';
-import { Users, Plus, Search, Edit2, Trash2, Shield, Mail, AlertCircle, X, ShieldAlert, Check, BadgeCheck, Briefcase, MapPin, Upload, Download } from 'lucide-react';
+import { Users, Plus, Search, Edit2, Trash2, Shield, Mail, AlertCircle, X, ShieldAlert, Check, BadgeCheck, Briefcase, MapPin, Upload, Download, ChevronDown } from 'lucide-react';
 
 const ROLE_BADGES = {
     Admin: 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20',
     HSE: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
     Supervisor: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20',
     Manager: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20',
+    Staff: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
     Operator: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
+    Vendor: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20',
     Kontraktor: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20',
 };
 
@@ -26,7 +28,17 @@ const UsersPage = () => {
     const parseCSV = (text) => {
         const lines = text.split(/\r?\n/);
         if (lines.length < 2) return [];
-        const headers = lines[0].split(',').map(h => h.trim().replace(/^["']|["']$/g, '').toLowerCase());
+
+        // Clean UTF-8 BOM if present
+        const firstLine = lines[0].replace(/^\uFEFF/, '');
+
+        // Detect separator: check if first line has ';' or ','
+        let separator = ',';
+        if (firstLine.includes(';') && (firstLine.split(';').length > firstLine.split(',').length)) {
+            separator = ';';
+        }
+
+        const headers = firstLine.split(separator).map(h => h.trim().replace(/^["']|["']$/g, '').toLowerCase());
         const results = [];
         for (let i = 1; i < lines.length; i++) {
             const line = lines[i].trim();
@@ -38,7 +50,7 @@ const UsersPage = () => {
                 const char = line[j];
                 if (char === '"' || char === "'") {
                     inQuotes = !inQuotes;
-                } else if (char === ',' && !inQuotes) {
+                } else if (char === separator && !inQuotes) {
                     values.push(current.trim().replace(/^["']|["']$/g, ''));
                     current = '';
                 } else {
@@ -91,28 +103,49 @@ const UsersPage = () => {
                     const row = parsedData[i];
                     const nama = row.nama || row.name || '';
                     const email = row.email || '';
-                    const password = row.password || row.sandi || '';
-                    const role = row.role || 'Operator';
+                    const password = row.password || row.sandi || 'password123';
+                    const role = row.role || 'Staff';
                     const nik = row.nik || row.id_pekerja || '';
                     const jabatan = row.jabatan || row.position || '';
                     const area_kerja = row.area_kerja || row.department || '';
+                    const no_whatsapp = row.no_whatsapp || row.whatsapp || '';
+                    const jenis_kelamin = row.jenis_kelamin || row.gender || 'Laki-laki';
 
-                    if (!nama || !email || !password) {
+                    if (!nama || !email) {
                         failCount++;
-                        failDetails.push(`Baris ${i + 2}: Nama, email, dan password wajib diisi.`);
+                        failDetails.push(`Baris ${i + 2}: Nama dan email wajib diisi.`);
                         continue;
                     }
 
+                    // Check if user already exists (by email) in local state
+                    const existingUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+
                     try {
-                        await api.post('/users', {
-                            nama,
-                            email,
-                            password,
-                            role,
-                            nik,
-                            jabatan,
-                            area_kerja
-                        });
+                        if (existingUser) {
+                            // Update existing user details
+                            await api.put(`/users/${existingUser.id_user}`, {
+                                nama,
+                                role,
+                                nik,
+                                jabatan,
+                                area_kerja,
+                                no_whatsapp,
+                                jenis_kelamin
+                            });
+                        } else {
+                            // Create new user with password
+                            await api.post('/users', {
+                                nama,
+                                email,
+                                password,
+                                role,
+                                nik,
+                                jabatan,
+                                area_kerja,
+                                no_whatsapp,
+                                jenis_kelamin
+                            });
+                        }
                         successCount++;
                     } catch (err) {
                         failCount++;
@@ -121,7 +154,7 @@ const UsersPage = () => {
                 }
 
                 if (successCount > 0) {
-                    setSuccessMessage(`Berhasil mengimpor ${successCount} user baru.`);
+                    setSuccessMessage(`Berhasil mengimpor/sinkronisasi ${successCount} user.`);
                 }
                 if (failCount > 0) {
                     setError(`Gagal mengimpor ${failCount} user. Detail:\n${failDetails.join('\n')}`);
@@ -146,7 +179,7 @@ const UsersPage = () => {
             return;
         }
 
-        const headers = ['nama', 'email', 'role', 'nik', 'jabatan', 'area_kerja'];
+        const headers = ['nama', 'email', 'role', 'nik', 'jabatan', 'area_kerja', 'no_whatsapp', 'jenis_kelamin'];
         const csvRows = [
             headers.join(','),
             ...users.map(u =>
@@ -179,15 +212,32 @@ const UsersPage = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [editingUserId, setEditingUserId] = useState(null);
 
+    // Helper to auto-generate worker ID / NIK based on role
+    const generateAutoNik = (roleName) => {
+        const prefixes = {
+            Admin: 'ADM',
+            HSE: 'HSE',
+            Supervisor: 'SPV',
+            Manager: 'MGR',
+            Staff: 'STF',
+            Vendor: 'VND',
+        };
+        const prefix = prefixes[roleName] || 'EMP';
+        const randomNum = Math.floor(100 + Math.random() * 900);
+        return `${prefix}-${randomNum}`;
+    };
+
     // Form data
     const [formData, setFormData] = useState({
         nama: '',
         email: '',
         password: '',
-        role: 'Operator',
+        role: 'Staff',
         nik: '',
         jabatan: '',
         area_kerja: '',
+        no_whatsapp: '',
+        jenis_kelamin: 'Laki-laki',
     });
 
     useEffect(() => {
@@ -208,7 +258,18 @@ const UsersPage = () => {
     };
 
     const handleOpenAdd = () => {
-        setFormData({ nama: '', email: '', password: '', role: 'Operator', nik: '', jabatan: '', area_kerja: '' });
+        const defaultRole = 'Staff';
+        setFormData({
+            nama: '',
+            email: '',
+            password: '',
+            role: defaultRole,
+            nik: generateAutoNik(defaultRole),
+            jabatan: '',
+            area_kerja: '',
+            no_whatsapp: '',
+            jenis_kelamin: 'Laki-laki',
+        });
         setIsEditing(false);
         setEditingUserId(null);
         setError('');
@@ -224,11 +285,24 @@ const UsersPage = () => {
             nik: user.nik || '',
             jabatan: user.jabatan || '',
             area_kerja: user.area_kerja || '',
+            no_whatsapp: user.no_whatsapp || '',
+            jenis_kelamin: user.jenis_kelamin || 'Laki-laki',
         });
         setIsEditing(true);
         setEditingUserId(user.id_user);
         setError('');
         setShowModal(true);
+    };
+
+    const handleRoleChange = (selectedRole) => {
+        setFormData(prev => {
+            const shouldGenerate = !isEditing || !prev.nik;
+            return {
+                ...prev,
+                role: selectedRole,
+                nik: shouldGenerate ? generateAutoNik(selectedRole) : prev.nik
+            };
+        });
     };
 
     const handleSubmit = async (e) => {
@@ -393,14 +467,24 @@ const UsersPage = () => {
                                                                 <span className="text-[10px] font-black bg-blue-500 text-white px-2 py-0.5 rounded-full uppercase">Saya</span>
                                                             )}
                                                         </div>
-                                                        {u.jabatan && <div className="text-xs text-slate-400">{u.jabatan}</div>}
+                                                        <div className="text-xs text-slate-400">
+                                                            {u.jabatan ? `${u.jabatan} • ` : ''}{u.jenis_kelamin || 'Laki-laki'}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-slate-600 dark:text-slate-300 text-sm font-medium">
-                                                <div className="flex items-center gap-1.5">
-                                                    <Mail size={14} className="text-slate-400" />
-                                                    {u.email}
+                                                <div className="space-y-1">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <Mail size={14} className="text-slate-400 shrink-0" />
+                                                        <span className="truncate max-w-[200px]">{u.email}</span>
+                                                    </div>
+                                                    {u.no_whatsapp && (
+                                                        <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-bold">
+                                                            <span className="inline-block w-3.5 h-3.5 bg-emerald-500 rounded text-[9px] text-white flex items-center justify-center font-black font-sans shrink-0">WA</span>
+                                                            <span className="font-mono">{u.no_whatsapp}</span>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
@@ -424,7 +508,7 @@ const UsersPage = () => {
                                                 )}
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${ROLE_BADGES[u.role] || ROLE_BADGES.Operator}`}>
+                                                <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${ROLE_BADGES[u.role] || ROLE_BADGES.Staff}`}>
                                                     <Shield size={11} /> {u.role}
                                                 </span>
                                             </td>
@@ -458,8 +542,14 @@ const UsersPage = () => {
 
             {/* Add/Edit Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-800 border-t-8 border-blue-600 w-full max-w-lg rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200">
+                <div 
+                    onClick={() => setShowModal(false)}
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                >
+                    <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white dark:bg-slate-800 border-t-8 border-blue-600 w-full max-w-lg rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200"
+                    >
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter flex items-center gap-2">
                                 {isEditing ? <Edit2 size={20} className="text-blue-600" /> : <Plus size={20} className="text-blue-600" />}
@@ -491,21 +581,46 @@ const UsersPage = () => {
                                 required
                             />
 
-                            <div className="flex flex-col gap-1.5 w-full">
-                                <label className="text-sm font-medium text-slate-600 dark:text-slate-300">Hak Akses / Peran</label>
-                                <select
-                                    value={formData.role}
-                                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                    required
-                                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                >
-                                    <option value="Operator">Operator</option>
-                                    <option value="Admin">Admin</option>
-                                    <option value="HSE">HSE</option>
-                                    <option value="Supervisor">Supervisor</option>
-                                    <option value="Manager">Manager</option>
-                                    <option value="Kontraktor">Kontraktor</option>
-                                </select>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="flex flex-col gap-1.5 w-full">
+                                    <label className="text-sm font-medium text-slate-600 dark:text-slate-300">Hak Akses / Peran</label>
+                                    <div className="relative w-full">
+                                        <select
+                                            value={formData.role}
+                                            onChange={(e) => handleRoleChange(e.target.value)}
+                                            required
+                                            className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none pr-10 font-medium"
+                                        >
+                                            <option value="Staff">Staff</option>
+                                            <option value="Admin">Admin</option>
+                                            <option value="HSE">HSE</option>
+                                            <option value="Supervisor">Supervisor</option>
+                                            <option value="Manager">Manager</option>
+                                            <option value="Vendor">Vendor</option>
+                                        </select>
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 dark:text-slate-500">
+                                            <ChevronDown size={18} />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col gap-1.5 w-full">
+                                    <label className="text-sm font-medium text-slate-600 dark:text-slate-300">Jenis Kelamin</label>
+                                    <div className="relative w-full">
+                                        <select
+                                            value={formData.jenis_kelamin}
+                                            onChange={(e) => setFormData({ ...formData, jenis_kelamin: e.target.value })}
+                                            required
+                                            className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none pr-10 font-medium"
+                                        >
+                                            <option value="Laki-laki">Laki-laki</option>
+                                            <option value="Perempuan">Perempuan</option>
+                                        </select>
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 dark:text-slate-500">
+                                            <ChevronDown size={18} />
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <Input
@@ -530,8 +645,14 @@ const UsersPage = () => {
                                         onChange={(e) => setFormData({ ...formData, nik: e.target.value })}
                                     />
                                     <Input
+                                        label="Nomor WhatsApp"
+                                        placeholder="Format: +62xxxxxxxxxx"
+                                        value={formData.no_whatsapp}
+                                        onChange={(e) => setFormData({ ...formData, no_whatsapp: e.target.value })}
+                                    />
+                                    <Input
                                         label="Jabatan / Job Title"
-                                        placeholder="Contoh: Operator Mesin, HSE Officer"
+                                        placeholder="Contoh: Staff Lapangan, HSE Officer"
                                         value={formData.jabatan}
                                         onChange={(e) => setFormData({ ...formData, jabatan: e.target.value })}
                                     />

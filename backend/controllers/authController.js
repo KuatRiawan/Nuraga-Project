@@ -6,12 +6,12 @@ const { recordLog } = require('./logController');
 
 const register = async (req, res) => {
     try {
-        const { nama, email, password, role } = req.body;
+        const { nama, email, password, role, no_whatsapp, jenis_kelamin } = req.body;
         const userExists = await User.findOne({ where: { email } });
         if (userExists) {
             return res.status(400).json({ message: 'User already exists' });
         }
-        const user = await User.create({ nama, email, password, role });
+        const user = await User.create({ nama, email, password, role, no_whatsapp, jenis_kelamin });
         res.status(201).json({ message: 'User registered successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -30,7 +30,7 @@ const login = async (req, res) => {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
         const token = jwt.sign(
-            { id: user.id_user, role: user.role },
+            { id: user.id_user, role: user.role, nama: user.nama },
             process.env.JWT_SECRET,
             { expiresIn: '1d' }
         );
@@ -55,6 +55,7 @@ const login = async (req, res) => {
                 nik: user.nik,
                 jabatan: user.jabatan,
                 area_kerja: user.area_kerja,
+                jenis_kelamin: user.jenis_kelamin,
             },
         });
     } catch (error) {
@@ -82,6 +83,7 @@ const getMe = async (req, res) => {
             nik: user.nik,
             jabatan: user.jabatan,
             area_kerja: user.area_kerja,
+            jenis_kelamin: user.jenis_kelamin,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt
         });
@@ -124,14 +126,14 @@ const resetPassword = async (req, res) => {
 
 const updateProfile = async (req, res) => {
     try {
-        const { email, no_whatsapp } = req.body;
+        const { email, no_whatsapp, jenis_kelamin } = req.body;
         const user = await User.findByPk(req.user.id);
         if (!user) {
             return res.status(404).json({ message: 'User tidak ditemukan' });
         }
 
         // === FIELD-LEVEL ACCESS CONTROL ===
-        // Users can ONLY change: email, no_whatsapp, foto
+        // Users can ONLY change: email, no_whatsapp, foto, jenis_kelamin
         // nama, nik, jabatan, area_kerja -> ADMIN ONLY (via /api/users/:id)
         if (email && email !== user.email) {
             const userExists = await User.findOne({ where: { email } });
@@ -141,6 +143,7 @@ const updateProfile = async (req, res) => {
             user.email = email;
         }
         if (no_whatsapp !== undefined) user.no_whatsapp = no_whatsapp;
+        if (jenis_kelamin !== undefined) user.jenis_kelamin = jenis_kelamin;
         if (req.file) {
             user.foto = req.file.filename;
         }
@@ -160,6 +163,7 @@ const updateProfile = async (req, res) => {
                 nik: user.nik,
                 jabatan: user.jabatan,
                 area_kerja: user.area_kerja,
+                jenis_kelamin: user.jenis_kelamin,
             }
         });
     } catch (error) {

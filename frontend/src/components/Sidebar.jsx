@@ -11,7 +11,9 @@ const ROLE_COLORS = {
     HSE: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
     Supervisor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
     Manager: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+    Staff: 'bg-slate-500/10 text-slate-600 dark:text-slate-400',
     Operator: 'bg-slate-500/10 text-slate-600 dark:text-slate-400',
+    Vendor: 'bg-orange-500/10 text-orange-600 dark:text-orange-400',
     Kontraktor: 'bg-orange-500/10 text-orange-600 dark:text-orange-400',
 };
 
@@ -23,23 +25,23 @@ const Sidebar = ({ onClose }) => {
         {
             section: 'UTAMA',
             items: [
-                { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/', roles: ['Admin', 'HSE', 'Supervisor', 'Manager', 'Operator', 'Kontraktor'] },
+                { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/', roles: ['Admin', 'HSE', 'Supervisor', 'Manager', 'Staff', 'Operator', 'Vendor', 'Kontraktor'] },
             ],
         },
         {
             section: 'PELAPORAN',
             items: [
-                { name: 'Laporan Bahaya', icon: <AlertCircle size={20} />, path: '/hazards', roles: ['Admin', 'HSE', 'Supervisor', 'Manager', 'Operator', 'Kontraktor'] },
-                { name: 'Laporan Insiden', icon: <FileText size={20} />, path: '/incidents', roles: ['Admin', 'HSE', 'Supervisor', 'Manager', 'Operator'] },
+                { name: 'Laporan Bahaya', icon: <AlertCircle size={20} />, path: '/hazards', roles: ['Admin', 'HSE', 'Supervisor', 'Manager', 'Staff', 'Operator', 'Vendor', 'Kontraktor'] },
+                { name: 'Laporan Insiden', icon: <FileText size={20} />, path: '/incidents', roles: ['Admin', 'HSE', 'Supervisor', 'Manager', 'Staff', 'Operator'] },
             ],
         },
         {
             section: 'OPERASIONAL',
             items: [
-                { name: 'Izin Kerja (e-PTW)', icon: <FileCheck size={20} />, path: '/permits', roles: ['Admin', 'HSE', 'Supervisor', 'Manager', 'Operator', 'Kontraktor'] },
+                { name: 'Izin Kerja (e-PTW)', icon: <FileCheck size={20} />, path: '/permits', roles: ['Admin', 'HSE', 'Supervisor', 'Manager', 'Staff', 'Operator', 'Vendor', 'Kontraktor'] },
                 { name: 'Safety Audit', icon: <CheckSquare size={20} />, path: '/audits', roles: ['Admin', 'HSE', 'Supervisor'] },
                 { name: 'Tindakan Perbaikan', icon: <ClipboardList size={20} />, path: '/corrective-actions', roles: ['Admin', 'HSE', 'Supervisor', 'Manager'] },
-                { name: 'Sertifikasi', icon: <Award size={20} />, path: '/certifications', roles: ['Admin', 'HSE', 'Supervisor', 'Manager', 'Operator', 'Kontraktor'] },
+                { name: 'Sertifikasi', icon: <Award size={20} />, path: '/certifications', roles: ['Admin', 'HSE', 'Supervisor', 'Manager', 'Staff', 'Operator', 'Vendor', 'Kontraktor'] },
             ],
         },
         {
@@ -51,15 +53,15 @@ const Sidebar = ({ onClose }) => {
         {
             section: 'ADMINISTRASI',
             items: [
-                { name: 'Safety Rewards', icon: <Trophy size={20} />, path: '/gamification', roles: ['Admin', 'HSE', 'Supervisor', 'Manager', 'Operator'] },
+                { name: 'Safety Rewards', icon: <Trophy size={20} />, path: '/gamification', roles: ['Admin', 'HSE', 'Supervisor', 'Manager', 'Staff', 'Operator'] },
                 { name: 'Manajemen User', icon: <Users size={20} />, path: '/users', roles: ['Admin'] },
                 { name: 'Log Sistem', icon: <History size={20} />, path: '/logs', roles: ['Admin'] },
-                { name: 'Pengaturan', icon: <Settings size={20} />, path: '/settings', roles: ['Admin', 'HSE', 'Supervisor', 'Manager', 'Operator', 'Kontraktor'] },
+                { name: 'Pengaturan', icon: <Settings size={20} />, path: '/settings', roles: ['Admin', 'HSE', 'Supervisor', 'Manager', 'Staff', 'Operator', 'Vendor', 'Kontraktor'] },
             ],
         },
     ];
 
-    const roleColor = ROLE_COLORS[user?.role] || ROLE_COLORS.Operator;
+    const roleColor = ROLE_COLORS[user?.role] || ROLE_COLORS.Staff;
 
     return (
         <div className="flex flex-col h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-colors duration-300">

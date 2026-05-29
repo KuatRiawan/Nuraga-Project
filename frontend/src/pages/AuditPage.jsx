@@ -98,8 +98,14 @@ const AuditPage = () => {
 
             {/* QR Scanner Modal */}
             {showQrModal && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center">
+                <div 
+                    onClick={() => setShowQrModal(false)}
+                    className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                >
+                    <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white dark:bg-slate-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center"
+                    >
                         <div className="w-16 h-16 bg-blue-600/10 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
                             <QrCode size={36} />
                         </div>
@@ -130,8 +136,14 @@ const AuditPage = () => {
 
             {/* Audit Form Modal */}
             {showForm && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-800 border-t-8 border-blue-600 w-full max-w-xl rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+                <div 
+                    onClick={() => setShowForm(false)}
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                >
+                    <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white dark:bg-slate-800 border-t-8 border-blue-600 w-full max-w-xl rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
+                    >
                         <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter mb-6">Form Audit Keselamatan</h2>
                         <form onSubmit={handleSubmit} className="space-y-5">
                             <Input
@@ -279,8 +291,14 @@ const AuditPage = () => {
                     }
                 }
                 return (
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                        <div className="bg-white dark:bg-slate-900 border-t-8 border-blue-600 w-full max-w-xl rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto space-y-6">
+                    <div 
+                        onClick={() => setSelectedAudit(null)}
+                        className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                    >
+                        <div 
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-white dark:bg-slate-900 border-t-8 border-blue-600 w-full max-w-xl rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto space-y-6"
+                        >
                             <div className="flex justify-between items-start">
                                 <div>
                                     <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg text-[10px] font-black uppercase tracking-wider">Hasil Audit</span>

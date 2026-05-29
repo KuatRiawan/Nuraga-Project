@@ -117,8 +117,14 @@ const HazardPage = () => {
 
             {/* === FORM MODAL === */}
             {showForm && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-800 border-t-8 border-blue-600 w-full max-w-lg rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+                <div 
+                    onClick={() => { setShowForm(false); setPreview(null); setAiPredictedRisk(null); }}
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                >
+                    <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white dark:bg-slate-800 border-t-8 border-blue-600 w-full max-w-lg rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
+                    >
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Buat Laporan Baru</h2>
                             <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-full">
@@ -298,8 +304,14 @@ const HazardPage = () => {
                 const mapsUrl = selectedHazard.koordinat_gps ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedHazard.koordinat_gps)}` : null;
 
                 return (
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                        <div className="bg-white dark:bg-slate-900 border-t-8 border-blue-600 w-full max-w-xl rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto space-y-6">
+                    <div 
+                        onClick={() => setSelectedHazard(null)}
+                        className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                    >
+                        <div 
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-white dark:bg-slate-900 border-t-8 border-blue-600 w-full max-w-xl rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto space-y-6"
+                        >
                             <div className="flex justify-between items-start">
                                 <div>
                                     <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${risk.color}`}>

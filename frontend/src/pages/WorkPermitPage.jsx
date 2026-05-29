@@ -119,11 +119,16 @@ const WorkPermitPage = () => {
             )}
 
             {showForm && (
-                <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                    <PermitForm
-                        onSubmit={handleFormSubmit}
-                        onCancel={() => setShowForm(false)}
-                    />
+                <div 
+                    onClick={() => setShowForm(false)}
+                    className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                >
+                    <div onClick={(e) => e.stopPropagation()} className="w-full max-w-4xl">
+                        <PermitForm
+                            onSubmit={handleFormSubmit}
+                            onCancel={() => setShowForm(false)}
+                        />
+                    </div>
                 </div>
             )}
 
@@ -180,7 +185,7 @@ const WorkPermitPage = () => {
                                 </div>                                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/50 flex items-center justify-between gap-1 text-[9px] font-black uppercase tracking-wider">
                                     <div className="flex items-center gap-1.5">
                                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                        <span className="text-emerald-600 dark:text-emerald-500 font-bold">Operator</span>
+                                        <span className="text-emerald-600 dark:text-emerald-500 font-bold">Staff</span>
                                     </div>
                                     <span className="text-slate-300 dark:text-slate-700">→</span>
                                     <div className="flex items-center gap-1.5">
@@ -232,8 +237,14 @@ const WorkPermitPage = () => {
 
             {/* Selected Permit Detail & Signing Modal */}
             {selectedPermit && (
-                <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-800 border-t-8 border-blue-600 w-full max-w-2xl rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto custom-scrollbar">
+                <div 
+                    onClick={() => setSelectedPermit(null)}
+                    className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                >
+                    <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white dark:bg-slate-800 border-t-8 border-blue-600 w-full max-w-2xl rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto custom-scrollbar"
+                    >
                         <div className="flex justify-between items-start mb-6">
                             <div>
                                 <span className={`inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.2em] border px-2.5 py-1 rounded-full mb-2 ${getStatusColor(selectedPermit.status)}`}>
@@ -254,12 +265,12 @@ const WorkPermitPage = () => {
                             <div className="bg-slate-50 dark:bg-slate-900/30 p-6 rounded-2xl border border-slate-200 dark:border-slate-850 space-y-4">
                                 <p className="text-[10px] font-black text-slate-450 uppercase tracking-widest text-center">Proses Persetujuan Bertingkat</p>
                                 <div className="flex justify-between items-start max-w-md mx-auto">
-                                    {/* Operator */}
+                                    {/* Staff */}
                                     <div className="text-center flex-1">
                                         <div className="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center mx-auto mb-1.5 font-bold shadow-sm text-xs">
                                             ✓
                                         </div>
-                                        <p className="text-[9px] font-black uppercase text-emerald-600 leading-tight">Operator</p>
+                                        <p className="text-[9px] font-black uppercase text-emerald-600 leading-tight">Staff</p>
                                         <p className="text-[8px] text-slate-450 dark:text-slate-500 font-bold uppercase mt-0.5">Signed</p>
                                         <p className="text-[7px] text-slate-400 dark:text-slate-550 mt-0.5 font-medium leading-none">
                                             {new Date(selectedPermit.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit' })} {new Date(selectedPermit.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -385,7 +396,7 @@ const WorkPermitPage = () => {
                             {/* Section 1: Info Administrasi */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-800">
                                 <div>
-                                    <p className="text-[10px] font-black text-slate-450 uppercase tracking-widest">Perusahaan / Kontraktor</p>
+                                    <p className="text-[10px] font-black text-slate-450 uppercase tracking-widest">Perusahaan / Vendor</p>
                                     <p className="font-bold text-slate-800 dark:text-slate-100 mt-1">{selectedPermit.perusahaan}</p>
                                 </div>
                                 <div>
@@ -585,8 +596,14 @@ const WorkPermitPage = () => {
 
             {/* Housekeeping Close Out Confirmation Modal */}
             {showCloseModal && selectedPermit && (
-                <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-800 border-t-8 border-green-600 w-full max-w-md rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200">
+                <div 
+                    onClick={() => setShowCloseModal(false)}
+                    className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                >
+                    <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white dark:bg-slate-800 border-t-8 border-green-600 w-full max-w-md rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200"
+                    >
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter flex items-center gap-2">
                                 <ShieldCheck className="text-green-600" size={24} /> Penutupan Izin Kerja
