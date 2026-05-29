@@ -20,9 +20,20 @@ const HazardReport = sequelize.define('HazardReport', {
         allowNull: false,
     },
     risiko: {
-        type: DataTypes.ENUM('Low', 'Medium', 'High', 'Extreme'),
         type: DataTypes.ENUM('Low', 'Medium', 'High', 'Critical'),
         defaultValue: 'Low',
+    },
+    original_risiko: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    is_overridden: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
+    is_verified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
     },
     foto: {
         type: DataTypes.STRING,

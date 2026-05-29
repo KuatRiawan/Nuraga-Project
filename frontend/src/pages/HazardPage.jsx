@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import api from '../api/axios';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import { AlertTriangle, MapPin, Camera, Zap, CheckCircle, Clock, X } from 'lucide-react';
+import { useAuth } from '../store/AuthContext';
 
 const RISK_CONFIG = {
     Low: { color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400', border: 'border-emerald-500/30', dot: 'bg-emerald-500' },
@@ -12,12 +14,22 @@ const RISK_CONFIG = {
 };
 
 const HazardPage = () => {
+    const { user } = useAuth();
+    const location = useLocation();
     const [hazards, setHazards] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [loading, setLoading] = useState(false);
     const [analyzing, setAnalyzing] = useState(false);
     const [formData, setFormData] = useState({ lokasi: '', deskripsi: '', risiko: 'Low', koordinat_gps: '' });
     const [file, setFile] = useState(null);
+    const [aiPredictedRisk, setAiPredictedRisk] = useState(null);
+
+    // Auto open form if redirected from dashboard quick action
+    useEffect(() => {
+        if (location.state?.openForm) {
+            setShowForm(true);
+        }
+    }, [location]);
     const [preview, setPreview] = useState(null);
     const [selectedHazard, setSelectedHazard] = useState(null);
 
@@ -47,10 +59,12 @@ const HazardPage = () => {
     const analyzeWithAI = async () => {
         if (!formData.deskripsi) return alert('Masukkan deskripsi bahaya terlebih dahulu.');
         setAnalyzing(true);
+        setAiPredictedRisk(null);
         try {
             const res = await api.post('/ai/analyze', { deskripsi: formData.deskripsi, lokasi: formData.lokasi });
             const risk = res.data.predicted_risk || formData.risiko;
             setFormData(prev => ({ ...prev, risiko: risk }));
+            setAiPredictedRisk(risk);
         } catch (err) {
             console.error('AI analyze failed:', err);
         } finally {
@@ -80,6 +94,7 @@ const HazardPage = () => {
             setFormData({ lokasi: '', deskripsi: '', risiko: 'Low', koordinat_gps: '' });
             setFile(null);
             setPreview(null);
+            setAiPredictedRisk(null);
             fetchHazards();
         } catch (err) {
             console.error(err);
@@ -141,13 +156,28 @@ const HazardPage = () => {
                             </div>
 
                             <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest px-1">Tingkat Risiko</label>
+                                <label className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest px-1 flex items-center justify-between transition-all duration-300">
+                                    <span>Tingkat Risiko</span>
+                                    {analyzing && (
+                                        <span className="text-[10px] text-blue-600 dark:text-blue-400 animate-pulse flex items-center gap-1 normal-case font-bold">
+                                            <Zap size={10} className="fill-blue-600 animate-bounce" /> Menilai dengan AI...
+                                        </span>
+                                    )}
+                                    {aiPredictedRisk && !analyzing && (
+                                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 animate-in fade-in slide-in-from-right-2 duration-300 flex items-center gap-1 normal-case font-extrabold">
+                                            ✨ AI Predicted: {aiPredictedRisk}
+                                        </span>
+                                    )}
+                                </label>
                                 <div className="grid grid-cols-4 gap-2">
                                     {Object.keys(RISK_CONFIG).map(r => (
                                         <button
                                             key={r}
                                             type="button"
-                                            onClick={() => setFormData({ ...formData, risiko: r })}
+                                            onClick={() => {
+                                                setFormData({ ...formData, risiko: r });
+                                                setAiPredictedRisk(null);
+                                            }}
                                             className={`py-3 rounded-xl text-xs font-black border-2 transition-all ${formData.risiko === r ? `${RISK_CONFIG[r].color} ${RISK_CONFIG[r].border} shadow-lg` : 'border-slate-100 dark:border-slate-700 text-slate-400 bg-slate-50 dark:bg-slate-900/50'}`}
                                         >
                                             {r}
@@ -180,7 +210,7 @@ const HazardPage = () => {
                             </div>
 
                             <div className="flex gap-4 pt-2">
-                                <Button type="button" variant="ghost" onClick={() => { setShowForm(false); setPreview(null); }} className="flex-1 rounded-2xl py-4">Batal</Button>
+                                <Button type="button" variant="ghost" onClick={() => { setShowForm(false); setPreview(null); setAiPredictedRisk(null); }} className="flex-1 rounded-2xl py-4">Batal</Button>
                                 <Button type="submit" className="flex-1 rounded-2xl py-4 shadow-xl shadow-blue-500/20" loading={loading}>
                                     {loading ? 'Mengirim...' : 'Kirim Laporan'}
                                 </Button>
@@ -213,7 +243,19 @@ const HazardPage = () => {
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-end gap-1">
-                                    <span className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase ${risk.color}`}>{hazard.risiko}</span>
+                                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                                        {hazard.is_verified && (
+                                            <span className="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[8px] font-black uppercase rounded">
+                                                Verified
+                                            </span>
+                                        )}
+                                        {hazard.is_overridden && (
+                                            <span className="px-1.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[8px] font-black uppercase rounded">
+                                                Overridden
+                                            </span>
+                                        )}
+                                        <span className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase ${risk.color}`}>{hazard.risiko}</span>
+                                    </div>
                                     <span className="text-[10px] text-slate-400">{hazard.status}</span>
                                 </div>
                             </div>
@@ -289,6 +331,18 @@ const HazardPage = () => {
                                     </span>
                                 </div>
                                 <div>
+                                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Verifikasi K3</p>
+                                    {selectedHazard.is_verified ? (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-500/10 text-emerald-600 text-[10px] font-black uppercase tracking-wider rounded-lg mt-1 border border-emerald-500/20">
+                                            ✓ Terverifikasi (+100 Poin)
+                                        </span>
+                                    ) : (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-500/10 text-amber-600 text-[10px] font-black uppercase tracking-wider rounded-lg mt-1 border border-amber-500/20">
+                                            ⚠ Menunggu Validasi
+                                        </span>
+                                    )}
+                                </div>
+                                <div>
                                     <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Koordinat GPS</p>
                                     {mapsUrl ? (
                                         <a
@@ -304,6 +358,72 @@ const HazardPage = () => {
                                     )}
                                 </div>
                             </div>
+
+                             {/* HSE/Admin Validation Section */}
+                             {(user?.role === 'HSE' || user?.role === 'Admin') && !selectedHazard.is_verified && (
+                                 <div className="p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                                     <div className="flex-1">
+                                         <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Validasi Laporan K3</p>
+                                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                             Validasikan laporan ini untuk menyetujui temuan bahaya dan mengirimkan reward 100 poin safety kepada pelapor.
+                                         </p>
+                                     </div>
+                                     <button
+                                         onClick={async () => {
+                                             try {
+                                                 const res = await api.patch(`/hazards/${selectedHazard.id_hazard}/verify`);
+                                                 setSelectedHazard(res.data.hazard);
+                                                 fetchHazards();
+                                                 alert('Laporan berhasil divalidasi! 100 poin safety telah dikirim ke pelapor.');
+                                             } catch (err) {
+                                                 console.error('Failed to verify hazard:', err);
+                                                 alert(err.response?.data?.message || 'Gagal memvalidasi laporan.');
+                                             }
+                                         }}
+                                         className="w-full sm:w-auto px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-colors shadow-lg shadow-emerald-500/15 whitespace-nowrap active:scale-98"
+                                     >
+                                         Validasi Laporan
+                                     </button>
+                                 </div>
+                             )}
+
+                            {/* HSE/Admin Risk Override Section */}
+                            {(user?.role === 'HSE' || user?.role === 'Admin') && (
+                                <div className="p-4 bg-blue-500/5 border border-blue-500/10 rounded-2xl space-y-3">
+                                    <div className="flex justify-between items-center">
+                                        <p className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider">HSE AI Override (Koreksi Risiko)</p>
+                                        {selectedHazard.is_overridden && (
+                                            <span className="px-2 py-0.5 bg-amber-500/10 text-amber-600 rounded text-[9px] font-black uppercase">Overridden</span>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                                        Prediksi Asli AI: <span className="font-bold text-slate-700 dark:text-slate-300">{selectedHazard.original_risiko || selectedHazard.risiko}</span>
+                                    </p>
+                                    <div className="flex items-center gap-2">
+                                        <label className="text-xs text-slate-600 dark:text-slate-400 font-bold">Ubah Risiko ke:</label>
+                                        <select
+                                            value={selectedHazard.risiko}
+                                            onChange={async (e) => {
+                                                const newRisk = e.target.value;
+                                                try {
+                                                    const res = await api.patch(`/hazards/${selectedHazard.id_hazard}/override`, { risiko: newRisk });
+                                                    setSelectedHazard(res.data);
+                                                    fetchHazards();
+                                                } catch (err) {
+                                                    console.error('Failed to override risk:', err);
+                                                    alert('Gagal memperbarui risiko.');
+                                                }
+                                            }}
+                                            className="px-3 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-black text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            <option value="Low">Low</option>
+                                            <option value="Medium">Medium</option>
+                                            <option value="High">High</option>
+                                            <option value="Critical">Critical</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Description */}
                             <div className="space-y-2">

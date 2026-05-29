@@ -29,6 +29,30 @@ const User = sequelize.define('User', {
         type: DataTypes.STRING,
         allowNull: true,
     },
+    no_whatsapp: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        comment: 'Format: +62xxxx — untuk push notifikasi SOS & status pekerjaan',
+    },
+    nik: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        comment: 'NIK / Badge Number — ID Pekerja Unik (Hanya Admin yang bisa ubah)',
+    },
+    jabatan: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        comment: 'Job Title / Jabatan — validasi kewenangan PTW (Hanya Admin)',
+    },
+    area_kerja: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        comment: 'Area Kerja / Departemen — digunakan untuk SOS zone routing (Hanya Admin)',
+    },
+    points: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+    },
 
 }, {
     timestamps: true,

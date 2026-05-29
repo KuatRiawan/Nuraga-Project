@@ -1,5 +1,6 @@
 const Audit = require('../models/Audit');
 const User = require('../models/User');
+const { clearStatsCache } = require('./statsController');
 
 const createAudit = async (req, res) => {
     try {
@@ -12,6 +13,7 @@ const createAudit = async (req, res) => {
             qr_code_asset,
             checklist_items,
         });
+        clearStatsCache();
         res.status(201).json(audit);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -31,3 +33,4 @@ const getAudits = async (req, res) => {
 };
 
 module.exports = { createAudit, getAudits };
+

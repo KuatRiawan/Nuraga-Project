@@ -1,4 +1,4 @@
-#!/Users/mac/fixed/ai-service/.venv/bin/python
+#!/Users/mac/fixed/ai-service/.venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys

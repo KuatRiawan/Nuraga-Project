@@ -18,6 +18,16 @@ const WorkPermitPage = () => {
     const [approvalLoading, setApprovalLoading] = useState(false);
     const [error, setError] = useState('');
 
+    // States for Housekeeping Close Out
+    const [showCloseModal, setShowCloseModal] = useState(false);
+    const [closeForm, setCloseForm] = useState({
+        housekeeping_verified: false,
+        equipment_cleared: false,
+        close_applicant_sig: false,
+        close_supervisor_sig: false
+    });
+    const [closeLoading, setCloseLoading] = useState(false);
+
     useEffect(() => {
         fetchPermits();
     }, []);
@@ -72,6 +82,8 @@ const WorkPermitPage = () => {
     const getStatusColor = (status) => {
         switch (status) {
             case 'Approved': return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800';
+            case 'Closed': return 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800';
+            case 'Expired': return 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-850';
             case 'Pending': return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800';
             case 'Rejected': return 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800';
             default: return 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800';
@@ -165,36 +177,54 @@ const WorkPermitPage = () => {
                                     <span>{permit.daftar_pekerja?.length || 0} Personel</span>
                                     <span className="w-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800" />
                                     <span>{permit.bahaya?.length || 0} Bahaya</span>
-                                </div>
-
-                                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/50 flex items-center justify-between gap-1 text-[9px] font-black uppercase tracking-wider">
+                                </div>                                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/50 flex items-center justify-between gap-1 text-[9px] font-black uppercase tracking-wider">
                                     <div className="flex items-center gap-1.5">
                                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                        <span className="text-slate-500">Operator</span>
+                                        <span className="text-emerald-600 dark:text-emerald-500 font-bold">Operator</span>
                                     </div>
                                     <span className="text-slate-300 dark:text-slate-700">→</span>
                                     <div className="flex items-center gap-1.5">
-                                        <span className={`w-1.5 h-1.5 rounded-full ${
-                                            permit.supervisor_sig ? 'bg-emerald-500' : permit.status === 'Rejected' && permit.approval_step === 1 ? 'bg-red-500' : 'bg-amber-500'
-                                        }`} />
-                                        <span className={permit.approval_step === 1 && permit.status === 'Pending' ? 'text-amber-600 dark:text-amber-500 font-black' : 'text-slate-400 dark:text-slate-500'}>SPV</span>
+                                        <span className={`w-1.5 h-1.5 rounded-full ${permit.supervisor_sig ? 'bg-emerald-500' : permit.status === 'Rejected' && permit.approval_step === 1 ? 'bg-red-500' : permit.approval_step === 1 && permit.status === 'Pending' ? 'bg-blue-500 animate-pulse' : 'bg-slate-300 dark:bg-slate-700'
+                                            }`} />
+                                        <span className={
+                                            permit.supervisor_sig
+                                                ? 'text-emerald-600 dark:text-emerald-500 font-bold'
+                                                : permit.status === 'Rejected' && permit.approval_step === 1
+                                                    ? 'text-red-500 font-bold'
+                                                    : permit.approval_step === 1 && permit.status === 'Pending'
+                                                        ? 'text-blue-600 dark:text-blue-400 font-extrabold animate-pulse'
+                                                        : 'text-slate-350 dark:text-slate-600 font-medium'
+                                        }>SPV</span>
                                     </div>
                                     <span className="text-slate-300 dark:text-slate-700">→</span>
                                     <div className="flex items-center gap-1.5">
-                                        <span className={`w-1.5 h-1.5 rounded-full ${
-                                            permit.safety_officer_sig ? 'bg-emerald-500' : permit.status === 'Rejected' && permit.approval_step === 2 ? 'bg-red-500' : permit.approval_step > 1 ? 'bg-amber-500' : 'bg-slate-350 dark:bg-slate-700'
-                                        }`} />
-                                        <span className={permit.approval_step === 2 && permit.status === 'Pending' ? 'text-amber-600 dark:text-amber-500 font-black' : 'text-slate-400 dark:text-slate-500'}>HSE</span>
+                                        <span className={`w-1.5 h-1.5 rounded-full ${permit.safety_officer_sig ? 'bg-emerald-500' : permit.status === 'Rejected' && permit.approval_step === 2 ? 'bg-red-500' : permit.approval_step === 2 && permit.status === 'Pending' ? 'bg-blue-500 animate-pulse' : 'bg-slate-300 dark:bg-slate-700'
+                                            }`} />
+                                        <span className={
+                                            permit.safety_officer_sig
+                                                ? 'text-emerald-600 dark:text-emerald-500 font-bold'
+                                                : permit.status === 'Rejected' && permit.approval_step === 2
+                                                    ? 'text-red-500 font-bold'
+                                                    : permit.approval_step === 2 && permit.status === 'Pending'
+                                                        ? 'text-blue-600 dark:text-blue-400 font-extrabold animate-pulse'
+                                                        : 'text-slate-350 dark:text-slate-600 font-medium'
+                                        }>HSE</span>
                                     </div>
                                     <span className="text-slate-300 dark:text-slate-700">→</span>
                                     <div className="flex items-center gap-1.5">
-                                        <span className={`w-1.5 h-1.5 rounded-full ${
-                                            permit.approver_sig ? 'bg-emerald-500' : permit.status === 'Rejected' && permit.approval_step === 3 ? 'bg-red-500' : permit.approval_step > 2 ? 'bg-amber-500' : 'bg-slate-350 dark:bg-slate-700'
-                                        }`} />
-                                        <span className={permit.approval_step === 3 && permit.status === 'Pending' ? 'text-amber-600 dark:text-amber-500 font-black' : 'text-slate-400 dark:text-slate-500'}>Manager</span>
+                                        <span className={`w-1.5 h-1.5 rounded-full ${permit.approver_sig ? 'bg-emerald-500' : permit.status === 'Rejected' && permit.approval_step === 3 ? 'bg-red-500' : permit.approval_step === 3 && permit.status === 'Pending' ? 'bg-blue-500 animate-pulse' : 'bg-slate-300 dark:bg-slate-700'
+                                            }`} />
+                                        <span className={
+                                            permit.approver_sig
+                                                ? 'text-emerald-600 dark:text-emerald-500 font-bold'
+                                                : permit.status === 'Rejected' && permit.approval_step === 3
+                                                    ? 'text-red-500 font-bold'
+                                                    : permit.approval_step === 3 && permit.status === 'Pending'
+                                                        ? 'text-blue-600 dark:text-blue-400 font-extrabold animate-pulse'
+                                                        : 'text-slate-350 dark:text-slate-600 font-medium'
+                                        }>Manager</span>
                                     </div>
-                                </div>
-                            </div>
+                                </div>  </div>
                         </div>
                     ))}
                 </div>
@@ -232,81 +262,120 @@ const WorkPermitPage = () => {
                                         <p className="text-[9px] font-black uppercase text-emerald-600 leading-tight">Operator</p>
                                         <p className="text-[8px] text-slate-450 dark:text-slate-500 font-bold uppercase mt-0.5">Signed</p>
                                         <p className="text-[7px] text-slate-400 dark:text-slate-550 mt-0.5 font-medium leading-none">
-                                            {new Date(selectedPermit.createdAt).toLocaleDateString('id-ID', {day: '2-digit', month: '2-digit'})} {new Date(selectedPermit.createdAt).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+                                            {new Date(selectedPermit.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit' })} {new Date(selectedPermit.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </p>
                                     </div>
-                                    <div className={`h-0.5 flex-1 mx-1.5 rounded-full mt-4 ${selectedPermit.approval_step > 1 ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-800'}`} />
+                                    <div className={`h-0.5 flex-1 mx-1.5 rounded-full mt-4 ${selectedPermit.supervisor_sig
+                                            ? 'bg-emerald-500'
+                                            : selectedPermit.status === 'Rejected' && selectedPermit.approval_step === 1
+                                                ? 'bg-red-500'
+                                                : selectedPermit.approval_step === 1
+                                                    ? 'bg-blue-500 animate-pulse'
+                                                    : 'bg-slate-200 dark:bg-slate-800'
+                                        }`} />
 
                                     {/* Supervisor */}
                                     <div className="text-center flex-1">
-                                        <div className={`w-9 h-9 rounded-full flex items-center justify-center mx-auto mb-1.5 font-bold shadow-sm text-xs transition-all ${
-                                            selectedPermit.supervisor_sig
+                                        <div className={`w-9 h-9 rounded-full flex items-center justify-center mx-auto mb-1.5 font-bold shadow-sm text-xs transition-all ${selectedPermit.supervisor_sig
                                                 ? 'bg-emerald-500 text-white'
                                                 : selectedPermit.status === 'Rejected' && selectedPermit.approval_step === 1
                                                     ? 'bg-red-500 text-white'
-                                                    : selectedPermit.approval_step === 1
-                                                        ? 'bg-amber-500 text-white ring-4 ring-amber-500/20'
+                                                    : selectedPermit.approval_step === 1 && selectedPermit.status === 'Pending'
+                                                        ? 'bg-blue-500 text-white ring-4 ring-blue-500/20 animate-pulse'
                                                         : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500'
-                                        }`}>
+                                            }`}>
                                             {selectedPermit.supervisor_sig ? '✓' : selectedPermit.status === 'Rejected' && selectedPermit.approval_step === 1 ? '✗' : '2'}
                                         </div>
-                                        <p className={`text-[9px] font-black uppercase leading-tight ${selectedPermit.supervisor_sig ? 'text-emerald-600' : selectedPermit.approval_step === 1 ? 'text-amber-500' : 'text-slate-400'}`}>SPV</p>
+                                        <p className={`text-[9px] font-black uppercase leading-tight ${selectedPermit.supervisor_sig
+                                                ? 'text-emerald-600'
+                                                : selectedPermit.status === 'Rejected' && selectedPermit.approval_step === 1
+                                                    ? 'text-red-500 font-bold'
+                                                    : selectedPermit.approval_step === 1 && selectedPermit.status === 'Pending'
+                                                        ? 'text-blue-600 dark:text-blue-400 font-extrabold animate-pulse'
+                                                        : 'text-slate-350 dark:text-slate-600'
+                                            }`}>SPV</p>
                                         <p className="text-[8px] text-slate-450 dark:text-slate-500 font-bold uppercase mt-0.5 leading-none">
                                             {selectedPermit.supervisor_sig ? 'Approved' : selectedPermit.status === 'Rejected' && selectedPermit.approval_step === 1 ? 'Rejected' : selectedPermit.approval_step === 1 ? 'Pending' : 'Queue'}
                                         </p>
                                         {selectedPermit.supervisor_approved_at && (
                                             <p className="text-[7px] text-slate-400 dark:text-slate-550 mt-1 font-medium leading-none">
-                                                {new Date(selectedPermit.supervisor_approved_at).toLocaleDateString('id-ID', {day: '2-digit', month: '2-digit'})} {new Date(selectedPermit.supervisor_approved_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+                                                {new Date(selectedPermit.supervisor_approved_at).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit' })} {new Date(selectedPermit.supervisor_approved_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </p>
                                         )}
                                     </div>
-                                    <div className={`h-0.5 flex-1 mx-1.5 rounded-full mt-4 ${selectedPermit.approval_step > 2 ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-800'}`} />
+                                    <div className={`h-0.5 flex-1 mx-1.5 rounded-full mt-4 ${selectedPermit.safety_officer_sig
+                                            ? 'bg-emerald-500'
+                                            : selectedPermit.status === 'Rejected' && selectedPermit.approval_step === 2
+                                                ? 'bg-red-500'
+                                                : selectedPermit.approval_step === 2
+                                                    ? 'bg-blue-500 animate-pulse'
+                                                    : 'bg-slate-200 dark:bg-slate-800'
+                                        }`} />
 
                                     {/* HSE */}
                                     <div className="text-center flex-1">
-                                        <div className={`w-9 h-9 rounded-full flex items-center justify-center mx-auto mb-1.5 font-bold shadow-sm text-xs transition-all ${
-                                            selectedPermit.safety_officer_sig
+                                        <div className={`w-9 h-9 rounded-full flex items-center justify-center mx-auto mb-1.5 font-bold shadow-sm text-xs transition-all ${selectedPermit.safety_officer_sig
                                                 ? 'bg-emerald-500 text-white'
                                                 : selectedPermit.status === 'Rejected' && selectedPermit.approval_step === 2
                                                     ? 'bg-red-500 text-white'
-                                                    : selectedPermit.approval_step === 2
-                                                        ? 'bg-amber-500 text-white ring-4 ring-amber-500/20'
+                                                    : selectedPermit.approval_step === 2 && selectedPermit.status === 'Pending'
+                                                        ? 'bg-blue-500 text-white ring-4 ring-blue-500/20 animate-pulse'
                                                         : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500'
-                                        }`}>
+                                            }`}>
                                             {selectedPermit.safety_officer_sig ? '✓' : selectedPermit.status === 'Rejected' && selectedPermit.approval_step === 2 ? '✗' : '3'}
                                         </div>
-                                        <p className={`text-[9px] font-black uppercase leading-tight ${selectedPermit.safety_officer_sig ? 'text-emerald-600' : selectedPermit.approval_step === 2 ? 'text-amber-500' : 'text-slate-400'}`}>HSE</p>
+                                        <p className={`text-[9px] font-black uppercase leading-tight ${selectedPermit.safety_officer_sig
+                                                ? 'text-emerald-600'
+                                                : selectedPermit.status === 'Rejected' && selectedPermit.approval_step === 2
+                                                    ? 'text-red-500 font-bold'
+                                                    : selectedPermit.approval_step === 2 && selectedPermit.status === 'Pending'
+                                                        ? 'text-blue-600 dark:text-blue-400 font-extrabold animate-pulse'
+                                                        : 'text-slate-350 dark:text-slate-600'
+                                            }`}>HSE</p>
                                         <p className="text-[8px] text-slate-450 dark:text-slate-500 font-bold uppercase mt-0.5 leading-none">
                                             {selectedPermit.safety_officer_sig ? 'Approved' : selectedPermit.status === 'Rejected' && selectedPermit.approval_step === 2 ? 'Rejected' : selectedPermit.approval_step === 2 ? 'Pending' : 'Queue'}
                                         </p>
                                         {selectedPermit.safety_officer_approved_at && (
                                             <p className="text-[7px] text-slate-400 dark:text-slate-550 mt-1 font-medium leading-none">
-                                                {new Date(selectedPermit.safety_officer_approved_at).toLocaleDateString('id-ID', {day: '2-digit', month: '2-digit'})} {new Date(selectedPermit.safety_officer_approved_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+                                                {new Date(selectedPermit.safety_officer_approved_at).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit' })} {new Date(selectedPermit.safety_officer_approved_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </p>
                                         )}
                                     </div>
-                                    <div className={`h-0.5 flex-1 mx-1.5 rounded-full mt-4 ${selectedPermit.approval_step > 3 ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-800'}`} />
+                                    <div className={`h-0.5 flex-1 mx-1.5 rounded-full mt-4 ${selectedPermit.approver_sig
+                                            ? 'bg-emerald-500'
+                                            : selectedPermit.status === 'Rejected' && selectedPermit.approval_step === 3
+                                                ? 'bg-red-500'
+                                                : selectedPermit.approval_step === 3
+                                                    ? 'bg-blue-500 animate-pulse'
+                                                    : 'bg-slate-200 dark:bg-slate-800'
+                                        }`} />
 
                                     {/* Manager */}
                                     <div className="text-center flex-1">
-                                        <div className={`w-9 h-9 rounded-full flex items-center justify-center mx-auto mb-1.5 font-bold shadow-sm text-xs transition-all ${
-                                            selectedPermit.approver_sig
+                                        <div className={`w-9 h-9 rounded-full flex items-center justify-center mx-auto mb-1.5 font-bold shadow-sm text-xs transition-all ${selectedPermit.approver_sig
                                                 ? 'bg-emerald-500 text-white'
                                                 : selectedPermit.status === 'Rejected' && selectedPermit.approval_step === 3
                                                     ? 'bg-red-500 text-white'
-                                                    : selectedPermit.approval_step === 3
-                                                        ? 'bg-amber-500 text-white ring-4 ring-amber-500/20'
+                                                    : selectedPermit.approval_step === 3 && selectedPermit.status === 'Pending'
+                                                        ? 'bg-blue-500 text-white ring-4 ring-blue-500/20 animate-pulse'
                                                         : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500'
-                                        }`}>
+                                            }`}>
                                             {selectedPermit.approver_sig ? '✓' : selectedPermit.status === 'Rejected' && selectedPermit.approval_step === 3 ? '✗' : '4'}
                                         </div>
-                                        <p className={`text-[9px] font-black uppercase leading-tight ${selectedPermit.approver_sig ? 'text-emerald-600' : selectedPermit.approval_step === 3 ? 'text-amber-500' : 'text-slate-400'}`}>Manager</p>
+                                        <p className={`text-[9px] font-black uppercase leading-tight ${selectedPermit.approver_sig
+                                                ? 'text-emerald-600'
+                                                : selectedPermit.status === 'Rejected' && selectedPermit.approval_step === 3
+                                                    ? 'text-red-500 font-bold'
+                                                    : selectedPermit.approval_step === 3 && selectedPermit.status === 'Pending'
+                                                        ? 'text-blue-600 dark:text-blue-400 font-extrabold animate-pulse'
+                                                        : 'text-slate-350 dark:text-slate-600'
+                                            }`}>Manager</p>
                                         <p className="text-[8px] text-slate-450 dark:text-slate-500 font-bold uppercase mt-0.5 leading-none">
                                             {selectedPermit.approver_sig ? 'Approved' : selectedPermit.status === 'Rejected' && selectedPermit.approval_step === 3 ? 'Rejected' : selectedPermit.approval_step === 3 ? 'Pending' : 'Queue'}
                                         </p>
                                         {selectedPermit.manager_approved_at && (
                                             <p className="text-[7px] text-slate-400 dark:text-slate-550 mt-1 font-medium leading-none">
-                                                {new Date(selectedPermit.manager_approved_at).toLocaleDateString('id-ID', {day: '2-digit', month: '2-digit'})} {new Date(selectedPermit.manager_approved_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+                                                {new Date(selectedPermit.manager_approved_at).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit' })} {new Date(selectedPermit.manager_approved_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </p>
                                         )}
                                     </div>
@@ -472,10 +541,34 @@ const WorkPermitPage = () => {
                                         }
                                     })()
                                 ) : (
-                                    <div className="text-center text-xs font-black uppercase tracking-widest py-2">
+                                    <div className="flex flex-col items-center gap-4 text-center text-xs font-black uppercase tracking-widest py-2">
                                         {selectedPermit.status === 'Approved' ? (
-                                            <span className="text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-4 py-2 rounded-xl">
-                                                ✓ Izin Kerja ini telah DISETUJUI sepenuhnya oleh Manager
+                                            <>
+                                                <span className="text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-4 py-2 rounded-xl">
+                                                    ✓ Izin Kerja ini telah DISETUJUI sepenuhnya oleh Manager
+                                                </span>
+                                                <Button
+                                                    onClick={() => {
+                                                        setCloseForm({
+                                                            housekeeping_verified: false,
+                                                            equipment_cleared: false,
+                                                            close_applicant_sig: false,
+                                                            close_supervisor_sig: false
+                                                        });
+                                                        setShowCloseModal(true);
+                                                    }}
+                                                    className="w-full py-4 rounded-2xl bg-green-600 hover:bg-green-700 shadow-lg shadow-green-500/25 flex items-center justify-center gap-2 text-white text-xs font-black"
+                                                >
+                                                    <ShieldCheck size={16} /> Tutup Izin Kerja (Housekeeping Close Out)
+                                                </Button>
+                                            </>
+                                        ) : selectedPermit.status === 'Closed' ? (
+                                            <span className="text-slate-650 dark:text-slate-400 bg-slate-500/10 border border-slate-500/20 px-4 py-2 rounded-xl">
+                                                ✓ Izin Kerja ini telah DITUTUP. Housekeeping Selesai & Area Aman.
+                                            </span>
+                                        ) : selectedPermit.status === 'Expired' ? (
+                                            <span className="text-orange-600 dark:text-orange-400 bg-orange-500/10 border border-orange-500/20 px-4 py-2 rounded-xl">
+                                                ⌛ Izin Kerja ini telah KEDALUWARSA (Batas Waktu Terlewati)
                                             </span>
                                         ) : (
                                             <span className="text-red-500 bg-red-500/10 border border-red-500/20 px-4 py-2 rounded-xl">
@@ -486,6 +579,112 @@ const WorkPermitPage = () => {
                                 )}
                             </div>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Housekeeping Close Out Confirmation Modal */}
+            {showCloseModal && selectedPermit && (
+                <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-slate-800 border-t-8 border-green-600 w-full max-w-md rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter flex items-center gap-2">
+                                <ShieldCheck className="text-green-600" size={24} /> Penutupan Izin Kerja
+                            </h2>
+                            <button onClick={() => setShowCloseModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <form
+                            onSubmit={async (e) => {
+                                e.preventDefault();
+                                setCloseLoading(true);
+                                try {
+                                    await api.patch(`/permits/${selectedPermit.id_permit}/close`, {
+                                        close_applicant_sig: closeForm.close_applicant_sig,
+                                        close_supervisor_sig: closeForm.close_supervisor_sig,
+                                        housekeeping_verified: closeForm.housekeeping_verified
+                                    });
+                                    setShowCloseModal(false);
+                                    setSelectedPermit(null);
+                                    fetchPermits();
+                                } catch (err) {
+                                    console.error(err);
+                                    alert(err.response?.data?.message || 'Gagal menutup permit.');
+                                } finally {
+                                    setCloseLoading(false);
+                                }
+                            }}
+                            className="space-y-6"
+                        >
+                            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
+                                Harap pastikan area kerja telah dibersihkan dan aman sebelum menutup izin kerja untuk <strong>{selectedPermit.jenis_permit}</strong> di <strong>{selectedPermit.lokasi}</strong>.
+                            </p>
+
+                            <div className="space-y-4">
+                                <label className="flex items-start gap-3 cursor-pointer group">
+                                    <input
+                                        type="checkbox"
+                                        checked={closeForm.housekeeping_verified}
+                                        onChange={(e) => setCloseForm(prev => ({ ...prev, housekeeping_verified: e.target.checked }))}
+                                        className="mt-1 w-4 h-4 rounded text-green-600 border-slate-300 focus:ring-green-500"
+                                        required
+                                    />
+                                    <div>
+                                        <p className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-green-600 transition-colors">Housekeeping Selesai</p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">Sisa material, sampah, dan penghalang di area kerja telah dibersihkan.</p>
+                                    </div>
+                                </label>
+
+                                <label className="flex items-start gap-3 cursor-pointer group">
+                                    <input
+                                        type="checkbox"
+                                        checked={closeForm.equipment_cleared}
+                                        onChange={(e) => setCloseForm(prev => ({ ...prev, equipment_cleared: e.target.checked }))}
+                                        className="mt-1 w-4 h-4 rounded text-green-600 border-slate-300 focus:ring-green-500"
+                                        required
+                                    />
+                                    <div>
+                                        <p className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-green-600 transition-colors">Peralatan Dirapikan</p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">Semua mesin, kabel isolasi, dan alat kerja telah dilepas dan dirapikan.</p>
+                                    </div>
+                                </label>
+
+                                <div className="border-t border-slate-200 dark:border-slate-700/50 pt-4 mt-2 space-y-3">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tanda Tangan Elektronik Penutupan</p>
+
+                                    <label className="flex items-center gap-3 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={closeForm.close_applicant_sig}
+                                            onChange={(e) => setCloseForm(prev => ({ ...prev, close_applicant_sig: e.target.checked }))}
+                                            className="w-4 h-4 rounded text-green-600 border-slate-300 focus:ring-green-500"
+                                            required
+                                        />
+                                        <span className="text-xs font-bold text-slate-700 dark:text-slate-355">Tanda Tangan Pemohon (Applicant Sign-off)</span>
+                                    </label>
+
+                                    <label className="flex items-center gap-3 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={closeForm.close_supervisor_sig}
+                                            onChange={(e) => setCloseForm(prev => ({ ...prev, close_supervisor_sig: e.target.checked }))}
+                                            className="w-4 h-4 rounded text-green-600 border-slate-300 focus:ring-green-500"
+                                            required
+                                        />
+                                        <span className="text-xs font-bold text-slate-700 dark:text-slate-355">Tanda Tangan Pengawas Lapangan (Supervisor Sign-off)</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-4 pt-2">
+                                <Button type="button" variant="ghost" onClick={() => setShowCloseModal(false)} className="flex-1 rounded-2xl py-4">Batal</Button>
+                                <Button type="submit" className="flex-1 rounded-2xl py-4 bg-green-600 hover:bg-green-700 shadow-xl shadow-green-500/20 text-white font-black" loading={closeLoading}>
+                                    Tutup Permit
+                                </Button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

@@ -72,7 +72,7 @@ const WorkPermit = sequelize.define('WorkPermit', {
         defaultValue: 1,
     },
     status: {
-        type: DataTypes.ENUM('Pending', 'Approved', 'Active', 'Closed', 'Rejected'),
+        type: DataTypes.ENUM('Pending', 'Approved', 'Active', 'Closed', 'Rejected', 'Expired'),
         defaultValue: 'Pending',
     },
     applicant_sig: {
@@ -105,6 +105,22 @@ const WorkPermit = sequelize.define('WorkPermit', {
     },
     approved_by: {
         type: DataTypes.INTEGER,
+        allowNull: true,
+    },
+    close_applicant_sig: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
+    close_supervisor_sig: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
+    housekeeping_verified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
+    closedAt: {
+        type: DataTypes.DATE,
         allowNull: true,
     },
 }, {

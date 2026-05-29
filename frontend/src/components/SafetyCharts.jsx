@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../api/axios';
 import {
-    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
+    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 
 const SafetyCharts = () => {
@@ -26,39 +26,32 @@ const SafetyCharts = () => {
 
     return (
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-8 shadow-sm transition-colors duration-300">
-            <div className="flex items-center justify-between mb-8">
-                <div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">Safety Trend Analysis</h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-black tracking-widest mt-1">Last 30 Days Activity</p>
-                </div>
+            <div className="text-center mb-8">
+                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200">Safety Trend Analysis</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-black tracking-widest mt-1">Last 30 Days Activity</p>
             </div>
 
-            <div className="h-80 w-full">
+            <div className="h-96 w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={data}>
-                        <defs>
-                            <linearGradient id="gradientHazards" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.1} />
-                                <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
-                            </linearGradient>
-                            <linearGradient id="gradientIncidents" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#ef4444" stopOpacity={0.1} />
-                                <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                            </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#33415510" />
+                    <LineChart data={data} margin={{ top: 20, right: 30, left: 30, bottom: 25 }}>
                         <XAxis
                             dataKey="date"
-                            axisLine={false}
-                            tickLine={false}
+                            axisLine={{ stroke: '#cbd5e1' }}
+                            tickLine={{ stroke: '#cbd5e1' }}
                             tick={{ fontSize: 10, fill: '#64748b' }}
                             minTickGap={30}
                             tickFormatter={(str) => {
                                 const date = new Date(str);
                                 return date.toLocaleDateString('default', { day: 'numeric', month: 'short' });
                             }}
+                            label={{ value: 'Tanggal (30 Hari Terakhir)', position: 'insideBottom', offset: -10, style: { fontSize: 11, fill: '#64748b', fontWeight: 'bold' } }}
                         />
-                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} />
+                        <YAxis 
+                            axisLine={{ stroke: '#cbd5e1' }} 
+                            tickLine={{ stroke: '#cbd5e1' }} 
+                            tick={{ fontSize: 10, fill: '#64748b' }}
+                            label={{ value: 'Jumlah Kasus', angle: -90, position: 'insideLeft', offset: -15, style: { textAnchor: 'middle', fontSize: 11, fill: '#64748b', fontWeight: 'bold' } }}
+                        />
                         <Tooltip
                             contentStyle={{
                                 backgroundColor: '#0f172a',
@@ -69,26 +62,32 @@ const SafetyCharts = () => {
                             }}
                             itemStyle={{ color: '#fff' }}
                         />
-                        <Legend iconType="circle" />
-                        <Area
-                            type="monotone"
+                        <Legend 
+                            iconType="rect" 
+                            verticalAlign="bottom"
+                            align="center"
+                            wrapperStyle={{ paddingTop: '20px' }}
+                            formatter={(value) => <span className="text-slate-700 dark:text-slate-300 font-bold text-xs">{value}</span>}
+                        />
+                        <Line
+                            type="linear"
                             dataKey="hazards"
                             name="Hazards Reported"
                             stroke="#f59e0b"
-                            fillOpacity={1}
-                            fill="url(#gradientHazards)"
-                            strokeWidth={3}
+                            strokeWidth={1.5}
+                            dot={{ r: 5, stroke: '#f59e0b', strokeWidth: 1.5, fill: '#f59e0b', fillOpacity: 0.8 }}
+                            activeDot={{ r: 7 }}
                         />
-                        <Area
-                            type="monotone"
+                        <Line
+                            type="linear"
                             dataKey="incidents"
                             name="Incidents Logged"
                             stroke="#ef4444"
-                            fillOpacity={1}
-                            fill="url(#gradientIncidents)"
-                            strokeWidth={3}
+                            strokeWidth={1.5}
+                            dot={{ r: 5, stroke: '#ef4444', strokeWidth: 1.5, fill: '#ef4444', fillOpacity: 0.8 }}
+                            activeDot={{ r: 7 }}
                         />
-                    </AreaChart>
+                    </LineChart>
                 </ResponsiveContainer>
             </div>
         </div>

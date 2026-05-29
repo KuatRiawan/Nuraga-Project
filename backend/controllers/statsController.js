@@ -4,20 +4,51 @@ const IncidentReport = require('../models/IncidentReport');
 const Audit = require('../models/Audit');
 const CorrectiveAction = require('../models/CorrectiveAction');
 
+// Simple In-memory Cache
+let cache = {
+    stats: null,
+    statsExpiry: 0,
+    analytics: null,
+    analyticsExpiry: 0,
+    reportData: null,
+    reportDataExpiry: 0,
+};
+
+const CACHE_TTL = 10000; // 10 seconds TTL
+
+const clearStatsCache = () => {
+    cache.stats = null;
+    cache.statsExpiry = 0;
+    cache.analytics = null;
+    cache.analyticsExpiry = 0;
+    cache.reportData = null;
+    cache.reportDataExpiry = 0;
+    console.log('[Cache] Stats cache invalidated.');
+};
 
 const getDashboardStats = async (req, res) => {
     try {
+        const now = Date.now();
+        if (cache.stats && cache.statsExpiry > now) {
+            return res.json(cache.stats);
+        }
+
         const totalHazards = await HazardReport.count();
         const totalIncidents = await IncidentReport.count();
         const totalAudits = await Audit.count();
-        const pendingActions = await CorrectiveAction.count({ where: { status: 'Pending' } });
+        const pendingActions = await CorrectiveAction.count({ where: { status: 'Open' } });
 
-        res.json({
+        const statsData = {
             totalHazards,
             totalIncidents,
             totalAudits,
             pendingActions,
-        });
+        };
+
+        cache.stats = statsData;
+        cache.statsExpiry = now + CACHE_TTL;
+
+        res.json(statsData);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -25,6 +56,11 @@ const getDashboardStats = async (req, res) => {
 
 const getMonthlyAnalytics = async (req, res) => {
     try {
+        const now = Date.now();
+        if (cache.analytics && cache.analyticsExpiry > now) {
+            return res.json(cache.analytics);
+        }
+
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -57,7 +93,11 @@ const getMonthlyAnalytics = async (req, res) => {
             if (analytics[date]) analytics[date].incidents++;
         });
 
-        res.json(Object.values(analytics));
+        const analyticsData = Object.values(analytics);
+        cache.analytics = analyticsData;
+        cache.analyticsExpiry = now + CACHE_TTL;
+
+        res.json(analyticsData);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -65,6 +105,11 @@ const getMonthlyAnalytics = async (req, res) => {
 
 const getReportData = async (req, res) => {
     try {
+        const now = Date.now();
+        if (cache.reportData && cache.reportDataExpiry > now) {
+            return res.json(cache.reportData);
+        }
+
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -83,7 +128,7 @@ const getReportData = async (req, res) => {
             order: [['createdAt', 'DESC']]
         });
 
-        res.json({
+        const reportData = {
             summary: {
                 hazards: hazards.length,
                 incidents: incidents.length,
@@ -95,11 +140,17 @@ const getReportData = async (req, res) => {
                 incidents,
                 audits
             }
-        });
+        };
+
+        cache.reportData = reportData;
+        cache.reportDataExpiry = now + CACHE_TTL;
+
+        res.json(reportData);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-module.exports = { getDashboardStats, getMonthlyAnalytics, getReportData };
+module.exports = { getDashboardStats, getMonthlyAnalytics, getReportData, clearStatsCache };
+
 

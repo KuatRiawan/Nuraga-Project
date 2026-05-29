@@ -12,6 +12,10 @@ const CorrectiveAction = require('./models/CorrectiveAction');
 const Certification = require('./models/Certification');
 const EmergencyCall = require('./models/EmergencyCall');
 const WorkPermit = require('./models/WorkPermit');
+const Voucher = require('./models/Voucher');
+const AuditLog = require('./models/AuditLog');
+const SystemConfig = require('./models/SystemConfig');
+const { autoExpirePermits } = require('./controllers/workPermitController');
 
 dotenv.config();
 
@@ -46,6 +50,12 @@ WorkPermit.belongsTo(User, { foreignKey: 'id_user', targetKey: 'id_user' });
 EmergencyCall.belongsTo(User, { as: 'responder', foreignKey: 'handled_by', targetKey: 'id_user' });
 WorkPermit.belongsTo(User, { as: 'approver', foreignKey: 'approved_by', targetKey: 'id_user' });
 
+User.hasMany(Voucher, { foreignKey: 'id_user', sourceKey: 'id_user' });
+Voucher.belongsTo(User, { foreignKey: 'id_user', targetKey: 'id_user' });
+
+User.hasMany(AuditLog, { foreignKey: 'id_user', sourceKey: 'id_user' });
+AuditLog.belongsTo(User, { foreignKey: 'id_user', targetKey: 'id_user' });
+
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
@@ -59,6 +69,9 @@ app.use('/api/certifications', require('./routes/certificationRoutes'));
 app.use('/api/permits', require('./routes/workPermitRoutes'));
 app.use('/api/emergency', require('./routes/emergencyRoutes'));
 app.use('/api/ai', require('./routes/aiRoutes'));
+app.use('/api/vouchers', require('./routes/voucherRoutes'));
+app.use('/api/logs', require('./routes/logRoutes'));
+app.use('/api/config', require('./routes/configRoutes'));
 
 
 app.get('/', (req, res) => {
@@ -92,8 +105,75 @@ function startServer(port, retries = 5) {
     return server;
 }
 
-sequelize.sync({ force: false }).then(() => {
+sequelize.sync({ force: false }).then(async () => {
     console.log('Database synced');
+
+    // Safety Migrations for Users
+    try {
+        await sequelize.query('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "points" INTEGER DEFAULT 0;');
+        await sequelize.query('UPDATE "Users" SET "points" = 1200 WHERE "points" = 0;');
+        await sequelize.query('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "no_whatsapp" VARCHAR(255) NULL;');
+        await sequelize.query('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "nik" VARCHAR(255) NULL;');
+        await sequelize.query('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "jabatan" VARCHAR(255) NULL;');
+        await sequelize.query('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "area_kerja" VARCHAR(255) NULL;');
+        console.log('User schema columns verified successfully');
+    } catch (err) {
+        console.error('Failed to add columns to Users:', err.message);
+    }
+
+    // Safety Migrations for WorkPermits
+    try {
+        await sequelize.query('ALTER TABLE "WorkPermits" ADD COLUMN IF NOT EXISTS "close_applicant_sig" BOOLEAN DEFAULT false;');
+        await sequelize.query('ALTER TABLE "WorkPermits" ADD COLUMN IF NOT EXISTS "close_supervisor_sig" BOOLEAN DEFAULT false;');
+        await sequelize.query('ALTER TABLE "WorkPermits" ADD COLUMN IF NOT EXISTS "housekeeping_verified" BOOLEAN DEFAULT false;');
+        await sequelize.query('ALTER TABLE "WorkPermits" ADD COLUMN IF NOT EXISTS "closedAt" TIMESTAMP WITH TIME ZONE NULL;');
+        console.log('WorkPermit close-out columns verified successfully');
+    } catch (err) {
+        console.error('Failed to add close-out columns to WorkPermits:', err.message);
+    }
+
+    // Safety Migrations for HazardReports
+    try {
+        await sequelize.query('ALTER TABLE "HazardReports" ADD COLUMN IF NOT EXISTS "is_verified" BOOLEAN DEFAULT false;');
+        console.log('HazardReports columns verified successfully');
+    } catch (err) {
+        console.error('Failed to add columns to HazardReports:', err.message);
+    }
+
+    // Add Expired to enum status in database (PostgreSQL specific)
+    try {
+        await sequelize.query('ALTER TYPE "enum_WorkPermits_status" ADD VALUE IF NOT EXISTS \'Expired\';');
+        console.log('WorkPermits status enum verified successfully');
+    } catch (err) {
+        // May fail if not Postgres or already exists, which is fine
+        console.warn('Postgres enum alteration warning:', err.message);
+    }
+
+    // Run auto-expiration check immediately and start the 60-second periodic interval
+    try {
+        await autoExpirePermits();
+        setInterval(autoExpirePermits, 60000);
+        console.log('Auto-expiration scheduler started');
+    } catch (err) {
+        console.error('Failed to start auto-expiration scheduler:', err.message);
+    }
+
+    // Seed default configurations if empty
+    try {
+        const configCount = await SystemConfig.count();
+        if (configCount === 0) {
+            await SystemConfig.bulkCreate([
+                { key: 'whatsapp_gateway_number', value: '+6281234567890' },
+                { key: 'whatsapp_api_key', value: 'dummy-wa-api-key' },
+                { key: 'ai_fastapi_endpoint', value: 'http://localhost:8000' },
+                { key: 'open_meteo_endpoint', value: 'https://api.open-meteo.com' }
+            ]);
+            console.log('Default configurations seeded successfully');
+        }
+    } catch (err) {
+        console.error('Failed to seed default configurations:', err.message);
+    }
+
     startServer(PORT);
 }).catch(err => {
     console.error('Failed to sync database: ' + err.message);

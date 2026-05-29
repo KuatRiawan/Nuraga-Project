@@ -172,7 +172,7 @@ const AuditPage = () => {
                                             key={t}
                                             type="button"
                                             onClick={() => setSelectedTemplate(t)}
-                                            className={`px-3 py-1.5 rounded-xl text-xs font-black border transition-all ${selectedTemplate === t ? 'bg-blue-600 text-white border-blue-600' : 'border-slate-200 dark:border-slate-700 text-slate-500 hover:border-blue-400'}`}
+                                            className={`px-5 py-3 rounded-xl text-sm font-black border transition-all min-h-[48px] flex items-center justify-center ${selectedTemplate === t ? 'bg-blue-600 text-white border-blue-600' : 'border-slate-200 dark:border-slate-700 text-slate-500 hover:border-blue-400'}`}
                                         >
                                             {t}
                                         </button>
@@ -180,16 +180,16 @@ const AuditPage = () => {
                                 </div>
 
                                 {CHECKLIST_TEMPLATES[selectedTemplate]?.length > 0 && (
-                                    <div className="space-y-2 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl">
+                                    <div className="space-y-3 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl">
                                         {CHECKLIST_TEMPLATES[selectedTemplate].map(item => (
-                                            <label key={item} className="flex items-center gap-3 cursor-pointer group">
+                                            <label key={item} className="flex items-center gap-4 px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-all cursor-pointer select-none min-h-[48px] active:scale-[0.99]">
                                                 <input
                                                     type="checkbox"
                                                     checked={checklistState[item] || false}
                                                     onChange={(e) => setChecklistState(prev => ({ ...prev, [item]: e.target.checked }))}
-                                                    className="w-4 h-4 rounded accent-blue-600"
+                                                    className="w-6 h-6 rounded-lg accent-blue-600 cursor-pointer shrink-0"
                                                 />
-                                                <span className={`text-sm font-medium transition-colors ${checklistState[item] ? 'text-emerald-600 dark:text-emerald-400 line-through' : 'text-slate-700 dark:text-slate-300'}`}>
+                                                <span className={`text-sm font-semibold transition-colors ${checklistState[item] ? 'text-emerald-600 dark:text-emerald-400 line-through' : 'text-slate-700 dark:text-slate-300'}`}>
                                                     {item}
                                                 </span>
                                             </label>
@@ -210,8 +210,8 @@ const AuditPage = () => {
                             </div>
 
                             <div className="flex gap-4 pt-2">
-                                <Button type="button" variant="ghost" onClick={() => setShowForm(false)} className="flex-1 rounded-2xl py-4">Batal</Button>
-                                <Button type="submit" className="flex-1 rounded-2xl py-4 shadow-xl shadow-blue-500/20" loading={loading}>
+                                <Button type="button" variant="ghost" onClick={() => setShowForm(false)} className="flex-1 rounded-2xl py-3.5 min-h-[48px]">Batal</Button>
+                                <Button type="submit" className="flex-1 rounded-2xl py-3.5 min-h-[48px] shadow-xl shadow-blue-500/20" loading={loading}>
                                     {loading ? 'Menyimpan...' : 'Simpan Audit'}
                                 </Button>
                             </div>

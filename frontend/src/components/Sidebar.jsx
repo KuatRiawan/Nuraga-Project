@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import {
     LayoutDashboard, AlertCircle, FileText, CheckSquare, Settings, LogOut,
-    Shield, Award, Zap, FileCheck, Sun, Moon, X, Users, ClipboardList, Trophy
+    Shield, Award, Zap, FileCheck, Sun, Moon, X, Users, ClipboardList, Trophy, History
 } from 'lucide-react';
 import { useAuth } from '../store/AuthContext';
 import { useTheme } from '../store/ThemeContext';
@@ -39,7 +39,7 @@ const Sidebar = ({ onClose }) => {
                 { name: 'Izin Kerja (e-PTW)', icon: <FileCheck size={20} />, path: '/permits', roles: ['Admin', 'HSE', 'Supervisor', 'Manager', 'Operator', 'Kontraktor'] },
                 { name: 'Safety Audit', icon: <CheckSquare size={20} />, path: '/audits', roles: ['Admin', 'HSE', 'Supervisor'] },
                 { name: 'Tindakan Perbaikan', icon: <ClipboardList size={20} />, path: '/corrective-actions', roles: ['Admin', 'HSE', 'Supervisor', 'Manager'] },
-                { name: 'Sertifikasi', icon: <Award size={20} />, path: '/certifications', roles: ['Admin', 'HSE'] },
+                { name: 'Sertifikasi', icon: <Award size={20} />, path: '/certifications', roles: ['Admin', 'HSE', 'Supervisor', 'Manager', 'Operator', 'Kontraktor'] },
             ],
         },
         {
@@ -53,6 +53,7 @@ const Sidebar = ({ onClose }) => {
             items: [
                 { name: 'Safety Rewards', icon: <Trophy size={20} />, path: '/gamification', roles: ['Admin', 'HSE', 'Supervisor', 'Manager', 'Operator'] },
                 { name: 'Manajemen User', icon: <Users size={20} />, path: '/users', roles: ['Admin'] },
+                { name: 'Log Sistem', icon: <History size={20} />, path: '/logs', roles: ['Admin'] },
                 { name: 'Pengaturan', icon: <Settings size={20} />, path: '/settings', roles: ['Admin', 'HSE', 'Supervisor', 'Manager', 'Operator', 'Kontraktor'] },
             ],
         },

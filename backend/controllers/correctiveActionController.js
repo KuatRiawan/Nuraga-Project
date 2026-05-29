@@ -1,6 +1,7 @@
 const CorrectiveAction = require('../models/CorrectiveAction');
 const HazardReport = require('../models/HazardReport');
 const User = require('../models/User');
+const { clearStatsCache } = require('./statsController');
 
 const createAction = async (req, res) => {
     try {
@@ -11,6 +12,7 @@ const createAction = async (req, res) => {
             deadline,
             description,
         });
+        clearStatsCache();
         res.status(201).json(action);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -21,7 +23,7 @@ const getActions = async (req, res) => {
     try {
         const actions = await CorrectiveAction.findAll({
             include: [
-                { model: HazardReport, attributes: ['lokasi', 'deskripsi'] },
+                { model: HazardReport, attributes: ['lokasi', 'deskripsi', 'risiko'] },
                 { model: User, as: 'assignee', attributes: ['nama'] }
             ],
             order: [['deadline', 'ASC']],
@@ -40,6 +42,7 @@ const updateActionStatus = async (req, res) => {
 
         action.status = status;
         await action.save();
+        clearStatsCache();
         res.json(action);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -47,3 +50,4 @@ const updateActionStatus = async (req, res) => {
 };
 
 module.exports = { createAction, getActions, updateActionStatus };
+

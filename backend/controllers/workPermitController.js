@@ -1,5 +1,7 @@
+const { Op } = require('sequelize');
 const WorkPermit = require('../models/WorkPermit');
 const User = require('../models/User');
+const { recordLog } = require('./logController');
 
 const requestPermit = async (req, res) => {
     try {
@@ -9,6 +11,7 @@ const requestPermit = async (req, res) => {
             status: 'Pending'
         });
 
+        await recordLog(req, 'REQUEST_PTW', `User ${req.user.nama} (${req.user.role}) mengajukan Izin Kerja (PTW) baru: ${permit.jenis_pekerjaan} di ${permit.lokasi_kerja}.`);
         res.status(201).json(permit);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -48,6 +51,7 @@ const approvePermit = async (req, res) => {
         if (status === 'Rejected') {
             permit.status = 'Rejected';
             await permit.save();
+            await recordLog(req, 'REJECT_PTW', `${req.user.nama} (${req.user.role}) menolak Izin Kerja (PTW) #${permit.id_permit}.`);
             return res.json(permit);
         }
 
@@ -62,6 +66,7 @@ const approvePermit = async (req, res) => {
             permit.supervisor_approved_at = new Date();
             permit.approval_step = 2;
             await permit.save();
+            await recordLog(req, 'APPROVE_PTW_STEP1', `${req.user.nama} (${req.user.role}) menyetujui Izin Kerja (PTW) #${permit.id_permit} pada Tahap 1 (Supervisor).`);
             return res.json(permit);
         }
 
@@ -74,6 +79,7 @@ const approvePermit = async (req, res) => {
             permit.safety_officer_approved_at = new Date();
             permit.approval_step = 3;
             await permit.save();
+            await recordLog(req, 'APPROVE_PTW_STEP2', `${req.user.nama} (${req.user.role}) menyetujui Izin Kerja (PTW) #${permit.id_permit} pada Tahap 2 (HSE).`);
             return res.json(permit);
         }
 
@@ -88,6 +94,7 @@ const approvePermit = async (req, res) => {
             permit.status = 'Approved';
             permit.approved_by = req.user.id;
             await permit.save();
+            await recordLog(req, 'APPROVE_PTW_FINAL', `${req.user.nama} (${req.user.role}) menyetujui Izin Kerja (PTW) #${permit.id_permit} pada Tahap 3 (Final Approval). Status menjadi Approved.`);
             return res.json(permit);
         }
 
@@ -97,4 +104,43 @@ const approvePermit = async (req, res) => {
     }
 };
 
-module.exports = { requestPermit, getPermits, approvePermit };
+const closePermit = async (req, res) => {
+    try {
+        const permit = await WorkPermit.findByPk(req.params.id);
+        if (!permit) return res.status(404).json({ message: 'Permit not found' });
+
+        permit.status = 'Closed';
+        permit.close_applicant_sig = req.body.close_applicant_sig !== false;
+        permit.close_supervisor_sig = req.body.close_supervisor_sig !== false;
+        permit.housekeeping_verified = req.body.housekeeping_verified !== false;
+        permit.closedAt = new Date();
+
+        await permit.save();
+        await recordLog(req, 'CLOSE_PTW', `${req.user.nama} (${req.user.role}) menutup Izin Kerja (PTW) #${permit.id_permit}.`);
+        res.json(permit);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const autoExpirePermits = async () => {
+    try {
+        const now = new Date();
+        const [affectedCount] = await WorkPermit.update(
+            { status: 'Expired' },
+            {
+                where: {
+                    status: { [Op.in]: ['Approved', 'Active', 'Pending'] },
+                    waktu_selesai: { [Op.lt]: now }
+                }
+            }
+        );
+        if (affectedCount > 0) {
+            console.log(`[Scheduler] Auto-expired ${affectedCount} permits past their selesai time (${now.toISOString()}).`);
+        }
+    } catch (error) {
+        console.error('[Scheduler] Error in autoExpirePermits:', error);
+    }
+};
+
+module.exports = { requestPermit, getPermits, approvePermit, closePermit, autoExpirePermits };

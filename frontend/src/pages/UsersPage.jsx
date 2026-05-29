@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import api from '../api/axios';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import { useAuth } from '../store/AuthContext';
-import { Users, Plus, Search, Edit2, Trash2, Shield, Mail, AlertCircle, X, ShieldAlert, Check } from 'lucide-react';
+import { Users, Plus, Search, Edit2, Trash2, Shield, Mail, AlertCircle, X, ShieldAlert, Check, BadgeCheck, Briefcase, MapPin, Upload, Download } from 'lucide-react';
 
 const ROLE_BADGES = {
     Admin: 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20',
@@ -21,6 +21,158 @@ const UsersPage = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
+    const fileInputRef = useRef(null);
+
+    const parseCSV = (text) => {
+        const lines = text.split(/\r?\n/);
+        if (lines.length < 2) return [];
+        const headers = lines[0].split(',').map(h => h.trim().replace(/^["']|["']$/g, '').toLowerCase());
+        const results = [];
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+            const values = [];
+            let current = '';
+            let inQuotes = false;
+            for (let j = 0; j < line.length; j++) {
+                const char = line[j];
+                if (char === '"' || char === "'") {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    values.push(current.trim().replace(/^["']|["']$/g, ''));
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            values.push(current.trim().replace(/^["']|["']$/g, ''));
+
+            if (values.length < headers.length) continue;
+            const rowObj = {};
+            headers.forEach((h, index) => {
+                rowObj[h] = values[index] || '';
+            });
+            results.push(rowObj);
+        }
+        return results;
+    };
+
+    const handleImportClick = () => {
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+            fileInputRef.current.click();
+        }
+    };
+
+    const handleImportCSV = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setLoading(true);
+        setError('');
+        setSuccessMessage('');
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const text = event.target.result;
+            try {
+                const parsedData = parseCSV(text);
+                if (parsedData.length === 0) {
+                    setError('File CSV kosong atau format tidak valid.');
+                    setLoading(false);
+                    return;
+                }
+
+                let successCount = 0;
+                let failCount = 0;
+                let failDetails = [];
+
+                for (let i = 0; i < parsedData.length; i++) {
+                    const row = parsedData[i];
+                    const nama = row.nama || row.name || '';
+                    const email = row.email || '';
+                    const password = row.password || row.sandi || '';
+                    const role = row.role || 'Operator';
+                    const nik = row.nik || row.id_pekerja || '';
+                    const jabatan = row.jabatan || row.position || '';
+                    const area_kerja = row.area_kerja || row.department || '';
+
+                    if (!nama || !email || !password) {
+                        failCount++;
+                        failDetails.push(`Baris ${i + 2}: Nama, email, dan password wajib diisi.`);
+                        continue;
+                    }
+
+                    try {
+                        await api.post('/users', {
+                            nama,
+                            email,
+                            password,
+                            role,
+                            nik,
+                            jabatan,
+                            area_kerja
+                        });
+                        successCount++;
+                    } catch (err) {
+                        failCount++;
+                        failDetails.push(`Baris ${i + 2} (${email}): ${err.response?.data?.message || err.message}`);
+                    }
+                }
+
+                if (successCount > 0) {
+                    setSuccessMessage(`Berhasil mengimpor ${successCount} user baru.`);
+                }
+                if (failCount > 0) {
+                    setError(`Gagal mengimpor ${failCount} user. Detail:\n${failDetails.join('\n')}`);
+                }
+                fetchUsers();
+            } catch (err) {
+                setError('Gagal membaca file CSV: ' + err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+        reader.onerror = () => {
+            setError('Gagal membaca file CSV.');
+            setLoading(false);
+        };
+        reader.readAsText(file);
+    };
+
+    const handleExportCSV = () => {
+        if (users.length === 0) {
+            setError('Tidak ada data user untuk diexport.');
+            return;
+        }
+
+        const headers = ['nama', 'email', 'role', 'nik', 'jabatan', 'area_kerja'];
+        const csvRows = [
+            headers.join(','),
+            ...users.map(u =>
+                headers.map(header => {
+                    const val = u[header] || '';
+                    const escaped = String(val).replace(/"/g, '""');
+                    return `"${escaped}"`;
+                }).join(',')
+            )
+        ];
+
+        const csvString = csvRows.join("\n");
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `k3_users_export_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        setSuccessMessage('Data user berhasil diexport ke CSV.');
+        setTimeout(() => setSuccessMessage(''), 3000);
+    };
 
     // Modal control
     const [showModal, setShowModal] = useState(false);
@@ -32,7 +184,10 @@ const UsersPage = () => {
         nama: '',
         email: '',
         password: '',
-        role: 'Operator'
+        role: 'Operator',
+        nik: '',
+        jabatan: '',
+        area_kerja: '',
     });
 
     useEffect(() => {
@@ -53,7 +208,7 @@ const UsersPage = () => {
     };
 
     const handleOpenAdd = () => {
-        setFormData({ nama: '', email: '', password: '', role: 'Operator' });
+        setFormData({ nama: '', email: '', password: '', role: 'Operator', nik: '', jabatan: '', area_kerja: '' });
         setIsEditing(false);
         setEditingUserId(null);
         setError('');
@@ -64,8 +219,11 @@ const UsersPage = () => {
         setFormData({
             nama: user.nama,
             email: user.email,
-            password: '', // blank by default when updating
-            role: user.role
+            password: '',
+            role: user.role,
+            nik: user.nik || '',
+            jabatan: user.jabatan || '',
+            area_kerja: user.area_kerja || '',
         });
         setIsEditing(true);
         setEditingUserId(user.id_user);
@@ -82,7 +240,7 @@ const UsersPage = () => {
                 // If editing and password is left empty, omit it from the payload
                 const payload = { ...formData };
                 if (!payload.password) delete payload.password;
-                
+
                 await api.put(`/users/${editingUserId}`, payload);
                 setSuccessMessage('User berhasil diperbarui.');
             } else {
@@ -91,7 +249,7 @@ const UsersPage = () => {
             }
             setShowModal(false);
             fetchUsers();
-            
+
             // Clear alert after 3 seconds
             setTimeout(() => setSuccessMessage(''), 3000);
         } catch (err) {
@@ -117,10 +275,12 @@ const UsersPage = () => {
         }
     };
 
-    const filteredUsers = users.filter(u => 
+    const filteredUsers = users.filter(u =>
         u.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
         u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        u.role.toLowerCase().includes(searchQuery.toLowerCase())
+        u.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (u.nik && u.nik.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (u.area_kerja && u.area_kerja.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
     return (
@@ -130,9 +290,24 @@ const UsersPage = () => {
                     <h1 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Manajemen User</h1>
                     <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Kelola hak akses dan peran para pengguna aplikasi.</p>
                 </div>
-                <Button onClick={handleOpenAdd} className="flex items-center gap-2 w-full sm:w-auto justify-center rounded-2xl py-3 px-6 shadow-xl shadow-blue-500/20">
-                    <Plus size={18} /> Tambah User
-                </Button>
+                <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept=".csv"
+                        className="hidden"
+                        onChange={handleImportCSV}
+                    />
+                    <Button onClick={handleImportClick} variant="ghost" className="flex items-center gap-2 w-full sm:w-auto justify-center rounded-2xl py-3 px-5 border border-slate-200 dark:border-slate-800">
+                        <Upload size={18} /> Import CSV
+                    </Button>
+                    <Button onClick={handleExportCSV} variant="ghost" className="flex items-center gap-2 w-full sm:w-auto justify-center rounded-2xl py-3 px-5 border border-slate-200 dark:border-slate-800">
+                        <Download size={18} /> Export CSV
+                    </Button>
+                    <Button onClick={handleOpenAdd} className="flex items-center gap-2 w-full sm:w-auto justify-center rounded-2xl py-3 px-6 shadow-xl shadow-blue-500/20">
+                        <Plus size={18} /> Tambah User
+                    </Button>
+                </div>
             </div>
 
             {/* Success Alert */}
@@ -180,8 +355,9 @@ const UsersPage = () => {
                             <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850/50 text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
                                 <th className="px-6 py-4">User</th>
                                 <th className="px-6 py-4">Email</th>
+                                <th className="px-6 py-4">NIK / ID Pekerja</th>
+                                <th className="px-6 py-4">Area Kerja</th>
                                 <th className="px-6 py-4">Role</th>
-                                <th className="px-6 py-4">Terdaftar Pada</th>
                                 <th className="px-6 py-4 text-right">Aksi</th>
                             </tr>
                         </thead>
@@ -217,6 +393,7 @@ const UsersPage = () => {
                                                                 <span className="text-[10px] font-black bg-blue-500 text-white px-2 py-0.5 rounded-full uppercase">Saya</span>
                                                             )}
                                                         </div>
+                                                        {u.jabatan && <div className="text-xs text-slate-400">{u.jabatan}</div>}
                                                     </div>
                                                 </div>
                                             </td>
@@ -227,16 +404,29 @@ const UsersPage = () => {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
+                                                {u.nik ? (
+                                                    <div className="flex items-center gap-1.5">
+                                                        <BadgeCheck size={14} className="text-blue-400" />
+                                                        <span className="text-sm font-mono font-bold text-slate-700 dark:text-slate-300">{u.nik}</span>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-xs text-slate-400 italic">Belum diisi</span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                {u.area_kerja ? (
+                                                    <div className="flex items-center gap-1.5">
+                                                        <MapPin size={14} className="text-emerald-400" />
+                                                        <span className="text-sm text-slate-700 dark:text-slate-300">{u.area_kerja}</span>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-xs text-slate-400 italic">—</span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4">
                                                 <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${ROLE_BADGES[u.role] || ROLE_BADGES.Operator}`}>
                                                     <Shield size={11} /> {u.role}
                                                 </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-slate-500 text-xs font-medium">
-                                                {new Date(u.createdAt).toLocaleDateString('id-ID', {
-                                                    day: '2-digit',
-                                                    month: 'long',
-                                                    year: 'numeric'
-                                                })}
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex justify-end gap-2">
@@ -291,7 +481,7 @@ const UsersPage = () => {
                                 onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
                                 required
                             />
-                            
+
                             <Input
                                 label="Alamat Email"
                                 type="email"
@@ -326,6 +516,33 @@ const UsersPage = () => {
                                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                 required={!isEditing}
                             />
+
+                            {/* Admin-only Operational Fields */}
+                            <div className="pt-2 border-t border-slate-100 dark:border-slate-700">
+                                <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                                    <BadgeCheck size={12} /> Data Operasional K3 (Hanya Admin)
+                                </p>
+                                <div className="space-y-3">
+                                    <Input
+                                        label="NIK / ID Pekerja (Badge Number)"
+                                        placeholder="Contoh: EMP-2024-001"
+                                        value={formData.nik}
+                                        onChange={(e) => setFormData({ ...formData, nik: e.target.value })}
+                                    />
+                                    <Input
+                                        label="Jabatan / Job Title"
+                                        placeholder="Contoh: Operator Mesin, HSE Officer"
+                                        value={formData.jabatan}
+                                        onChange={(e) => setFormData({ ...formData, jabatan: e.target.value })}
+                                    />
+                                    <Input
+                                        label="Area Kerja / Departemen"
+                                        placeholder="Contoh: Area A - Boiler, Gedung B"
+                                        value={formData.area_kerja}
+                                        onChange={(e) => setFormData({ ...formData, area_kerja: e.target.value })}
+                                    />
+                                </div>
+                            </div>
 
                             {isEditing && (
                                 <div className="flex gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl">

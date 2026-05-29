@@ -1,5 +1,5 @@
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 export const generateMonthlyReport = (data) => {
     const doc = new jsPDF();
@@ -28,7 +28,7 @@ export const generateMonthlyReport = (data) => {
     doc.setFontSize(16);
     doc.text('Safety Summary (Last 30 Days)', 20, 55);
 
-    doc.autoTable({
+    autoTable(doc, {
         startY: 65,
         head: [['Metric', 'Total Count', 'Status']],
         body: [
@@ -43,7 +43,7 @@ export const generateMonthlyReport = (data) => {
     // Hazards Table
     doc.setFontSize(14);
     doc.text('Detailed Hazards Log', 20, doc.lastAutoTable.finalY + 15);
-    doc.autoTable({
+    autoTable(doc, {
         startY: doc.lastAutoTable.finalY + 20,
         head: [['Lokasi', 'Deskripsi', 'Tingkat Risiko', 'Status', 'Tanggal']],
         body: details.hazards.map(h => [
@@ -63,14 +63,14 @@ export const generateMonthlyReport = (data) => {
         doc.setFontSize(14);
         doc.setTextColor(30, 41, 59);
         doc.text('Detailed Incidents Log', 20, 20);
-        doc.autoTable({
+        autoTable(doc, {
             startY: 30,
             head: [['Kategori', 'Kronologi', 'Korban', 'Estimasi Kerugian', 'Tanggal']],
             body: details.incidents.map(i => [
                 i.kategori,
                 i.kronologi,
                 i.korban || 'Tidak ada',
-                `Rp ${i.loss_cost?.toLocaleString('id-ID') || 0}`,
+                `Rp ${Number(i.loss_cost || 0).toLocaleString('id-ID')}`,
                 new Date(i.createdAt).toLocaleDateString('id-ID')
             ]),
             theme: 'striped',
@@ -85,7 +85,7 @@ export const generateMonthlyReport = (data) => {
         doc.setFontSize(14);
         doc.setTextColor(30, 41, 59);
         doc.text('Detailed Audits Log', 20, 20);
-        doc.autoTable({
+        autoTable(doc, {
             startY: 30,
             head: [['Area', 'Hasil Pemeriksaan', 'Tanggal']],
             body: details.audits.map(a => [
@@ -126,13 +126,13 @@ export const generateIncidentReport = (incident) => {
     doc.setFontSize(16);
     doc.text('Incident Investigation Details', 20, 55);
 
-    doc.autoTable({
+    autoTable(doc, {
         startY: 65,
         head: [['Field', 'Detail']],
         body: [
             ['Kategori', incident.kategori],
             ['Korban', incident.korban || 'Tidak ada korban'],
-            ['Estimasi Kerugian (Loss Cost)', `Rp ${incident.loss_cost?.toLocaleString('id-ID') || 0}`],
+            ['Estimasi Kerugian (Loss Cost)', `Rp ${Number(incident.loss_cost || 0).toLocaleString('id-ID')}`],
             ['Pelapor', incident.User?.nama || 'Unknown'],
             ['Waktu Laporan', new Date(incident.createdAt).toLocaleString('id-ID')],
         ],
@@ -174,7 +174,7 @@ export const generateIncidentReport = (incident) => {
             }
             doc.setFontSize(14);
             doc.text('Analisis Akar Masalah (5 Whys)', 20, yPos);
-            doc.autoTable({
+            autoTable(doc, {
                 startY: yPos + 5,
                 head: [['Why Step', 'Penjelasan']],
                 body: whyList,

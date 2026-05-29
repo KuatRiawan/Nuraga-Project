@@ -35,9 +35,7 @@ const hazardDescriptions = [
 ];
 
 const risks = ['Low', 'Medium', 'High', 'Critical'];
-
 const incidentCategories = ['Medical', 'Near Miss', 'Property Damage', 'First Aid'];
-
 const incidentChronologies = [
     'Pekerja tersandung kabel melintang dan mengalami cedera memar pada lutut kanan.',
     'Forklift berjalan mundur di jalur pejalan kaki tanpa alarm berbunyi, nyaris menabrak operator.',
@@ -45,13 +43,56 @@ const incidentChronologies = [
     'Cairan pembersih kimia tepercik ke tangan pekerja saat penuangan manual, langsung dibilas di wastafel.',
     'Pekerja terpeleset di tangga besi basah saat hujan, mengalami terkilir ringan pada pergelangan tangan.'
 ];
-
 const victims = [
-    'Main Operator', 'PT Petro Kimia Contractor', 'CV Bangun Jaya worker', 'Workshop Technician'
+    'Main Operator', 'PT Petro Kimia Contractor', 'CV Bangun Jaya Worker', 'Workshop Technician'
 ];
-
 const templates = ['APAR', 'Perancah', 'Forklift', 'Panel Listrik'];
 const checklistScore = ['5/5', '4/5', '4/4', '3/4'];
+
+const permitJobDescriptions = {
+    'Hot Work': 'Pengelasan dan pemotongan pipa steam di area boiler sesuai prosedur LOTO dan izin api terbuka.',
+    'Cold Work': 'Penggantian bearing pompa sentrifugal di pump station tanpa risiko penyalaan api.',
+    'Confined Space': 'Inspeksi dan pembersihan bagian dalam tangki penyimpan bahan bakar HSD.',
+    'Working at Height': 'Pemasangan scaffolding dan pengecatan struktur baja di ketinggian 12 meter.',
+    'Electrical Work': 'Penggantian panel distribusi listrik MDP dan pengkabelan ulang di ruang kontrol.',
+    'Excavation': 'Penggalian tanah untuk pemasangan pipa utilitas di area parkir barat.',
+};
+const permitCompanies = ['PT Petro Kimia', 'CV Bangun Jaya', 'PT Logistik Abadi', 'PT Mitra Teknik Utama'];
+const supervisorNames = ['Andi Pratama', 'Budi Santoso', 'Rudi Hartono', 'Wahyu Nugroho'];
+const workerLists = [
+    ['Ahmad Fauzi', 'Bima Sakti', 'Candra Putra'],
+    ['Dodi Kurniawan', 'Eko Wijaya', 'Fajar Hidayat', 'Gunawan'],
+    ['Hendra Susilo', 'Irwan Maulana', 'Joko Purnomo'],
+    ['Kukuh Setiawan', 'Luthfi Arif', 'Muhamad Rizki'],
+];
+const apdLists = [
+    ['Helm Keselamatan', 'Sepatu Safety', 'Sarung Tangan Katun', 'Kacamata Las'],
+    ['Full Body Harness', 'Helm Keselamatan', 'Sepatu Safety', 'Safety Lanyard'],
+    ['SCBA Breathing Apparatus', 'Helm Keselamatan', 'Sarung Tangan Kimia', 'Coverall Anti-Static'],
+    ['Sarung Tangan Isolasi Listrik', 'Kacamata Pelindung', 'Helm Keselamatan', 'Sepatu Safety'],
+];
+
+// Data PTW tetap - mencakup semua status lifecycle
+const fixedPermits = [
+    { daysAgo: 0, type: 'Hot Work', status: 'Pending', approvalStep: 1, company: 'PT Petro Kimia', supervisor: 'Andi Pratama', workers: 0, apd: 0, useKontraktor: false },
+    { daysAgo: 1, type: 'Working at Height', status: 'Pending', approvalStep: 1, company: 'CV Bangun Jaya', supervisor: 'Budi Santoso', workers: 1, apd: 1, useKontraktor: true },
+    { daysAgo: 2, type: 'Electrical Work', status: 'Approved', approvalStep: 3, company: 'PT Mitra Teknik Utama', supervisor: 'Rudi Hartono', workers: 2, apd: 3, useKontraktor: false },
+    { daysAgo: 2, type: 'Cold Work', status: 'Approved', approvalStep: 3, company: 'PT Petro Kimia', supervisor: 'Wahyu Nugroho', workers: 3, apd: 0, useKontraktor: true },
+    { daysAgo: 3, type: 'Confined Space', status: 'Active', approvalStep: 3, company: 'PT Logistik Abadi', supervisor: 'Andi Pratama', workers: 0, apd: 2, useKontraktor: false },
+    { daysAgo: 4, type: 'Hot Work', status: 'Active', approvalStep: 3, company: 'CV Bangun Jaya', supervisor: 'Budi Santoso', workers: 1, apd: 0, useKontraktor: true },
+    { daysAgo: 5, type: 'Excavation', status: 'Active', approvalStep: 3, company: 'PT Mitra Teknik Utama', supervisor: 'Rudi Hartono', workers: 2, apd: 1, useKontraktor: false },
+    { daysAgo: 7, type: 'Electrical Work', status: 'Rejected', approvalStep: 2, company: 'PT Logistik Abadi', supervisor: 'Wahyu Nugroho', workers: 3, apd: 3, useKontraktor: true },
+    { daysAgo: 8, type: 'Working at Height', status: 'Closed', approvalStep: 4, company: 'PT Petro Kimia', supervisor: 'Andi Pratama', workers: 0, apd: 1, useKontraktor: false },
+    { daysAgo: 9, type: 'Hot Work', status: 'Closed', approvalStep: 4, company: 'CV Bangun Jaya', supervisor: 'Budi Santoso', workers: 1, apd: 0, useKontraktor: true },
+    { daysAgo: 10, type: 'Confined Space', status: 'Closed', approvalStep: 4, company: 'PT Logistik Abadi', supervisor: 'Rudi Hartono', workers: 2, apd: 2, useKontraktor: false },
+    { daysAgo: 12, type: 'Cold Work', status: 'Expired', approvalStep: 3, company: 'PT Petro Kimia', supervisor: 'Wahyu Nugroho', workers: 3, apd: 3, useKontraktor: true },
+    { daysAgo: 14, type: 'Excavation', status: 'Closed', approvalStep: 4, company: 'CV Bangun Jaya', supervisor: 'Andi Pratama', workers: 0, apd: 0, useKontraktor: false },
+    { daysAgo: 16, type: 'Hot Work', status: 'Closed', approvalStep: 4, company: 'PT Mitra Teknik Utama', supervisor: 'Budi Santoso', workers: 1, apd: 1, useKontraktor: true },
+    { daysAgo: 18, type: 'Electrical Work', status: 'Closed', approvalStep: 4, company: 'PT Petro Kimia', supervisor: 'Rudi Hartono', workers: 2, apd: 3, useKontraktor: false },
+    { daysAgo: 20, type: 'Working at Height', status: 'Expired', approvalStep: 3, company: 'PT Logistik Abadi', supervisor: 'Wahyu Nugroho', workers: 3, apd: 2, useKontraktor: true },
+    { daysAgo: 22, type: 'Confined Space', status: 'Closed', approvalStep: 4, company: 'CV Bangun Jaya', supervisor: 'Andi Pratama', workers: 0, apd: 0, useKontraktor: false },
+    { daysAgo: 25, type: 'Excavation', status: 'Closed', approvalStep: 4, company: 'PT Mitra Teknik Utama', supervisor: 'Budi Santoso', workers: 1, apd: 1, useKontraktor: true },
+];
 
 const seed = async () => {
     try {
@@ -60,28 +101,88 @@ const seed = async () => {
 
         // 1. Create Core Users
         const password = 'password123';
-        const admin = await User.create({ nama: 'Nuraga Admin', email: 'admin@nuraga.com', password, role: 'Admin' });
-        const hse = await User.create({ nama: 'HSE Officer', email: 'hse@nuraga.com', password, role: 'HSE' });
-        const operator = await User.create({ nama: 'Main Operator', email: 'operator@nuraga.com', password, role: 'Operator' });
+        const admin = await User.create({
+            nama: 'Nuraga Admin',
+            email: 'admin@nuraga.com',
+            password,
+            role: 'Admin',
+            points: 500,
+            nik: 'ADM-001',
+            jabatan: 'System Administrator',
+            area_kerja: 'Head Office',
+            no_whatsapp: '+6281200000001',
+        });
+        const hse = await User.create({
+            nama: 'HSE Officer',
+            email: 'hse@nuraga.com',
+            password,
+            role: 'HSE',
+            points: 800,
+            nik: 'HSE-002',
+            jabatan: 'Safety Officer',
+            area_kerja: 'Main Factory',
+            no_whatsapp: '+6281200000002',
+        });
+        const operator = await User.create({
+            nama: 'Main Operator',
+            email: 'operator@nuraga.com',
+            password,
+            role: 'Operator',
+            points: 1200,
+            nik: 'OPR-003',
+            jabatan: 'Senior Operator Mesin',
+            area_kerja: 'Lantai Produksi 1',
+            no_whatsapp: '+6281200000003',
+        });
+        const supervisor = await User.create({
+            nama: 'Supervisor Lapangan',
+            email: 'supervisor@nuraga.com',
+            password,
+            role: 'Supervisor',
+            points: 950,
+            nik: 'SPV-004',
+            jabatan: 'Field Supervisor',
+            area_kerja: 'Mechanical Workshop',
+            no_whatsapp: '+6281200000004',
+        });
+        const manager = await User.create({
+            nama: 'Safety Manager',
+            email: 'manager@nuraga.com',
+            password,
+            role: 'Manager',
+            points: 1100,
+            nik: 'MGR-005',
+            jabatan: 'HSE Manager',
+            area_kerja: 'Main Office',
+            no_whatsapp: '+6281200000005',
+        });
+        const kontraktor = await User.create({
+            nama: 'Kontraktor CV Bangun',
+            email: 'kontraktor@cvbangun.com',
+            password,
+            role: 'Kontraktor',
+            points: 400,
+            nik: 'KTR-006',
+            jabatan: 'Project Coordinator',
+            area_kerja: 'Loading Dock C',
+            no_whatsapp: '+6281200000006',
+        });
 
         const today = new Date();
 
-        // 2. Loop through the past 30 days to generate records
+        // 2. Loop through the past 30 days to generate Hazards, Incidents, Audits
         for (let i = 30; i >= 0; i--) {
             const currentDate = new Date(today);
             currentDate.setDate(today.getDate() - i);
-            
-            // Set a random time during working hours (08:00 to 18:00)
             currentDate.setHours(8 + Math.floor(Math.random() * 10), Math.floor(Math.random() * 60), 0, 0);
 
             // Generate Hazards (65% chance daily)
             if (Math.random() < 0.65) {
-                const numHazards = Math.floor(Math.random() * 2) + 1; // 1 to 2 hazards
+                const numHazards = Math.floor(Math.random() * 2) + 1;
                 for (let h = 0; h < numHazards; h++) {
                     const loc = hazardLocations[Math.floor(Math.random() * hazardLocations.length)];
                     const desc = hazardDescriptions[Math.floor(Math.random() * hazardDescriptions.length)];
                     const risk = risks[Math.floor(Math.random() * risks.length)];
-                    // Past reports are closed, newer ones might be open
                     const status = i > 7 ? (Math.random() < 0.85 ? 'Closed' : 'Open') : (Math.random() < 0.4 ? 'Closed' : 'Open');
 
                     const hazard = await HazardReport.create({
@@ -90,16 +191,26 @@ const seed = async () => {
                         deskripsi: desc,
                         risiko: risk,
                         status: status,
+                        is_verified: true,
                         createdAt: currentDate,
                         updatedAt: currentDate
                     });
 
-                    // Auto-generate CAPA for High & Critical risks
                     if (risk === 'High' || risk === 'Critical') {
                         const capaStatus = status === 'Closed' ? 'Closed' : (Math.random() < 0.5 ? 'In Progress' : 'Open');
+
+                        // Distribute assignments across HSE, Operator, and Supervisor
+                        let assignedUserId = hse.id_user;
+                        const rand = Math.random();
+                        if (rand < 0.4) {
+                            assignedUserId = operator.id_user;
+                        } else if (rand < 0.6) {
+                            assignedUserId = supervisor.id_user;
+                        }
+
                         await CorrectiveAction.create({
                             id_hazard: hazard.id_hazard,
-                            assigned_to: hse.id_user,
+                            assigned_to: assignedUserId,
                             description: `Tindak lanjut bahaya: ${desc} di ${loc}`,
                             deadline: new Date(currentDate.getTime() + (7 * 24 * 60 * 60 * 1000)),
                             status: capaStatus,
@@ -115,7 +226,6 @@ const seed = async () => {
                 const cat = incidentCategories[Math.floor(Math.random() * incidentCategories.length)];
                 const chron = incidentChronologies[Math.floor(Math.random() * incidentChronologies.length)];
                 const vic = victims[Math.floor(Math.random() * victims.length)];
-
                 await IncidentReport.create({
                     id_user: operator.id_user,
                     kategori: cat,
@@ -131,64 +241,72 @@ const seed = async () => {
                 const tpl = templates[Math.floor(Math.random() * templates.length)];
                 const score = checklistScore[Math.floor(Math.random() * checklistScore.length)];
                 const items = {};
-                
                 CHECKLIST_TEMPLATES[tpl].forEach(item => {
-                    items[item] = Math.random() < 0.85; // 85% pass rate
+                    items[item] = Math.random() < 0.85;
                 });
-
                 await Audit.create({
                     auditor_id: hse.id_user,
                     area: hazardLocations[Math.floor(Math.random() * hazardLocations.length)],
                     tanggal: currentDate,
                     hasil: `Inspeksi berkala ${tpl} telah diselesaikan. Beberapa catatan perbaikan telah dicantumkan di lampiran checklist.`,
                     qr_code_asset: `${tpl.toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`,
-                    checklist_items: JSON.stringify({
-                        template: tpl,
-                        items,
-                        score
-                    }),
-                    createdAt: currentDate,
-                    updatedAt: currentDate
-                });
-            }
-
-            // Generate Work Permits (25% chance daily)
-            if (Math.random() < 0.25) {
-                const permitTypes = ['Hot Work', 'Cold Work', 'Confined Space', 'Working at Height', 'Electrical Work', 'Excavation'];
-                const type = permitTypes[Math.floor(Math.random() * permitTypes.length)];
-                // Older permits are completed, newer ones might be approved or pending
-                const status = i > 5 
-                    ? 'Closed' 
-                    : (Math.random() < 0.5 ? 'Approved' : 'Pending');
-
-                await WorkPermit.create({
-                    id_user: operator.id_user,
-                    jenis_permit: type,
-                    perusahaan: Math.random() < 0.5 ? 'PT Petro Kimia' : 'CV Bangun Jaya',
-                    lokasi: hazardLocations[Math.floor(Math.random() * hazardLocations.length)],
-                    waktu_mulai: currentDate,
-                    waktu_selesai: new Date(currentDate.getTime() + 8 * 60 * 60 * 1000),
-                    deskripsi_pekerjaan: `Melakukan pekerjaan ${type} konstruksi di lapangan sesuai standar prosedur keselamatan K3.`,
-                    supervisor_name: 'Andi Supervisor',
-                    daftar_pekerja: ['Pekerja A', 'Pekerja B', 'Pekerja C'],
-                    bahaya: ['Tergelincir/Terjatuh', 'Peralatan Jatuh', 'Sengatan Listrik'],
-                    apd: ['Helm Keselamatan', 'Sepatu Safety', 'Sarung Tangan', 'Full Body Harness'],
-                    applicant_sig: true,
-                    supervisor_sig: status !== 'Pending',
-                    supervisor_approved_at: status !== 'Pending' ? currentDate : null,
-                    safety_officer_sig: status === 'Approved' || status === 'Closed',
-                    safety_officer_approved_at: status === 'Approved' || status === 'Closed' ? currentDate : null,
-                    approver_sig: status === 'Approved' || status === 'Closed',
-                    manager_approved_at: status === 'Approved' || status === 'Closed' ? currentDate : null,
-                    approval_step: status === 'Pending' ? 1 : (status === 'Approved' ? 3 : 4),
-                    status: status,
+                    checklist_items: JSON.stringify({ template: tpl, items, score }),
                     createdAt: currentDate,
                     updatedAt: currentDate
                 });
             }
         }
 
-        // 3. Create Certifications for Operator
+        // 3. Create Fixed PTW Dummy Data — semua status lifecycle terwakili
+        for (const p of fixedPermits) {
+            const permitDate = new Date(today);
+            permitDate.setDate(today.getDate() - p.daysAgo);
+            permitDate.setHours(7, 30, 0, 0);
+
+            const endDate = new Date(permitDate.getTime() + 8 * 60 * 60 * 1000);
+            const isApprovedOrHigher = ['Approved', 'Active', 'Closed', 'Expired'].includes(p.status);
+            const isClosed = p.status === 'Closed';
+            const isExpired = p.status === 'Expired';
+
+            const userId = p.useKontraktor ? kontraktor.id_user : operator.id_user;
+
+            await WorkPermit.create({
+                id_user: userId,
+                jenis_permit: p.type,
+                perusahaan: p.company,
+                lokasi: hazardLocations[Math.floor(Math.random() * hazardLocations.length)],
+                waktu_mulai: permitDate,
+                waktu_selesai: endDate,
+                deskripsi_pekerjaan: permitJobDescriptions[p.type],
+                supervisor_name: p.supervisor,
+                daftar_pekerja: workerLists[p.workers],
+                bahaya: ['Tergelincir/Terjatuh', 'Peralatan Jatuh', 'Paparan Bahan Kimia'],
+                apd: apdLists[p.apd],
+                sistem_isolasi: isApprovedOrHigher
+                    ? 'LOTO (Lock Out Tag Out) sudah diterapkan pada semua titik isolasi energi.'
+                    : null,
+                gas_test: (p.type === 'Confined Space' || p.type === 'Hot Work')
+                    ? { o2: '20.9%', h2s: '0 ppm', co: '0 ppm', lel: '0%' }
+                    : null,
+                applicant_sig: true,
+                supervisor_sig: isApprovedOrHigher,
+                supervisor_approved_at: isApprovedOrHigher ? permitDate : null,
+                safety_officer_sig: isApprovedOrHigher,
+                safety_officer_approved_at: isApprovedOrHigher ? permitDate : null,
+                approver_sig: isApprovedOrHigher,
+                manager_approved_at: isApprovedOrHigher ? permitDate : null,
+                approval_step: p.approvalStep,
+                status: p.status,
+                close_applicant_sig: isClosed || isExpired,
+                close_supervisor_sig: isClosed,
+                housekeeping_verified: isClosed,
+                closedAt: isClosed ? endDate : null,
+                createdAt: permitDate,
+                updatedAt: (isClosed || isExpired) ? endDate : permitDate,
+            });
+        }
+
+        // 4. Create Certifications
         await Certification.create({
             id_user: operator.id_user,
             nama_personil: 'Main Operator',
@@ -198,7 +316,6 @@ const seed = async () => {
             tanggal_expired: new Date('2029-01-10'),
             status: 'Active'
         });
-
         await Certification.create({
             id_user: operator.id_user,
             nama_personil: 'Main Operator',
@@ -208,15 +325,86 @@ const seed = async () => {
             tanggal_expired: new Date('2028-03-05'),
             status: 'Active'
         });
+        await Certification.create({
+            id_user: kontraktor.id_user,
+            nama_personil: 'Kontraktor CV Bangun',
+            jenis_sertifikasi: 'Confined Space Entry',
+            nomor_sertifikat: 'CSE-2025-034C',
+            tanggal_terbit: new Date('2025-06-01'),
+            tanggal_expired: new Date('2026-06-10'),
+            status: 'Active'
+        });
+        await Certification.create({
+            id_user: hse.id_user,
+            nama_personil: 'HSE Officer',
+            jenis_sertifikasi: 'Ahli K3 Umum',
+            nomor_sertifikat: 'K3U-2023-055H',
+            tanggal_terbit: new Date('2023-05-15'),
+            tanggal_expired: new Date('2026-05-15'),
+            status: 'Expired'
+        });
+        await Certification.create({
+            id_user: hse.id_user,
+            nama_personil: 'HSE Officer',
+            jenis_sertifikasi: 'Fire Safety Specialist',
+            nomor_sertifikat: 'FIRE-2026-902A',
+            tanggal_terbit: new Date('2026-02-12'),
+            tanggal_expired: new Date('2029-02-12'),
+            status: 'Active'
+        });
+        await Certification.create({
+            id_user: supervisor.id_user,
+            nama_personil: 'Supervisor Lapangan',
+            jenis_sertifikasi: 'Working at Height Supervisor',
+            nomor_sertifikat: 'WAH-SPV-2025-001',
+            tanggal_terbit: new Date('2025-05-01'),
+            tanggal_expired: new Date('2028-05-01'),
+            status: 'Active'
+        });
+        await Certification.create({
+            id_user: supervisor.id_user,
+            nama_personil: 'Supervisor Lapangan',
+            jenis_sertifikasi: 'First Aid (P3K) Specialist',
+            nomor_sertifikat: 'P3K-2026-788B',
+            tanggal_terbit: new Date('2026-04-15'),
+            tanggal_expired: new Date('2029-04-15'),
+            status: 'Active'
+        });
+        await Certification.create({
+            id_user: manager.id_user,
+            nama_personil: 'Safety Manager',
+            jenis_sertifikasi: 'ISO 45001 Lead Auditor',
+            nomor_sertifikat: 'ISO-LA-2024-556',
+            tanggal_terbit: new Date('2024-11-20'),
+            tanggal_expired: new Date('2027-11-20'),
+            status: 'Active'
+        });
 
-        // 4. Create Emergency Calls
+        // 5. Create Emergency Call sample
         await EmergencyCall.create({
             jenis_kejadian: 'Kebocoran Gas Kimia',
             lokasi: 'Chemical Storage Room',
             status: 'Triggered'
         });
 
+        console.log('');
         console.log('Seeding completed successfully!');
+        console.log('');
+        console.log('--- Akun Login yang Tersedia ---');
+        console.log('Admin      : admin@nuraga.com       / password123');
+        console.log('HSE        : hse@nuraga.com         / password123');
+        console.log('Supervisor : supervisor@nuraga.com  / password123');
+        console.log('Manager    : manager@nuraga.com     / password123');
+        console.log('Operator   : operator@nuraga.com    / password123');
+        console.log('Kontraktor : kontraktor@cvbangun.com / password123');
+        console.log('');
+        console.log('--- Ringkasan Data PTW ---');
+        console.log('Pending  : 2 permit (Hot Work, Working at Height)');
+        console.log('Approved : 2 permit (Electrical Work, Cold Work)');
+        console.log('Active   : 3 permit (Confined Space, Hot Work, Excavation)');
+        console.log('Closed   : 8 permit');
+        console.log('Rejected : 1 permit');
+        console.log('Expired  : 2 permit');
         process.exit(0);
     } catch (err) {
         console.error('Seeding failed:', err);

@@ -40,6 +40,7 @@ const STATUS_CONFIG = {
 const CorrectiveActionPage = () => {
     const [actions, setActions] = useState([]);
     const [selectedAction, setSelectedAction] = useState(null);
+    const [filter, setFilter] = useState('All');
 
     useEffect(() => {
         fetchActions();
@@ -65,6 +66,17 @@ const CorrectiveActionPage = () => {
 
     const overdueCount = actions.filter(a => getDaysLeft(a.deadline) < 0 && a.status !== 'Closed').length;
 
+    const filteredActions = actions.filter(action => {
+        if (filter === 'All') return true;
+        if (filter === 'Overdue') {
+            return getDaysLeft(action.deadline) < 0 && action.status !== 'Closed';
+        }
+        if (filter === 'Critical') {
+            return action.HazardReport?.risiko === 'Critical' || action.HazardReport?.risiko === 'High';
+        }
+        return action.status === filter;
+    });
+
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex justify-between items-center">
@@ -80,8 +92,31 @@ const CorrectiveActionPage = () => {
                 )}
             </div>
 
+            {/* Filter Buttons */}
+            <div className="flex flex-wrap gap-2 pb-2">
+                {[
+                    { id: 'All', label: 'Semua Tiket' },
+                    { id: 'Overdue', label: 'Hanya Terlambat' },
+                    { id: 'Critical', label: 'Risiko Kritis' },
+                    { id: 'Open', label: 'Open' },
+                    { id: 'In Progress', label: 'Dalam Proses' },
+                    { id: 'Closed', label: 'Selesai' }
+                ].map(f => (
+                    <button
+                        key={f.id}
+                        onClick={() => setFilter(f.id)}
+                        className={`px-4 py-2 rounded-xl text-xs font-black border transition-all ${filter === f.id
+                                ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/10'
+                                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-850'
+                            }`}
+                    >
+                        {f.label}
+                    </button>
+                ))}
+            </div>
+
             <div className="grid grid-cols-1 gap-5">
-                {actions.map((action) => {
+                {filteredActions.map((action) => {
                     const days = getDaysLeft(action.deadline);
                     const isOverdue = days < 0 && action.status !== 'Closed';
                     const statusCfg = STATUS_CONFIG[action.status] || STATUS_CONFIG['Open'];
@@ -159,10 +194,10 @@ const CorrectiveActionPage = () => {
                     );
                 })}
 
-                {actions.length === 0 && (
+                {filteredActions.length === 0 && (
                     <div className="p-16 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl">
                         <Target size={48} className="mx-auto mb-4 text-slate-200 dark:text-slate-700" />
-                        <p className="text-slate-400 font-medium">Tidak ada tindakan perbaikan aktif. Sistem aman!</p>
+                        <p className="text-slate-400 font-medium">Tidak ada tindakan perbaikan aktif untuk filter ini.</p>
                     </div>
                 )}
             </div>
