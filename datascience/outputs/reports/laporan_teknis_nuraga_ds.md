@@ -413,21 +413,4 @@ D:\fixed\datascience\
 | Dokumentasi lengkap | 100% | ✅ Tercapai |
 
 ---
-
-## LEMBAR PENGESAHAN
-
-| **Dibuat oleh,** | **Mengetahui,** |
-|:---|:---|
-| *ttd* | *ttd* |
-| **Aldi Tri Maulana** | **Linda Anggara Wati** |
-| Data Scientist | Data Scientist |
-| | |
-| **Editya Nur Pratama** | **Alviana Imron N.H.** |
-| AI Engineer | AI Engineer |
-| | |
-| **Sopa Amelia** | **Kuat Riawan** |
-| Full-Stack Dev | Full-Stack Dev |
-
----
-
 *"Nuraga hadir agar pekerja tidak hanya menjadi angka dalam statistik kecelakaan, tetapi manusia yang dilindungi oleh teknologi prediktif."*
