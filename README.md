@@ -41,65 +41,45 @@ Dashboard interaktif yang menampilkan metrik keselamatan kerja secara real-time:
 
 ## Cara Kerja Nuraga
 
-```mermaid
-flowchart TB
-    subgraph INPUT["📥 INPUT"]
-        A[👷 Pekerja<br/>Melaporkan Bahaya]
-        B[📊 Data Kelelahan<br/>Jam Kerja, Shift, dll]
-        C[📋 Data Sertifikasi<br/>P3K & Kebakaran]
-    end
+```
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                                    NURAGA PLATFORM                                   │
+│                                                                                      │
+│  ┌──────────────┐      ┌─────────────────────────────────────────────────────┐      │
+│  │    INPUT     │      │                   LAYANAN INTI                      │      │
+│  └──────┬───────┘      └──────────┬──────────────┬──────────────┬────────────┘      │
+│         │                         │              │              │                   │
+│         ▼                         ▼              ▼              ▼                   │
+│  ┌─────────────┐           ┌───────────┐   ┌───────────┐   ┌───────────┐            │
+│  │ 👷 Pekerja  │──────────▶│⚠️ Hazard  │   │😴 WellGuard│   │📜 Sertifikasi│            │
+│  │             │           │   NLP     │   │           │   │           │            │
+│  └─────────────┘           └─────┬─────┘   └─────┬─────┘   └─────┬─────┘            │
+│                                  │               │               │                  │
+│                                  └───────────────┼───────────────┘                  │
+│                                                  │                                  │
+│                                                  ▼                                  │
+│                                   ┌─────────────────────────────┐                  │
+│                                   │     🧠 AI ENGINE            │                  │
+│                                   │     (TensorFlow)            │                  │
+│                                   └──────────────┬──────────────┘                  │
+│                                                  │                                  │
+│                                                  ▼                                  │
+│                                   ┌─────────────────────────────┐                  │
+│                                   │     📊 DASHBOARD             │                  │
+│                                   │  & NOTIFIKASI               │                  │
+│                                   └──────────────┬──────────────┘                  │
+│                                                  │                                  │
+└──────────────────────────────────────────────────┼──────────────────────────────────┘
+                                                   │
+                                                   ▼
+                                          ┌───────────────┐
+                                          │  👔 Manajer   │
+                                          │     K3        │
+                                          └───────────────┘
+```
 
-    subgraph PLATFORM["⚙️ NURAGA PLATFORM"]
-        direction TB
-        API[🔌 API Gateway<br/>Node.js / Express]
-        
-        subgraph SERVICES["Layanan Inti"]
-            HAZARD[⚠️ Hazard-NLP<br/>Klasifikasi Laporan Bahaya]
-            WELL[😴 WellGuard<br/>Prediksi Kelelahan]
-            CERT[📜 Manajemen<br/>Sertifikasi]
-        end
-        
-        AI[🧠 AI Engine<br/>TensorFlow<br/>Custom Architecture]
-        DB[(🗄️ Database<br/>PostgreSQL)]
-    end
+    
 
-    subgraph OUTPUT["📤 OUTPUT"]
-        DASH[📊 Dashboard Metrik K3<br/>AFR, SR, Tren Kecelakaan]
-        NOTIF[🔔 Notifikasi Otomatis<br/>Sertifikasi Kadaluarsa]
-        REPORT[📄 Laporan Risiko<br/>Prioritas Penanganan]
-    end
-
-    subgraph USER["👥 Pengguna"]
-        WORKER[👷 Pekerja]
-        MANAGER[👔 Manajer K3]
-    end
-
-    %% Alur data
-    A --> API
-    B --> API
-    C --> API
-    
-    API --> HAZARD
-    API --> WELL
-    API --> CERT
-    
-    HAZARD --> AI
-    WELL --> AI
-    
-    AI --> DASH
-    AI --> REPORT
-    
-    CERT --> DB
-    DB --> NOTIF
-    DB --> DASH
-    
-    DASH --> MANAGER
-    REPORT --> MANAGER
-    NOTIF --> MANAGER
-    WORKER --> A
-    WORKER --> C
-
----
 
 ## Manfaat untuk Perusahaan
 
