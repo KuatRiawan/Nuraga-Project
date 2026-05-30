@@ -1,6 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './store/AuthContext';
 import { ThemeProvider } from './store/ThemeContext';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useSocket } from './hooks/useSocket';
+
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import HazardPage from './pages/HazardPage';
@@ -12,17 +15,16 @@ import WorkPermitPage from './pages/WorkPermitPage';
 import EmergencyPage from './pages/EmergencyPage';
 import DashboardLayout from './layouts/DashboardLayout';
 import Button from './components/Button';
-import { ShieldAlert } from 'lucide-react';
+import { ShieldAlert, CheckCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
-
-
 import SettingsPage from './pages/SettingsPage';
 import UsersPage from './pages/UsersPage';
-import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import GamificationPage from './pages/GamificationPage';
 import AuditLogPage from './pages/AuditLogPage';
+
+const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }) => {
     const { user, loading } = useAuth();
@@ -38,56 +40,85 @@ const ProtectedRoute = ({ children }) => {
 const EmergencyListener = () => {
     const { user } = useAuth();
     const [alertData, setAlertData] = useState(null);
+    const [resolveData, setResolveData] = useState(null);
+    const { socket } = useSocket();
 
     useEffect(() => {
-        if (!user) return;
+        if (!user || !socket) return;
 
         // Safety override: alert Safety roles
         const isSafetyStaff = ['Admin', 'HSE', 'Supervisor', 'Manager'].includes(user.role);
         if (!isSafetyStaff) return;
 
-        const token = localStorage.getItem('token');
-        if (!token) return;
-
-        const streamUrl = `/api/emergency/stream?token=${encodeURIComponent(token)}`;
-        const eventSource = new EventSource(streamUrl);
-
-        eventSource.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                if (data.event === 'emergency-triggered') {
-                    // Play safety alert sound (beep)
-                    try {
-                        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                        const osc = audioCtx.createOscillator();
-                        const gain = audioCtx.createGain();
-                        osc.type = 'sawtooth';
-                        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-                        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                        osc.connect(gain);
-                        gain.connect(audioCtx.destination);
-                        osc.start();
-                        setTimeout(() => osc.stop(), 800);
-                    } catch (e) {
-                        console.warn('Audio play failed:', e);
-                    }
-                    setAlertData(data);
+        const handleEmergency = (data) => {
+            if (data.event === 'emergency-triggered') {
+                try {
+                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    setTimeout(() => osc.stop(), 800);
+                } catch (e) {
+                    console.warn('Audio play failed:', e);
                 }
-            } catch (err) {
-                console.error('Error parsing SSE event:', err);
+                setAlertData(data);
             }
         };
 
-        eventSource.onerror = (err) => {
-            console.error('SSE connection error, attempting auto-reconnect...', err);
+        const handleResolved = (data) => {
+            // Dismiss red alert if it's open
+            setAlertData(null);
+            setResolveData(data);
+            // Auto dismiss green alert after 5 seconds
+            setTimeout(() => {
+                setResolveData(null);
+            }, 5000);
         };
+
+        socket.on('EMERGENCY_SOS', handleEmergency);
+        socket.on('EMERGENCY_RESOLVED', handleResolved);
 
         return () => {
-            eventSource.close();
+            socket.off('EMERGENCY_SOS', handleEmergency);
+            socket.off('EMERGENCY_RESOLVED', handleResolved);
         };
-    }, [user]);
+    }, [user, socket]);
 
-    if (!alertData) return null;
+    if (!alertData && !resolveData) return null;
+
+    if (resolveData) {
+        return (
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-emerald-950/80 backdrop-blur-md animate-in fade-in duration-300">
+                <div className="bg-white dark:bg-slate-900 border-4 border-emerald-500 rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
+                    <div className="absolute -top-24 -left-24 w-48 h-48 bg-emerald-500/10 rounded-full animate-ping" />
+                    <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-emerald-500/10 rounded-full animate-ping" />
+                    
+                    <div className="flex flex-col items-center text-center space-y-4">
+                        <div className="p-4 bg-emerald-500 rounded-full text-white shadow-lg shadow-emerald-500/40">
+                            <CheckCircle size={40} className="animate-pulse" />
+                        </div>
+                        <div className="space-y-1">
+                            <h2 className="text-xl font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-tighter">KONDISI AMAN</h2>
+                            <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                                Darurat telah diselesaikan oleh: <br/> <span className="text-emerald-600 dark:text-emerald-400">{resolveData.resolver_name}</span>
+                            </p>
+                        </div>
+                        <Button
+                            onClick={() => setResolveData(null)}
+                            className="w-full mt-4 py-3 bg-emerald-600 hover:bg-emerald-700 shadow-xl shadow-emerald-500/20 text-white font-black uppercase text-xs tracking-wider rounded-2xl"
+                        >
+                            Tutup
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     const { emergency, responders } = alertData;
 
@@ -157,14 +188,14 @@ const EmergencyListener = () => {
 
 function App() {
     return (
-        <ThemeProvider>
-            <AuthProvider>
-                <Router>
+        <QueryClientProvider client={queryClient}>
+            <ThemeProvider>
+                <AuthProvider>
+                    <Router>
                     <EmergencyListener />
 
                     <Routes>
                         <Route path="/login" element={<LoginPage />} />
-                        <Route path="/register" element={<RegisterPage />} />
                         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                         <Route path="/reset-password" element={<ResetPasswordPage />} />
 
@@ -260,6 +291,7 @@ function App() {
                 </Router>
             </AuthProvider>
         </ThemeProvider>
+    </QueryClientProvider>
     );
 }
 

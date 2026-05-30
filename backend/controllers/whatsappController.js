@@ -54,7 +54,7 @@ const testMessage = async (req, res) => {
 
     const ok = await wa.sendMessage(
         phone,
-        `✅ *[Nuraga HSE — Test Message]*\n\nKoneksi WhatsApp berjalan dengan baik!\nWaktu: ${new Date().toLocaleString('id-ID')}`
+        `✅ *[NURAGA SAFETY — Test Message]*\n\nKoneksi WhatsApp berjalan dengan baik!\nWaktu: ${new Date().toLocaleString('id-ID')}`
     );
 
     if (ok) {

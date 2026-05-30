@@ -102,7 +102,7 @@ const seed = async () => {
         // 1. Create Core Users
         const password = 'password123';
         const admin = await User.create({
-            nama: 'Nuraga Admin',
+            nama: 'Kuat',
             email: 'admin@nuraga.com',
             password,
             role: 'Admin',
@@ -114,7 +114,7 @@ const seed = async () => {
             jenis_kelamin: 'Laki-laki',
         });
         const hse = await User.create({
-            nama: 'HSE Officer',
+            nama: 'Edit',
             email: 'hse@nuraga.com',
             password,
             role: 'HSE',
@@ -126,7 +126,7 @@ const seed = async () => {
             jenis_kelamin: 'Laki-laki',
         });
         const staff = await User.create({
-            nama: 'Main Staff',
+            nama: 'Sopa',
             email: 'staff@nuraga.com',
             password,
             role: 'Staff',
@@ -135,10 +135,10 @@ const seed = async () => {
             jabatan: 'Staff Lapangan',
             area_kerja: 'Lantai Produksi 1',
             no_whatsapp: '+6281200000003',
-            jenis_kelamin: 'Laki-laki',
+            jenis_kelamin: 'Perempuan',
         });
         const supervisor = await User.create({
-            nama: 'Supervisor Lapangan',
+            nama: 'Linda',
             email: 'supervisor@nuraga.com',
             password,
             role: 'Supervisor',
@@ -147,10 +147,10 @@ const seed = async () => {
             jabatan: 'Field Supervisor',
             area_kerja: 'Mechanical Workshop',
             no_whatsapp: '+6281200000004',
-            jenis_kelamin: 'Laki-laki',
+            jenis_kelamin: 'Perempuan',
         });
         const manager = await User.create({
-            nama: 'Safety Manager',
+            nama: 'Alviana',
             email: 'manager@nuraga.com',
             password,
             role: 'Manager',
@@ -159,10 +159,10 @@ const seed = async () => {
             jabatan: 'HSE Manager',
             area_kerja: 'Main Office',
             no_whatsapp: '+6281200000005',
-            jenis_kelamin: 'Laki-laki',
+            jenis_kelamin: 'Perempuan',
         });
         const vendor = await User.create({
-            nama: 'Vendor CV Bangun',
+            nama: 'Alditri',
             email: 'vendor@cvbangun.com',
             password,
             role: 'Vendor',
@@ -315,8 +315,8 @@ const seed = async () => {
         // 4. Create Certifications
         await Certification.create({
             id_user: staff.id_user,
-            nama_personil: 'Main Staff',
-            jenis_sertifikasi: 'General K3 Specialist',
+            nama_personil: staff.nama,
+            jenis_sertifikasi: 'Ahli K3 Umum (AK3U)',
             nomor_sertifikat: 'K3-2026-089A',
             tanggal_terbit: new Date('2026-01-10'),
             tanggal_expired: new Date('2029-01-10'),
@@ -324,17 +324,26 @@ const seed = async () => {
         });
         await Certification.create({
             id_user: staff.id_user,
-            nama_personil: 'Main Staff',
-            jenis_sertifikasi: 'Scaffolding Inspector',
+            nama_personil: staff.nama,
+            jenis_sertifikasi: 'Supervisi Perancah (Inspector Scaffolding)',
             nomor_sertifikat: 'SCAF-2026-112B',
             tanggal_terbit: new Date('2026-03-05'),
             tanggal_expired: new Date('2028-03-05'),
             status: 'Active'
         });
         await Certification.create({
+            id_user: staff.id_user,
+            nama_personil: staff.nama,
+            jenis_sertifikasi: 'Teknisi K3 Listrik',
+            nomor_sertifikat: 'TKL-2025-099X',
+            tanggal_terbit: new Date('2025-02-15'),
+            tanggal_expired: new Date('2028-02-15'),
+            status: 'Active'
+        });
+        await Certification.create({
             id_user: vendor.id_user,
-            nama_personil: 'Vendor CV Bangun',
-            jenis_sertifikasi: 'Confined Space Entry',
+            nama_personil: vendor.nama,
+            jenis_sertifikasi: 'Teknisi Ruang Terbatas',
             nomor_sertifikat: 'CSE-2025-034C',
             tanggal_terbit: new Date('2025-06-01'),
             tanggal_expired: new Date('2026-06-10'),
@@ -342,8 +351,8 @@ const seed = async () => {
         });
         await Certification.create({
             id_user: hse.id_user,
-            nama_personil: 'HSE Officer',
-            jenis_sertifikasi: 'Ahli K3 Umum',
+            nama_personil: hse.nama,
+            jenis_sertifikasi: 'Ahli K3 Umum (AK3U)',
             nomor_sertifikat: 'K3U-2023-055H',
             tanggal_terbit: new Date('2023-05-15'),
             tanggal_expired: new Date('2026-05-15'),
@@ -351,17 +360,26 @@ const seed = async () => {
         });
         await Certification.create({
             id_user: hse.id_user,
-            nama_personil: 'HSE Officer',
-            jenis_sertifikasi: 'Fire Safety Specialist',
+            nama_personil: hse.nama,
+            jenis_sertifikasi: 'Ahli K3 Spesialis Penanggulangan Kebakaran',
             nomor_sertifikat: 'FIRE-2026-902A',
             tanggal_terbit: new Date('2026-02-12'),
             tanggal_expired: new Date('2029-02-12'),
             status: 'Active'
         });
         await Certification.create({
+            id_user: hse.id_user,
+            nama_personil: hse.nama,
+            jenis_sertifikasi: 'Ahli K3 Kimia',
+            nomor_sertifikat: 'KIMIA-2025-332L',
+            tanggal_terbit: new Date('2025-08-10'),
+            tanggal_expired: new Date('2028-08-10'),
+            status: 'Active'
+        });
+        await Certification.create({
             id_user: supervisor.id_user,
-            nama_personil: 'Supervisor Lapangan',
-            jenis_sertifikasi: 'Working at Height Supervisor',
+            nama_personil: supervisor.nama,
+            jenis_sertifikasi: 'Tenaga Kerja Pada Ketinggian (TKPK) Tingkat 3',
             nomor_sertifikat: 'WAH-SPV-2025-001',
             tanggal_terbit: new Date('2025-05-01'),
             tanggal_expired: new Date('2028-05-01'),
@@ -369,17 +387,26 @@ const seed = async () => {
         });
         await Certification.create({
             id_user: supervisor.id_user,
-            nama_personil: 'Supervisor Lapangan',
-            jenis_sertifikasi: 'First Aid (P3K) Specialist',
+            nama_personil: supervisor.nama,
+            jenis_sertifikasi: 'Petugas P3K (First Aider)',
             nomor_sertifikat: 'P3K-2026-788B',
             tanggal_terbit: new Date('2026-04-15'),
             tanggal_expired: new Date('2029-04-15'),
             status: 'Active'
         });
         await Certification.create({
+            id_user: admin.id_user,
+            nama_personil: admin.nama,
+            jenis_sertifikasi: 'Ahli K3 Spesialis Listrik',
+            nomor_sertifikat: 'AK3L-2024-998Z',
+            tanggal_terbit: new Date('2024-01-20'),
+            tanggal_expired: new Date('2027-01-20'),
+            status: 'Active'
+        });
+        await Certification.create({
             id_user: manager.id_user,
-            nama_personil: 'Safety Manager',
-            jenis_sertifikasi: 'ISO 45001 Lead Auditor',
+            nama_personil: manager.nama,
+            jenis_sertifikasi: 'Auditor Eksternal SMK3',
             nomor_sertifikat: 'ISO-LA-2024-556',
             tanggal_terbit: new Date('2024-11-20'),
             tanggal_expired: new Date('2027-11-20'),

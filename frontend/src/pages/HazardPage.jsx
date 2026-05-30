@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
 import api from '../api/axios';
 import Button from '../components/Button';
@@ -14,9 +15,9 @@ const RISK_CONFIG = {
 };
 
 const HazardPage = () => {
+    const queryClient = useQueryClient();
     const { user } = useAuth();
     const location = useLocation();
-    const [hazards, setHazards] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [loading, setLoading] = useState(false);
     const [analyzing, setAnalyzing] = useState(false);
@@ -33,28 +34,13 @@ const HazardPage = () => {
     const [preview, setPreview] = useState(null);
     const [selectedHazard, setSelectedHazard] = useState(null);
 
-    // Initial data fetch
-    useEffect(() => {
-        fetchHazards();
-    }, []);
-
-    // GPS simulation when form opens
-    useEffect(() => {
-        if (showForm) {
-            const mockLat = (-6.2088 + (Math.random() * 0.01)).toFixed(6);
-            const mockLng = (106.8456 + (Math.random() * 0.01)).toFixed(6);
-            setFormData(prev => ({ ...prev, koordinat_gps: `${mockLat}, ${mockLng}` }));
-        }
-    }, [showForm]);
-
-    const fetchHazards = async () => {
-        try {
+    const { data: hazards = [] } = useQuery({
+        queryKey: ['hazards'],
+        queryFn: async () => {
             const res = await api.get('/hazards');
-            setHazards(res.data);
-        } catch (err) {
-            console.error(err);
+            return res.data;
         }
-    };
+    });
 
     const analyzeWithAI = async () => {
         if (!formData.deskripsi) return alert('Masukkan deskripsi bahaya terlebih dahulu.');
@@ -78,6 +64,27 @@ const HazardPage = () => {
         if (f) setPreview(URL.createObjectURL(f));
     };
 
+    const createMutation = useMutation({
+        mutationFn: async (data) => {
+            await api.post('/hazards', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+        },
+        onSuccess: () => {
+            setShowForm(false);
+            setFormData({ lokasi: '', deskripsi: '', risiko: 'Low', koordinat_gps: '' });
+            setFile(null);
+            setPreview(null);
+            setAiPredictedRisk(null);
+            queryClient.invalidateQueries(['hazards']);
+        },
+        onError: (err) => {
+            console.error(err);
+            alert('Gagal melapor bahaya');
+        },
+        onSettled: () => {
+            setLoading(false);
+        }
+    });
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -88,19 +95,7 @@ const HazardPage = () => {
         data.append('koordinat_gps', formData.koordinat_gps);
         if (file) data.append('foto', file);
 
-        try {
-            await api.post('/hazards', data, { headers: { 'Content-Type': 'multipart/form-data' } });
-            setShowForm(false);
-            setFormData({ lokasi: '', deskripsi: '', risiko: 'Low', koordinat_gps: '' });
-            setFile(null);
-            setPreview(null);
-            setAiPredictedRisk(null);
-            fetchHazards();
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
+        createMutation.mutate(data);
     };
 
     return (
@@ -303,6 +298,28 @@ const HazardPage = () => {
                 const imageUrl = selectedHazard.foto ? `/uploads/${selectedHazard.foto}` : null;
                 const mapsUrl = selectedHazard.koordinat_gps ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedHazard.koordinat_gps)}` : null;
 
+                const verifyMutation = useMutation({
+                    mutationFn: async () => {
+                        const res = await api.patch(`/hazards/${selectedHazard.id_hazard}/verify`);
+                        return res.data;
+                    },
+                    onSuccess: (data) => {
+                        setSelectedHazard(data);
+                        queryClient.invalidateQueries(['hazards']);
+                    }
+                });
+
+                const overrideMutation = useMutation({
+                    mutationFn: async (newRisk) => {
+                        const res = await api.patch(`/hazards/${selectedHazard.id_hazard}/override`, { risiko: newRisk });
+                        return res.data;
+                    },
+                    onSuccess: (data) => {
+                        setSelectedHazard(data);
+                        queryClient.invalidateQueries(['hazards']);
+                    }
+                });
+
                 return (
                     <div 
                         onClick={() => setSelectedHazard(null)}
@@ -380,22 +397,13 @@ const HazardPage = () => {
                                              Validasikan laporan ini untuk menyetujui temuan bahaya dan mengirimkan reward 100 poin safety kepada pelapor.
                                          </p>
                                      </div>
-                                     <button
-                                         onClick={async () => {
-                                             try {
-                                                 const res = await api.patch(`/hazards/${selectedHazard.id_hazard}/verify`);
-                                                 setSelectedHazard(res.data.hazard);
-                                                 fetchHazards();
-                                                 alert('Laporan berhasil divalidasi! 100 poin safety telah dikirim ke pelapor.');
-                                             } catch (err) {
-                                                 console.error('Failed to verify hazard:', err);
-                                                 alert(err.response?.data?.message || 'Gagal memvalidasi laporan.');
-                                             }
-                                         }}
+                                     <Button 
                                          className="w-full sm:w-auto px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-colors shadow-lg shadow-emerald-500/15 whitespace-nowrap active:scale-98"
+                                         onClick={() => verifyMutation.mutate()}
+                                         disabled={verifyMutation.isPending}
                                      >
-                                         Validasi Laporan
-                                     </button>
+                                         {verifyMutation.isPending ? 'Memproses...' : 'Validasi Laporan'}
+                                     </Button>
                                  </div>
                              )}
 
@@ -415,17 +423,8 @@ const HazardPage = () => {
                                         <label className="text-xs text-slate-600 dark:text-slate-400 font-bold">Ubah Risiko ke:</label>
                                         <select
                                             value={selectedHazard.risiko}
-                                            onChange={async (e) => {
-                                                const newRisk = e.target.value;
-                                                try {
-                                                    const res = await api.patch(`/hazards/${selectedHazard.id_hazard}/override`, { risiko: newRisk });
-                                                    setSelectedHazard(res.data);
-                                                    fetchHazards();
-                                                } catch (err) {
-                                                    console.error('Failed to override risk:', err);
-                                                    alert('Gagal memperbarui risiko.');
-                                                }
-                                            }}
+                                            onChange={(e) => overrideMutation.mutate(e.target.value)}
+                                            disabled={overrideMutation.isPending}
                                             className="px-3 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-black text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         >
                                             <option value="Low">Low</option>

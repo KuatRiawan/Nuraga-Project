@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import Sidebar from '../components/Sidebar';
-import { Menu, Shield, Bell, AlertTriangle, FileText, CheckCircle } from 'lucide-react';
+import { Menu, Shield, Bell, AlertTriangle, FileText, CheckCircle, Sun, Moon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../store/AuthContext';
+import { useTheme } from '../store/ThemeContext';
 import api from '../api/axios';
 
 const compileNotifications = (permits, hazards, actions, activeUser) => {
@@ -121,6 +122,7 @@ const compileNotifications = (permits, hazards, actions, activeUser) => {
 
 const DashboardLayout = ({ children }) => {
     const { user } = useAuth();
+    const { theme, toggleTheme } = useTheme();
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [isNotifOpen, setNotifOpen] = useState(false);
@@ -232,6 +234,15 @@ const DashboardLayout = ({ children }) => {
                         <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 text-blue-600 dark:text-blue-500 rounded-lg text-xs font-black uppercase tracking-widest border border-blue-500/20">
                             <Shield size={14} /> System Secure
                         </div>
+
+                        {/* Theme Toggle Button */}
+                        <button
+                            onClick={toggleTheme}
+                            className="p-2.5 bg-slate-105 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl transition-all active:scale-95"
+                            title={theme === 'dark' ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
+                        >
+                            {theme === 'dark' ? <Sun size={20} className="text-amber-500" /> : <Moon size={20} className="text-indigo-600" />}
+                        </button>
 
                         {/* Notification Dropdown */}
                         <div className="relative" ref={notifRef}>

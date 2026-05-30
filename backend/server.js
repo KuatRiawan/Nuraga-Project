@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const sequelize = require('./config/db');
+const { Server } = require('socket.io');
 
 // Import models to sync
 const User = require('./models/User');
@@ -88,6 +89,22 @@ function startServer(port, retries = 5) {
     const server = app.listen(port, () => {
         console.log(`Server is running on port ${port}`);
     });
+
+    const io = new Server(server, {
+        cors: {
+            origin: "*",
+            methods: ["GET", "POST"]
+        }
+    });
+
+    io.on('connection', (socket) => {
+        console.log('A user connected to WebSocket');
+        socket.on('disconnect', () => {
+            console.log('User disconnected from WebSocket');
+        });
+    });
+
+    app.set('io', io);
 
     server.on('error', (err) => {
         if (err && err.code === 'EADDRINUSE') {

@@ -82,14 +82,7 @@ const LoginPage = () => {
                     </Button>
                 </form>
 
-                <div className="mt-8 text-center">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                        Belum punya akun?{' '}
-                        <Link to="/register" className="text-blue-600 dark:text-blue-500 font-bold hover:underline">
-                            Daftar Sekarang
-                        </Link>
-                    </p>
-                </div>
+
 
             </div>
         </div>

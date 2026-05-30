@@ -1,10 +1,11 @@
+import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import Button from './Button';
 import {
     LayoutDashboard, AlertCircle, FileText, CheckSquare, Settings, LogOut,
-    Shield, Award, Zap, FileCheck, Sun, Moon, X, Users, ClipboardList, Trophy, History
+    Shield, Award, Zap, FileCheck, X, Users, ClipboardList, Trophy, History
 } from 'lucide-react';
 import { useAuth } from '../store/AuthContext';
-import { useTheme } from '../store/ThemeContext';
 
 const ROLE_COLORS = {
     Admin: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
@@ -19,7 +20,7 @@ const ROLE_COLORS = {
 
 const Sidebar = ({ onClose }) => {
     const { user, logout } = useAuth();
-    const { theme, toggleTheme } = useTheme();
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
 
     const allMenuItems = [
         {
@@ -82,20 +83,6 @@ const Sidebar = ({ onClose }) => {
                     </button>
                 )}
             </div>
-
-            {/* Theme Toggle */}
-            <div className="px-4 mb-3">
-                <button
-                    onClick={toggleTheme}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 bg-slate-50 dark:bg-slate-800 rounded-2xl text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-all border border-slate-100 dark:border-slate-700/50"
-                >
-                    <div className="w-7 h-7 rounded-lg bg-white dark:bg-slate-700 flex items-center justify-center shadow-sm">
-                        {theme === 'dark' ? <Sun size={16} className="text-amber-500" /> : <Moon size={16} className="text-indigo-600" />}
-                    </div>
-                    <span className="text-sm font-bold">{theme === 'dark' ? 'Mode Terang' : 'Mode Gelap'}</span>
-                </button>
-            </div>
-
             {/* Navigation Sections */}
             <div className="flex-1 px-3 space-y-4 overflow-y-auto pb-4">
                 {allMenuItems.map((section) => {
@@ -152,13 +139,44 @@ const Sidebar = ({ onClose }) => {
                 </div>
 
                 <button
-                    onClick={logout}
+                    onClick={() => setShowLogoutModal(true)}
                     className="flex items-center gap-3 w-full px-4 py-2.5 text-slate-500 dark:text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all group"
                 >
                     <LogOut size={18} className="group-hover:translate-x-1 transition-transform" />
                     <span className="font-bold text-sm">Keluar Sistem</span>
                 </button>
             </div>
+
+            {/* Logout Confirmation Modal */}
+            {showLogoutModal && (
+                <div
+                    onClick={() => setShowLogoutModal(false)}
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200"
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white dark:bg-slate-800 border-t-8 border-red-500 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 duration-200"
+                    >
+                        <div className="flex justify-center mb-5">
+                            <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
+                                <LogOut size={28} className="text-red-500 ml-1" />
+                            </div>
+                        </div>
+                        <h3 className="text-xl font-black text-slate-900 dark:text-white text-center tracking-tighter mb-2">Keluar Sistem?</h3>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm text-center font-medium mb-6">
+                            Apakah Anda yakin ingin keluar dari sistem Nuraga? Sesi Anda akan diakhiri.
+                        </p>
+                        <div className="flex gap-3">
+                            <Button type="button" variant="ghost" onClick={() => setShowLogoutModal(false)} className="flex-1 rounded-2xl py-3 border border-slate-200 dark:border-slate-700">
+                                Batal
+                            </Button>
+                            <Button type="button" variant="danger" onClick={logout} className="flex-1 rounded-2xl py-3 shadow-xl shadow-red-500/20">
+                                Ya, Keluar
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

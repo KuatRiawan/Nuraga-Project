@@ -211,6 +211,8 @@ const UsersPage = () => {
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editingUserId, setEditingUserId] = useState(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [userToDelete, setUserToDelete] = useState(null);
 
     // Helper to auto-generate worker ID / NIK based on role
     const generateAutoNik = (roleName) => {
@@ -331,21 +333,28 @@ const UsersPage = () => {
         }
     };
 
-    const handleDelete = async (id, nama) => {
+    const handleDeleteClick = (id, nama) => {
         if (id === currentUser?.id) {
             alert('Anda tidak bisa menghapus akun Anda sendiri.');
             return;
         }
-        if (confirm(`Apakah Anda yakin ingin menghapus user "${nama}"?`)) {
-            setError('');
-            try {
-                await api.delete(`/users/${id}`);
-                setSuccessMessage('User berhasil dihapus.');
-                fetchUsers();
-                setTimeout(() => setSuccessMessage(''), 3000);
-            } catch (err) {
-                setError(err.response?.data?.message || 'Gagal menghapus user.');
-            }
+        setUserToDelete({ id, nama });
+        setShowDeleteModal(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!userToDelete) return;
+        setError('');
+        try {
+            await api.delete(`/users/${userToDelete.id}`);
+            setSuccessMessage('User berhasil dihapus.');
+            fetchUsers();
+            setTimeout(() => setSuccessMessage(''), 3000);
+        } catch (err) {
+            setError(err.response?.data?.message || 'Gagal menghapus user.');
+        } finally {
+            setShowDeleteModal(false);
+            setUserToDelete(null);
         }
     };
 
@@ -522,7 +531,7 @@ const UsersPage = () => {
                                                         <Edit2 size={16} />
                                                     </button>
                                                     <button
-                                                        onClick={() => handleDelete(u.id_user, u.nama)}
+                                                        onClick={() => handleDeleteClick(u.id_user, u.nama)}
                                                         disabled={isSelf}
                                                         className={`p-2 rounded-xl transition-all ${isSelf ? 'text-slate-200 dark:text-slate-800 cursor-not-allowed' : 'text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                                                         title={isSelf ? 'Anda tidak bisa menghapus diri sendiri' : 'Hapus User'}
@@ -681,6 +690,36 @@ const UsersPage = () => {
                                 </Button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && (
+                <div 
+                    onClick={() => setShowDeleteModal(false)}
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+                >
+                    <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white dark:bg-slate-800 border-t-8 border-red-500 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 duration-200"
+                    >
+                        <div className="flex justify-center mb-5">
+                            <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
+                                <Trash2 size={28} className="text-red-500" />
+                            </div>
+                        </div>
+                        <h3 className="text-xl font-black text-slate-900 dark:text-white text-center tracking-tighter mb-2">Hapus User?</h3>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm text-center font-medium mb-6">
+                            Apakah Anda yakin ingin menghapus user <span className="font-bold text-slate-700 dark:text-slate-300">"{userToDelete?.nama}"</span>? Tindakan ini tidak dapat dibatalkan.
+                        </p>
+                        <div className="flex gap-3">
+                            <Button type="button" variant="ghost" onClick={() => setShowDeleteModal(false)} className="flex-1 rounded-2xl py-3 border border-slate-200 dark:border-slate-700">
+                                Batal
+                            </Button>
+                            <Button type="button" variant="danger" onClick={confirmDelete} className="flex-1 rounded-2xl py-3 shadow-xl shadow-red-500/20">
+                                Ya, Hapus
+                            </Button>
+                        </div>
                     </div>
                 </div>
             )}

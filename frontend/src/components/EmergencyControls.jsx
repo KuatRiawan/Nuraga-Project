@@ -6,6 +6,7 @@ const EmergencyControls = ({ compact = false, onTriggered }) => {
     const [loading, setLoading] = useState(false);
     const [holding, setHolding] = useState(null); // Type of emergency being held
     const [progress, setProgress] = useState(0);
+    const [alertModal, setAlertModal] = useState({ show: false, type: '', respondersList: '', isError: false });
     const holdTimer = useRef(null);
     const progressTimer = useRef(null);
 
@@ -47,10 +48,10 @@ const EmergencyControls = ({ compact = false, onTriggered }) => {
                 ? res.data.responders.map(r => `• ${r.nama} (${r.role})`).join('\n')
                 : 'Tidak ada personil bersertifikat khusus yang terdeteksi. Sistem menyiarkan alarm ke seluruh tim.';
                 
-            alert(`ALARM DARURAT DISIARKAN: ${type.toUpperCase()}\n\nPersonil Bersertifikat yang Dihubungi:\n${respondersList}`);
+            setAlertModal({ show: true, type, respondersList, isError: false });
         } catch (err) {
             console.error(err);
-            alert('Emergency sync failed. Local alert activated.');
+            setAlertModal({ show: true, type: type || 'Error', respondersList: 'Emergency sync failed. Local alert activated.', isError: true });
         } finally {
             setLoading(false);
         }
@@ -97,6 +98,45 @@ const EmergencyControls = ({ compact = false, onTriggered }) => {
                     )}
                 </button>
             ))}
+
+            {/* Custom Alert Modal */}
+            {alertModal.show && (
+                <div 
+                    onClick={() => setAlertModal({ show: false, type: '', respondersList: '', isError: false })}
+                    className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200"
+                >
+                    <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className={`bg-white dark:bg-slate-900 border-t-8 ${alertModal.isError ? 'border-orange-500' : 'border-red-600'} w-full max-w-md rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200`}
+                    >
+                        <div className="flex justify-center mb-6">
+                            <div className={`w-20 h-20 rounded-full ${alertModal.isError ? 'bg-orange-500/20' : 'bg-red-600/20'} flex items-center justify-center border-2 ${alertModal.isError ? 'border-orange-500/30 text-orange-500' : 'border-red-600/30 text-red-600'}`}>
+                                <AlertTriangle size={36} className={!alertModal.isError ? 'animate-ping' : ''} />
+                            </div>
+                        </div>
+                        
+                        <h3 className={`text-2xl font-black text-center tracking-tighter mb-2 ${alertModal.isError ? 'text-orange-500' : 'text-red-600'}`}>
+                            {alertModal.isError ? 'Gagal Sinkronisasi' : `ALARM DISIARKAN: ${alertModal.type.toUpperCase()}`}
+                        </h3>
+                        
+                        <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl mb-6">
+                            <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">
+                                Detail / Personil Dihubungi:
+                            </p>
+                            <p className="text-slate-700 dark:text-slate-300 text-sm whitespace-pre-wrap font-medium">
+                                {alertModal.respondersList}
+                            </p>
+                        </div>
+                        
+                        <button 
+                            onClick={() => setAlertModal({ show: false, type: '', respondersList: '', isError: false })}
+                            className={`w-full py-4 rounded-2xl font-black text-white uppercase tracking-widest text-sm shadow-xl transition-all active:scale-95 ${alertModal.isError ? 'bg-orange-500 hover:bg-orange-600 shadow-orange-500/20' : 'bg-red-600 hover:bg-red-700 shadow-red-600/20'}`}
+                        >
+                            Saya Mengerti
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

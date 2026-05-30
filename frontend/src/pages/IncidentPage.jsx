@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
 import api from '../api/axios';
 import Button from '../components/Button';
@@ -8,9 +9,9 @@ import { generateIncidentReport } from '../utils/reportGenerator';
 import { useAuth } from '../store/AuthContext';
 
 const IncidentPage = () => {
+    const queryClient = useQueryClient();
     const { user } = useAuth();
     const location = useLocation();
-    const [incidents, setIncidents] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
@@ -38,9 +39,13 @@ const IncidentPage = () => {
         }
     }, [location]);
 
-    useEffect(() => {
-        fetchIncidents();
-    }, []);
+    const { data: incidents = [] } = useQuery({
+        queryKey: ['incidents'],
+        queryFn: async () => {
+            const res = await api.get('/incidents');
+            return res.data;
+        }
+    });
 
     useEffect(() => {
         if (selectedIncident) {
@@ -51,14 +56,47 @@ const IncidentPage = () => {
         }
     }, [selectedIncident]);
 
-    const fetchIncidents = async () => {
-        try {
-            const res = await api.get('/incidents');
-            setIncidents(res.data);
-        } catch (err) {
+    const createMutation = useMutation({
+        mutationFn: async (data) => {
+            await api.post('/incidents', data, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+        },
+        onSuccess: () => {
+            setShowForm(false);
+            setFormData({
+                kategori: 'Near Miss', kronologi: '', korban: '', loss_cost: 0,
+                five_whys: { why1: '', why2: '', why3: '', why4: '', why5: '' }
+            });
+            setFile(null);
+            queryClient.invalidateQueries(['incidents']);
+        },
+        onError: (err) => {
             console.error(err);
+        },
+        onSettled: () => {
+            setLoading(false);
         }
-    };
+    });
+
+    const updateMutation = useMutation({
+        mutationFn: async (payload) => {
+            const res = await api.put(`/incidents/${selectedIncident.id_incident}`, payload);
+            return res.data;
+        },
+        onSuccess: () => {
+            setSelectedIncident(null);
+            queryClient.invalidateQueries(['incidents']);
+            alert('Hasil investigasi berhasil disimpan.');
+        },
+        onError: (err) => {
+            console.error(err);
+            alert(err.response?.data?.message || 'Gagal menyimpan hasil investigasi.');
+        },
+        onSettled: () => {
+            setLoading(false);
+        }
+    });
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -71,41 +109,16 @@ const IncidentPage = () => {
         data.append('five_whys', JSON.stringify(formData.five_whys));
         if (file) data.append('foto', file);
 
-        try {
-            await api.post('/incidents', data, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-            setShowForm(false);
-            setFormData({
-                kategori: 'Near Miss', kronologi: '', korban: '', loss_cost: 0,
-                five_whys: { why1: '', why2: '', why3: '', why4: '', why5: '' }
-            });
-            setFile(null);
-            fetchIncidents();
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
+        createMutation.mutate(data);
     };
 
     const handleSaveInvestigation = async (e) => {
         e.preventDefault();
         setLoading(true);
-        try {
-            const res = await api.put(`/incidents/${selectedIncident.id_incident}`, {
-                loss_cost: investigationData.loss_cost,
-                five_whys: investigationData.five_whys
-            });
-            setIncidents(prev => prev.map(inc => inc.id_incident === selectedIncident.id_incident ? res.data : inc));
-            setSelectedIncident(null);
-            alert('Hasil investigasi berhasil disimpan.');
-        } catch (err) {
-            console.error(err);
-            alert(err.response?.data?.message || 'Gagal menyimpan hasil investigasi.');
-        } finally {
-            setLoading(false);
-        }
+        updateMutation.mutate({
+            loss_cost: investigationData.loss_cost,
+            five_whys: investigationData.five_whys
+        });
     };
 
     return (
@@ -224,6 +237,12 @@ const IncidentPage = () => {
 
             {/* Incident List */}
             <div className="space-y-4">
+                {incidents.length === 0 && (
+                    <div className="p-16 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl">
+                        <ClipboardList size={48} className="mx-auto mb-4 text-slate-200 dark:text-slate-700" />
+                        <p className="text-slate-400 font-medium">Belum ada laporan insiden kecelakaan kerja. Pertahankan kinerja K3 Anda!</p>
+                    </div>
+                )}
                 {incidents.map((incident) => (
                     <div
                         key={incident.id_incident}

@@ -25,12 +25,12 @@ const createIncident = async (req, res) => {
         try {
             const hsePics = await User.findAll({ where: { role: ['HSE', 'Admin', 'Manager'] } });
             const msg =
-                `⚠️ *[NURAGA HSE — Laporan Insiden Baru]*\n\n` +
+                `⚠️ *[NURAGA SAFETY — Laporan Insiden Baru]*\n\n` +
                 `Kategori: *${kategori}*\n` +
                 `Pelapor: *${req.user.nama}* (${req.user.role})\n` +
                 `Korban: ${korban || '-'}\n` +
                 `Kronologi: ${(kronologi || '').slice(0, 150)}...\n\n` +
-                `Segera investigasi di sistem Nuraga HSE.`;
+                `Segera investigasi di sistem Nuraga Safety.`;
             for (const u of hsePics) {
                 if (u.no_whatsapp) await wa.sendMessage(u.no_whatsapp, msg);
             }

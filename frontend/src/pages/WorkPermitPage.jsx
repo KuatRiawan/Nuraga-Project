@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import Button from '../components/Button';
 import PermitForm from '../components/PermitForm';
@@ -11,8 +12,8 @@ import {
 } from 'lucide-react';
 
 const WorkPermitPage = () => {
+    const queryClient = useQueryClient();
     const { user } = useAuth();
-    const [permits, setPermits] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [selectedPermit, setSelectedPermit] = useState(null);
     const [approvalLoading, setApprovalLoading] = useState(false);
@@ -28,43 +29,49 @@ const WorkPermitPage = () => {
     });
     const [closeLoading, setCloseLoading] = useState(false);
 
-    useEffect(() => {
-        fetchPermits();
-    }, []);
-
-    const fetchPermits = async () => {
-        try {
+    const { data: permits = [], isLoading } = useQuery({
+        queryKey: ['permits'],
+        queryFn: async () => {
             const res = await api.get('/permits');
-            setPermits(res.data);
-        } catch (err) {
-            console.error(err);
+            return res.data;
         }
-    };
+    });
 
-    const handleFormSubmit = async (formData) => {
-        setError('');
-        try {
+    const createMutation = useMutation({
+        mutationFn: async (formData) => {
             await api.post('/permits', formData);
+        },
+        onSuccess: () => {
             setShowForm(false);
-            fetchPermits();
-        } catch (err) {
+            queryClient.invalidateQueries(['permits']);
+        },
+        onError: (err) => {
             console.error(err);
             setError(err.response?.data?.message || 'Gagal mengirim pengajuan permit.');
         }
+    });
+
+    const approveMutation = useMutation({
+        mutationFn: async ({ id, status }) => {
+            await api.patch(`/permits/${id}/approve`, { status });
+        },
+        onSuccess: () => {
+            setSelectedPermit(null);
+            queryClient.invalidateQueries(['permits']);
+        },
+        onError: (err) => {
+            console.error(err);
+            alert(err.response?.data?.message || 'Gagal mengubah status permit.');
+        }
+    });
+
+    const handleFormSubmit = async (formData) => {
+        setError('');
+        createMutation.mutate(formData);
     };
 
     const handleApproveReject = async (id, status) => {
-        setApprovalLoading(true);
-        try {
-            await api.patch(`/permits/${id}/approve`, { status });
-            setSelectedPermit(null);
-            fetchPermits();
-        } catch (err) {
-            console.error(err);
-            alert(err.response?.data?.message || 'Gagal mengubah status permit.');
-        } finally {
-            setApprovalLoading(false);
-        }
+        approveMutation.mutate({ id, status });
     };
 
     const getPermitIcon = (type) => {
@@ -92,20 +99,13 @@ const WorkPermitPage = () => {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-700">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
-                        <ShieldCheck className="text-blue-600" size={32} /> Work Permits
-                    </h1>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm font-bold mt-1 uppercase tracking-widest">
-                        Otorisasi & Pengawasan Pekerjaan Berbahaya
-                    </p>
+                    <h1 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Work Permits (e-PTW)</h1>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Otorisasi & Pengawasan Pekerjaan Berbahaya.</p>
                 </div>
-                <Button
-                    onClick={() => setShowForm(true)}
-                    className="flex items-center gap-2 w-full md:w-auto h-14 px-8 rounded-2xl bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-600/20"
-                >
-                    <Plus size={20} /> Ajukan Izin Baru
+                <Button onClick={() => setShowForm(true)} className="flex items-center gap-2 w-full sm:w-auto justify-center rounded-2xl py-5 px-8 shadow-xl shadow-blue-500/20">
+                    <Plus size={18} /> Ajukan Izin Baru
                 </Button>
             </div>
 
@@ -133,12 +133,9 @@ const WorkPermitPage = () => {
             )}
 
             {permits.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-900/50 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 text-center px-6">
-                    <div className="p-6 bg-slate-100 dark:bg-slate-800 rounded-full mb-6">
-                        <AlertCircle size={48} className="text-slate-400" />
-                    </div>
-                    <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">Belum Ada Izin Kerja</h3>
-                    <p className="text-slate-500 dark:text-slate-400 max-w-sm">Anda belum memiliki riwayat pengajuan izin kerja. Klik tombol di atas untuk membuat pengajuan baru.</p>
+                <div className="p-16 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl">
+                    <AlertCircle size={48} className="mx-auto mb-4 text-slate-200 dark:text-slate-700" />
+                    <p className="text-slate-400 font-medium">Belum ada riwayat izin kerja (PTW). Silakan ajukan izin baru.</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -527,7 +524,7 @@ const WorkPermitPage = () => {
                                                         <Button
                                                             onClick={() => handleApproveReject(selectedPermit.id_permit, 'Rejected')}
                                                             variant="danger"
-                                                            disabled={approvalLoading}
+                                                            disabled={approveMutation.isPending}
                                                             className="flex-1 py-4 rounded-2xl flex items-center justify-center gap-2"
                                                         >
                                                             <Ban size={18} /> Tolak Pengajuan
@@ -535,7 +532,7 @@ const WorkPermitPage = () => {
                                                         <Button
                                                             onClick={() => handleApproveReject(selectedPermit.id_permit, 'Approved')}
                                                             variant="primary"
-                                                            disabled={approvalLoading}
+                                                            disabled={approveMutation.isPending}
                                                             className="flex-1 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
                                                         >
                                                             <Check size={18} /> Setujui & Tanda Tangani
@@ -619,13 +616,14 @@ const WorkPermitPage = () => {
                                 setCloseLoading(true);
                                 try {
                                     await api.patch(`/permits/${selectedPermit.id_permit}/close`, {
+                                        housekeeping_verified: closeForm.housekeeping_verified,
+                                        equipment_cleared: closeForm.equipment_cleared,
                                         close_applicant_sig: closeForm.close_applicant_sig,
-                                        close_supervisor_sig: closeForm.close_supervisor_sig,
-                                        housekeeping_verified: closeForm.housekeeping_verified
+                                        close_supervisor_sig: closeForm.close_supervisor_sig
                                     });
                                     setShowCloseModal(false);
                                     setSelectedPermit(null);
-                                    fetchPermits();
+                                    queryClient.invalidateQueries(['permits']);
                                 } catch (err) {
                                     console.error(err);
                                     alert(err.response?.data?.message || 'Gagal menutup permit.');

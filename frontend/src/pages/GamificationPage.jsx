@@ -17,12 +17,7 @@ const REWARDS = [
     { id: 4, title: 'Merchandise K3 Premium', points: 750, icon: '🎁', available: true },
 ];
 
-const baseLeaderboard = [
-    { name: 'Ahmad Fauzi', dept: 'Produksi', points: 1240, reports: 32, badge: 'Safety Champion' },
-    { name: 'Dewi Rahayu', dept: 'Warehouse', points: 980, reports: 26, badge: 'Hazard Hunter' },
-    { name: 'Budi Santoso', dept: 'Maintenance', points: 810, reports: 21, badge: 'Risk Ranger' },
-    { name: 'Siti Aminah', dept: 'QC', points: 650, reports: 17, badge: '' },
-];
+const baseLeaderboard = [];
 
 const GamificationPage = () => {
     const { user, updateUser } = useAuth();
@@ -86,7 +81,7 @@ const GamificationPage = () => {
         name: user?.nama || 'Anda',
         dept: user?.role || 'Safety Team',
         points: myPoints,
-        reports: ['Staff', 'Operator'].includes(user?.role) ? 13 : 5,
+        reports: 0,
         badge: myPoints > 1000 ? 'Safety Champion' : myPoints > 500 ? 'Hazard Hunter' : ''
     };
 
@@ -146,7 +141,7 @@ const GamificationPage = () => {
 
                     <div className="grid grid-cols-2 gap-4 w-full md:w-auto">
                         {[
-                            { label: 'Laporan Valid', value: ['Staff', 'Operator'].includes(user?.role) ? '13' : '5', icon: <CheckCircle size={20} /> },
+                            { label: 'Laporan Valid', value: '0', icon: <CheckCircle size={20} /> },
                             { label: 'Poin Bulan Ini', value: `+${myPoints}`, icon: <TrendingUp size={20} /> },
                             { label: 'Badge Diraih', value: myPoints > 1000 ? '2' : myPoints > 500 ? '1' : '0', icon: <Award size={20} /> },
                             { label: 'Rewards Ditukar', value: myPoints < 1200 ? '1' : '0', icon: <Gift size={20} /> },

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { AlertCircle, FileText, CheckCircle, Clock, Zap, Download, Shield, Trophy, X, Sun, Thermometer, ClipboardCheck, Activity, AlertTriangle, Star, Users } from 'lucide-react';
@@ -113,12 +114,12 @@ const DashboardPage = () => {
     };
 
     const [myHazards, setMyHazards] = useState([]);
-    const [myActions, setMyActions] = useState([]);
+    const [totalActions, setTotalActions] = useState([]);
     const [complianceChecklist, setComplianceChecklist] = useState([
-        { id: 1, text: 'Penyediaan APD lengkap & layak pakai', checked: true },
-        { id: 2, text: 'Pemberlakuan Sistem Izin Kerja Aman (PTW)', checked: true },
+        { id: 1, text: 'Penyediaan APD lengkap & layak pakai', checked: false },
+        { id: 2, text: 'Pemberlakuan Sistem Izin Kerja Aman (PTW)', checked: false },
         { id: 3, text: 'Pemeriksaan & kalibrasi berkala alat K3/APAR', checked: false },
-        { id: 4, text: 'Pembentukan P2K3 & penunjukan Ahli K3', checked: true },
+        { id: 4, text: 'Pembentukan P2K3 & penunjukan Ahli K3', checked: false },
         { id: 5, text: 'Pelatihan induksi K3 bagi seluruh pekerja baru', checked: false },
     ]);
 
@@ -178,98 +179,107 @@ const DashboardPage = () => {
     };
 
 
+    const fetchDashboardData = async () => {
+        const certsUrl = (['Staff', 'Operator', 'Vendor', 'Kontraktor'].includes(user?.role))
+            ? '/certifications/my'
+            : '/certifications/all';
+
+        const usersPromise = user?.role === 'Admin'
+            ? api.get('/users').catch(() => ({ data: [] }))
+            : Promise.resolve({ data: [] });
+
+        const [statsRes, permitsRes, reportRes, incidentsRes, certsRes, hazardsRes, actionsRes, usersRes] = await Promise.all([
+            api.get('/stats').catch(() => ({ data: { totalHazards: 0, totalIncidents: 0, totalAudits: 0, pendingActions: 0 } })),
+            api.get('/permits').catch(() => ({ data: [] })),
+            api.get('/stats/report-data').catch(() => ({ data: { summary: { audits: 0 } } })),
+            api.get('/incidents').catch(() => ({ data: [] })),
+            api.get(certsUrl).catch(() => ({ data: [] })),
+            api.get('/hazards').catch(() => ({ data: [] })),
+            api.get('/actions').catch(() => ({ data: [] })),
+            usersPromise
+        ]);
+
+        return {
+            stats: statsRes.data,
+            permits: permitsRes.data,
+            report: reportRes.data,
+            incidents: incidentsRes.data,
+            certs: certsRes.data,
+            hazards: hazardsRes.data,
+            actions: actionsRes.data,
+            users: usersRes.data
+        };
+    };
+
+    const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
+        queryKey: ['dashboardData', user?.id_user || user?.id, user?.role],
+        queryFn: fetchDashboardData,
+        enabled: !!user,
+        refetchInterval: 60000
+    });
+
     useEffect(() => {
         let isMounted = true;
         setHasTimeout(false);
-        setLoading(true);
+
+        if (dashboardLoading) {
+            setLoading(true);
+        }
 
         const timer = setTimeout(() => {
-            if (isMounted) {
+            if (isMounted && dashboardLoading) {
                 setHasTimeout(true);
-                setLoading(false);
             }
         }, 8000);
 
-        const fetchStats = async () => {
-            try {
-                const certsUrl = (['Staff', 'Operator', 'Vendor', 'Kontraktor'].includes(user?.role))
-                    ? '/certifications/my'
-                    : '/certifications/all';
+        if (dashboardData && !dashboardLoading) {
+            clearTimeout(timer);
+            setLoading(false);
 
-                const usersPromise = user?.role === 'Admin'
-                    ? api.get('/users').catch(() => ({ data: [] }))
-                    : Promise.resolve({ data: [] });
+            setStats(dashboardData.stats);
+            setPermits(dashboardData.permits);
 
-                const [statsRes, permitsRes, reportRes, incidentsRes, certsRes, hazardsRes, actionsRes, usersRes] = await Promise.all([
-                    api.get('/stats').catch(() => ({ data: { totalHazards: 0, totalIncidents: 0, totalAudits: 0, pendingActions: 0 } })),
-                    api.get('/permits').catch(() => ({ data: [] })),
-                    api.get('/stats/report-data').catch(() => ({ data: { summary: { audits: 0 } } })),
-                    api.get('/incidents').catch(() => ({ data: [] })),
-                    api.get(certsUrl).catch(() => ({ data: [] })),
-                    api.get('/hazards').catch(() => ({ data: [] })),
-                    api.get('/actions').catch(() => ({ data: [] })),
-                    usersPromise
-                ]);
+            const activeCount = dashboardData.permits.filter(p =>
+                p.status === 'Approved' || p.status === 'Active'
+            ).length;
+            setActivePermitsCount(activeCount);
 
-                if (!isMounted) return;
+            setAuditsLast30Days(dashboardData.report?.summary?.audits || 0);
 
-                clearTimeout(timer);
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            const nearMisses = dashboardData.incidents.filter(i =>
+                i.kategori === 'Near Miss' && new Date(i.createdAt) >= thirtyDaysAgo
+            );
+            setNearMissCount(nearMisses.length);
 
-                setStats(statsRes.data);
-                setPermits(permitsRes.data);
+            const now = new Date();
+            const expiring = dashboardData.certs.filter(cert => {
+                const expDate = new Date(cert.tanggal_expired);
+                const diffTime = expDate - now;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                return diffDays > 0 && diffDays <= 30;
+            });
+            setExpiringCertifications(expiring);
 
-                // 'Approved' = menunggu mulai pekerjaan, 'Active' = sedang berjalan
-                const activeCount = permitsRes.data.filter(p =>
-                    p.status === 'Approved' || p.status === 'Active'
-                ).length;
-                setActivePermitsCount(activeCount);
+            const expired = dashboardData.certs.filter(cert => {
+                const expDate = new Date(cert.tanggal_expired);
+                return expDate < now;
+            });
+            setExpiredCertifications(expired);
 
-                setAuditsLast30Days(reportRes.data?.summary?.audits || 0);
+            if (user) {
+                const userId = user.id_user || user.id;
+                const userHazards = dashboardData.hazards.filter(h => h.id_user === userId);
+                setMyHazards(userHazards);
 
-                const thirtyDaysAgo = new Date();
-                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-                const nearMisses = incidentsRes.data.filter(i =>
-                    i.kategori === 'Near Miss' && new Date(i.createdAt) >= thirtyDaysAgo
-                );
-                setNearMissCount(nearMisses.length);
+                setTotalActions(dashboardData.actions);
 
-                const now = new Date();
-                const expiring = certsRes.data.filter(cert => {
-                    const expDate = new Date(cert.tanggal_expired);
-                    const diffTime = expDate - now;
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    return diffDays > 0 && diffDays <= 30;
-                });
-                setExpiringCertifications(expiring);
-
-                const expired = certsRes.data.filter(cert => {
-                    const expDate = new Date(cert.tanggal_expired);
-                    return expDate < now;
-                });
-                setExpiredCertifications(expired);
-
-                if (user) {
-                    const userId = user.id_user || user.id;
-                    const userHazards = hazardsRes.data.filter(h => h.id_user === userId);
-                    setMyHazards(userHazards);
-
-                    const userActions = actionsRes.data.filter(a => a.assigned_to === userId);
-                    setMyActions(userActions);
-
-                    if (user.role === 'Admin') {
-                        setTotalUsersCount(usersRes.data.length);
-                    }
-                }
-            } catch (err) {
-                console.error(err);
-            } finally {
-                if (isMounted) {
-                    clearTimeout(timer);
-                    setLoading(false);
+                if (user.role === 'Admin') {
+                    setTotalUsersCount(dashboardData.users.length);
                 }
             }
-        };
-        fetchStats();
+        }
 
         // Get weather data dynamically
         if (navigator.geolocation) {
@@ -290,7 +300,7 @@ const DashboardPage = () => {
             isMounted = false;
             clearTimeout(timer);
         };
-    }, [user, retryCount]);
+    }, [user, retryCount, dashboardData, dashboardLoading]);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -337,11 +347,11 @@ const DashboardPage = () => {
         },
         {
             title: 'TRIR Index',
-            value: '1.24',
+            value: '0.00',
             icon: <Zap className="text-emerald-400" />,
             trend: 'Target < 1.5',
-            trendPercentage: '-4%',
-            trendColor: 'text-emerald-500',
+            trendPercentage: '0%',
+            trendColor: 'text-slate-400 dark:text-slate-500',
             color: 'bg-emerald-500/10'
         },
         {
@@ -459,13 +469,13 @@ const DashboardPage = () => {
                                     <CheckCircle size={12} />
                                     Database Sync: Connected
                                 </span>
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded-xl text-xs font-bold text-red-600 dark:text-red-400">
-                                    <AlertTriangle size={12} className="animate-pulse" />
-                                    System Alert: WhatsApp API Gateway Latency High
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                                    <CheckCircle size={12} />
+                                    WhatsApp API: Online
                                 </span>
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs font-bold text-amber-600 dark:text-amber-400">
-                                    <Clock size={12} />
-                                    Akun Menunggu Persetujuan: 3
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-xl text-xs font-bold text-blue-600 dark:text-blue-400">
+                                    <Shield size={12} />
+                                    Sistem Berjalan Normal
                                 </span>
                             </div>
                         </div>
@@ -777,21 +787,21 @@ const DashboardPage = () => {
                                 <div className="p-3 bg-purple-500/10 rounded-xl text-purple-500">
                                     <ClipboardCheck size={24} />
                                 </div>
-                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg">Tugas Perbaikan (CAPA)</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg">Tindakan Perbaikan (CAPA)</span>
                             </div>
                             <div>
-                                <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-1">Tugas Perbaikan Anda</h3>
+                                <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-1">Status Seluruh Tindakan</h3>
                                 <div className="grid grid-cols-3 gap-3 mt-4 text-center">
                                     <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-2xl border border-slate-100 dark:border-slate-800/50">
-                                        <p className="text-2xl font-black text-red-500">{myActions.filter(a => a.status === 'Open').length}</p>
+                                        <p className="text-2xl font-black text-red-500">{totalActions.filter(a => a.status === 'Open').length}</p>
                                         <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-1">Menunggu</p>
                                     </div>
                                     <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-2xl border border-slate-100 dark:border-slate-800/50">
-                                        <p className="text-2xl font-black text-amber-500">{myActions.filter(a => a.status === 'In Progress').length}</p>
+                                        <p className="text-2xl font-black text-amber-500">{totalActions.filter(a => a.status === 'In Progress').length}</p>
                                         <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-1">Berjalan</p>
                                     </div>
                                     <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-2xl border border-slate-100 dark:border-slate-800/50">
-                                        <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{myActions.filter(a => a.status === 'Closed').length}</p>
+                                        <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{totalActions.filter(a => a.status === 'Closed').length}</p>
                                         <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-1">Selesai</p>
                                     </div>
                                 </div>
@@ -910,6 +920,10 @@ const DashboardPage = () => {
                                                 </span>
                                             </div>
                                         ))}
+                                    </div>
+                                ) : dashboardData?.certs?.length === 0 ? (
+                                    <div className="p-3 bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/50 rounded-xl flex items-center gap-2">
+                                        <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Belum ada SIO/Sertifikat.</span>
                                     </div>
                                 ) : (
                                     <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
@@ -1033,6 +1047,10 @@ const DashboardPage = () => {
                                                 </div>
                                             ))}
                                         </div>
+                                    ) : dashboardData?.certs?.length === 0 ? (
+                                        <div className="p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/50 rounded-2xl text-center">
+                                            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Belum ada data SIO / Sertifikat yang terdaftar.</span>
+                                        </div>
                                     ) : (
                                         <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center gap-3 text-emerald-700 dark:text-emerald-400">
                                             <CheckCircle size={16} />
@@ -1103,10 +1121,10 @@ const DashboardPage = () => {
                                             <span className="flex-1 font-bold text-xs">AI Analytics Engine</span>
                                             <span className="text-[9px] font-black uppercase px-1.5 py-0.5 bg-blue-500/15 rounded">Ready</span>
                                         </div>
-                                        <div className="flex items-center gap-3 p-3 bg-amber-500/5 rounded-xl border border-amber-500/10 text-amber-600 dark:text-amber-500">
-                                            <Clock size={16} />
+                                        <div className="flex items-center gap-3 p-3 bg-emerald-500/5 rounded-xl border border-emerald-500/10 text-emerald-600 dark:text-emerald-500">
+                                            <CheckCircle size={16} />
                                             <span className="flex-1 font-bold text-xs">WhatsApp API</span>
-                                            <span className="text-[9px] font-black uppercase px-1.5 py-0.5 bg-amber-500/15 rounded">Configured</span>
+                                            <span className="text-[9px] font-black uppercase px-1.5 py-0.5 bg-emerald-500/15 rounded">Connected</span>
                                         </div>
                                     </div>
                                 </div>
@@ -1123,11 +1141,11 @@ const DashboardPage = () => {
                                         </div>
                                         <div className="flex justify-between items-center text-xs font-bold text-slate-600 dark:text-slate-400">
                                             <span>Akun Menunggu Persetujuan:</span>
-                                            <span className="text-amber-500 font-black">3</span>
+                                            <span className="text-slate-400 font-black">0</span>
                                         </div>
                                         <div className="flex justify-between items-center text-xs font-bold text-slate-600 dark:text-slate-400">
                                             <span>Akun Terkunci:</span>
-                                            <span className="text-red-500 font-black">1</span>
+                                            <span className="text-slate-400 font-black">0</span>
                                         </div>
                                     </div>
                                     <button
@@ -1193,29 +1211,31 @@ const DashboardPage = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="text-sm font-bold">
-                                        {[
-                                            { rank: 1, name: 'PT Petro Kimia', score: 98, permits: 12, incidents: 0 },
-                                            { rank: 2, name: 'CV Bangun Jaya', score: 92, permits: 8, incidents: 0 },
-                                            { rank: 3, name: 'PT Logistik Abadi', score: 85, permits: 5, incidents: 1 },
-                                        ].map((c) => (
-                                            <tr key={c.rank} className="border-b border-slate-50 dark:border-slate-800/50 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                                                <td className="py-4">
-                                                    <span className={`text-lg font-black ${c.rank === 1 ? 'text-amber-500' : c.rank === 2 ? 'text-slate-400' : 'text-orange-600'}`}>
-                                                        #{c.rank}
-                                                    </span>
-                                                </td>
-                                                <td className="py-4 text-slate-900 dark:text-slate-200">{c.name}</td>
-                                                <td className="py-4">
-                                                    <span className={`px-3 py-1 rounded-lg text-[10px] font-black ${c.score > 90 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-orange-500/10 text-orange-600'}`}>
-                                                        {c.score} / 100
-                                                    </span>
-                                                </td>
-                                                <td className="py-4 text-slate-500">{c.permits}</td>
-                                                <td className="py-4">
-                                                    <span className={c.incidents > 0 ? 'text-red-500' : 'text-emerald-500'}>{c.incidents}</span>
-                                                </td>
+                                        {[].length > 0 ? (
+                                            [].map((c) => (
+                                                <tr key={c.rank} className="border-b border-slate-50 dark:border-slate-800/50 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                                                    <td className="py-4">
+                                                        <span className={`text-lg font-black ${c.rank === 1 ? 'text-amber-500' : c.rank === 2 ? 'text-slate-400' : 'text-orange-600'}`}>
+                                                            #{c.rank}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-4 text-slate-900 dark:text-slate-200">{c.name}</td>
+                                                    <td className="py-4">
+                                                        <span className={`px-3 py-1 rounded-lg text-[10px] font-black ${c.score > 90 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-orange-500/10 text-orange-600'}`}>
+                                                            {c.score} / 100
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-4 text-slate-500">{c.permits}</td>
+                                                    <td className="py-4">
+                                                        <span className={c.incidents > 0 ? 'text-red-500' : 'text-emerald-500'}>{c.incidents}</span>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="5" className="py-8 text-center text-slate-400 font-bold text-xs uppercase tracking-wider">Belum ada aktivitas vendor</td>
                                             </tr>
-                                        ))}
+                                        )}
                                     </tbody>
                                 </table>
                             </div>

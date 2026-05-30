@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import Button from '../components/Button';
 import { Target, Clock, CheckCircle, User, AlertTriangle, ChevronRight, Link2, X } from 'lucide-react';
@@ -38,30 +39,32 @@ const STATUS_CONFIG = {
 };
 
 const CorrectiveActionPage = () => {
-    const [actions, setActions] = useState([]);
+    const queryClient = useQueryClient();
     const [selectedAction, setSelectedAction] = useState(null);
     const [filter, setFilter] = useState('All');
 
-    useEffect(() => {
-        fetchActions();
-    }, []);
-
-    const fetchActions = async () => {
-        try {
+    const { data: actions = [] } = useQuery({
+        queryKey: ['actions'],
+        queryFn: async () => {
             const res = await api.get('/actions');
-            setActions(res.data);
-        } catch (err) {
+            return res.data;
+        }
+    });
+
+    const statusMutation = useMutation({
+        mutationFn: async ({ id, status }) => {
+            await api.patch(`/actions/${id}/status`, { status });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries(['actions']);
+        },
+        onError: (err) => {
             console.error(err);
         }
-    };
+    });
 
     const handleUpdateStatus = async (id, status) => {
-        try {
-            await api.patch(`/actions/${id}/status`, { status });
-            fetchActions();
-        } catch (err) {
-            console.error(err);
-        }
+        statusMutation.mutate({ id, status });
     };
 
     const overdueCount = actions.filter(a => getDaysLeft(a.deadline) < 0 && a.status !== 'Closed').length;
@@ -195,7 +198,7 @@ const CorrectiveActionPage = () => {
                 })}
 
                 {filteredActions.length === 0 && (
-                    <div className="p-16 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl">
+                    <div className="p-16 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl">
                         <Target size={48} className="mx-auto mb-4 text-slate-200 dark:text-slate-700" />
                         <p className="text-slate-400 font-medium">Tidak ada tindakan perbaikan aktif untuk filter ini.</p>
                     </div>

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import api from '../api/axios';
 import EmergencyControls from '../components/EmergencyControls';
-import { Zap, AlertTriangle, Shield, MapPin, Clock, Users, Bell, Layers } from 'lucide-react';
+import { Zap, AlertTriangle, Shield, MapPin, Clock, Users, Bell, Layers, CheckCircle } from 'lucide-react';
 import Button from '../components/Button';
+import { useAuth } from '../store/AuthContext';
 
 const ZONE_COORDINATES = {
     'Main Production Zone': { x: 150, y: 105 },
@@ -38,11 +39,22 @@ const getZoneCoordinates = (locationName, index = 0) => {
 };
 
 const EmergencyPage = () => {
+    const { user } = useAuth();
     const [emergencies, setEmergencies] = useState([]);
     const [hazards, setHazards] = useState([]);
     const [loading, setLoading] = useState(false);
     const [activeView, setActiveView] = useState('list'); // 'list' or 'map'
     const [hoveredPin, setHoveredPin] = useState(null);
+
+    const handleResolve = async (id) => {
+        try {
+            await api.patch(`/emergency/${id}/resolve`);
+            fetchEmergencies();
+        } catch (err) {
+            console.error('Failed to resolve emergency:', err);
+            alert(err.response?.data?.message || 'Gagal menandai kondusif');
+        }
+    };
 
     useEffect(() => {
         fetchEmergencies();
@@ -179,10 +191,19 @@ const EmergencyPage = () => {
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-end gap-2">
-                                    <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${e.status === 'Triggered' ? 'bg-red-600 text-white shadow-lg shadow-red-500/20' : 'bg-blue-600 text-white'}`}>
-                                        {e.status}
+                                    <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${e.status === 'Triggered' ? 'bg-red-600 text-white shadow-lg shadow-red-500/20' : 'bg-emerald-600 text-white'}`}>
+                                        {e.status === 'Closed' ? 'Aman' : e.status}
                                     </span>
                                     <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tighter">Responder: <span className="text-slate-700 dark:text-slate-350">{e.responder?.nama || 'Awaiting Dispatch'}</span></span>
+                                    
+                                    {e.status === 'Triggered' && ['Admin', 'HSE', 'Manager'].includes(user?.role) && (
+                                        <button 
+                                            onClick={() => handleResolve(e.id_emergency)}
+                                            className="mt-2 flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-colors"
+                                        >
+                                            <CheckCircle size={12} /> Tandai Kondusif
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         ))}

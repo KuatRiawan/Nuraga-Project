@@ -5,40 +5,7 @@ const Certification = require('../models/Certification');
 const WorkPermit = require('../models/WorkPermit');
 const wa = require('../services/whatsappService');
 
-// SSE client pool
-let sseClients = [];
 
-const registerSseClient = (req, res) => {
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    res.flushHeaders();
-
-    // Send a heartbeat comment every 20 seconds to keep the connection alive
-    const keepAlive = setInterval(() => {
-        res.write(': keepalive\n\n');
-    }, 20000);
-
-    sseClients.push(res);
-    console.log(`[SSE] Client connected. Total clients: ${sseClients.length}`);
-
-    req.on('close', () => {
-        clearInterval(keepAlive);
-        sseClients = sseClients.filter(c => c !== res);
-        console.log(`[SSE] Client disconnected. Total clients: ${sseClients.length}`);
-    });
-};
-
-const broadcastEmergency = (data) => {
-    console.log(`[SSE] Broadcasting emergency to ${sseClients.length} clients`);
-    sseClients.forEach(client => {
-        try {
-            client.write(`data: ${JSON.stringify(data)}\n\n`);
-        } catch (err) {
-            console.error('[SSE] Write error:', err.message);
-        }
-    });
-};
 
 const triggerEmergency = async (req, res) => {
     try {
@@ -133,25 +100,28 @@ const triggerEmergency = async (req, res) => {
         // Fallback to all responders if no responder is currently assigned to this zone
         const finalResponders = zoneResponders.length > 0 ? zoneResponders : allResponders;
 
-        // Broadcast to all active clients (Safety Officers, HSE, etc.)
-        broadcastEmergency({
-            event: 'emergency-triggered',
-            emergency: {
-                id_emergency: emergency.id_emergency,
-                jenis_kejadian: emergency.jenis_kejadian,
-                lokasi: emergency.lokasi,
-                waktu_kejadian: emergency.waktu_kejadian,
-                status: emergency.status,
-                reporter_name: victimName,
-            },
-            responders: finalResponders
-        });
+        // Broadcast to all active clients via WebSockets
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('EMERGENCY_SOS', {
+                event: 'emergency-triggered',
+                emergency: {
+                    id_emergency: emergency.id_emergency,
+                    jenis_kejadian: emergency.jenis_kejadian,
+                    lokasi: emergency.lokasi,
+                    waktu_kejadian: emergency.waktu_kejadian,
+                    status: emergency.status,
+                    reporter_name: victimName,
+                },
+                responders: finalResponders
+            });
+        }
 
         // WA: blast to all HSE / Admin / Manager
         try {
             const responderNames = finalResponders.map(r => `• ${r.nama} (${r.role})`).join('\n') || '• Belum ada responder ditemukan';
             const waMessage =
-                `🚨 *[NURAGA HSE — DARURAT SOS!]*\n\n` +
+                `🚨 *[NURAGA SAFETY — DARURAT SOS!]*\n\n` +
                 `⚠️ Jenis Kejadian: *${jenis_kejadian}*\n` +
                 `📍 Lokasi: *${victimZone}*\n` +
                 `👤 Pelapor: *${victimName || 'Tidak diketahui'}*\n` +
@@ -169,7 +139,7 @@ const triggerEmergency = async (req, res) => {
                 const responderUser = await User.findByPk(responder.id_user);
                 if (responderUser && responderUser.no_whatsapp) {
                     await wa.sendMessage(responderUser.no_whatsapp,
-                        `🚨 *[NURAGA HSE — ANDA DITUGASKAN SEBAGAI RESPONDER]*\n\n` +
+                        `🚨 *[NURAGA SAFETY — ANDA DITUGASKAN SEBAGAI RESPONDER]*\n\n` +
                         `Jenis Kejadian: *${jenis_kejadian}*\n` +
                         `Lokasi: *${victimZone}*\n` +
                         `Pelapor: ${victimName || 'Tidak diketahui'}\n\n` +
@@ -206,4 +176,56 @@ const getEmergencies = async (req, res) => {
     }
 };
 
-module.exports = { registerSseClient, triggerEmergency, getEmergencies };
+const resolveEmergency = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const emergency = await EmergencyCall.findByPk(id);
+
+        if (!emergency) {
+            return res.status(404).json({ message: 'Log darurat tidak ditemukan.' });
+        }
+
+        if (emergency.status === 'Closed') {
+            return res.status(400).json({ message: 'Darurat ini sudah ditandai aman sebelumnya.' });
+        }
+
+        emergency.status = 'Closed';
+        emergency.handled_by = req.user.id;
+        await emergency.save();
+
+        const resolverName = req.user.nama;
+
+        // Broadcast WebSockets to ALL clients
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('EMERGENCY_RESOLVED', {
+                id_emergency: emergency.id_emergency,
+                resolver_name: resolverName,
+                waktu_selesai: new Date()
+            });
+        }
+
+        // Send WhatsApp broadcast
+        try {
+            const waMessage = 
+                `✅ *[NURAGA SAFETY — STATUS AMAN]*\n\n` +
+                `Peringatan Darurat untuk kejadian *${emergency.jenis_kejadian}* di *${emergency.lokasi}* telah dicabut.\n\n` +
+                `Kondisi dinyatakan *Kondusif/Aman* oleh: ${resolverName} (${req.user.role}).\n` +
+                `Waktu Selesai: ${new Date().toLocaleString('id-ID')}\n\n` +
+                `Seluruh staf dapat kembali beraktivitas normal.`;
+
+            const hsePics = await User.findAll({ where: { role: ['HSE', 'Admin', 'Manager'] } });
+            for (const u of hsePics) {
+                if (u.no_whatsapp) await wa.sendMessage(u.no_whatsapp, waMessage);
+            }
+        } catch (waErr) {
+            console.error('[WhatsApp] Resolve notification failed:', waErr.message);
+        }
+
+        res.json({ message: 'Status darurat berhasil dicabut (kondusif).', emergency });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { triggerEmergency, getEmergencies, resolveEmergency };

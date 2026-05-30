@@ -1,28 +1,21 @@
 import { useState, useEffect } from 'react';
 import api from '../api/axios';
+import { useQuery } from '@tanstack/react-query';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 
 const SafetyCharts = () => {
-    const [data, setData] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { data = [], isLoading } = useQuery({
+        queryKey: ['safetyCharts'],
+        queryFn: async () => {
+            const res = await api.get('/stats/monthly');
+            return res.data;
+        },
+        refetchInterval: 60000 // Short Polling every 60s
+    });
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const res = await api.get('/stats/monthly');
-                setData(res.data);
-            } catch (err) {
-                console.error(err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
-    }, []);
-
-    if (loading) return <div className="h-64 flex items-center justify-center text-slate-400">Loading charts...</div>;
+    if (isLoading) return <div className="h-64 flex items-center justify-center text-slate-400">Loading charts...</div>;
 
     return (
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-8 shadow-sm transition-colors duration-300">

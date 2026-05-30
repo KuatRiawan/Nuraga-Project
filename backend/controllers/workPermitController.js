@@ -38,12 +38,12 @@ const requestPermit = async (req, res) => {
 
         // WA: notify supervisors about new PTW request
         await notifyRoles(['Supervisor', 'Admin'],
-            `📋 *[NURAGA HSE — Pengajuan PTW Baru]*\n\n` +
+            `📋 *[NURAGA SAFETY — Pengajuan PTW Baru]*\n\n` +
             `Pemohon: *${requesterNama}* (${req.user.role})\n` +
             `Jenis Pekerjaan: ${permit.jenis_permit}\n` +
             `Lokasi: ${permit.lokasi}\n` +
             `Status: Menunggu persetujuan Supervisor\n\n` +
-            `Silakan review di sistem Nuraga HSE.`
+            `Silakan review di sistem Nuraga Safety.`
         );
 
         res.status(201).json(permit);
@@ -93,7 +93,7 @@ const approvePermit = async (req, res) => {
             // WA: notify the requester about rejection
             const requester = await User.findByPk(permit.id_user);
             await notifyUser(requester,
-                `❌ *[NURAGA HSE — PTW Ditolak]*\n\n` +
+                `❌ *[NURAGA SAFETY — PTW Ditolak]*\n\n` +
                 `PTW #${permit.id_permit} Anda ditolak oleh *${approverNama}* (${req.user.role}).\n` +
                 `Jenis Pekerjaan: ${permit.jenis_permit}\n` +
                 `Lokasi: ${permit.lokasi}\n\n` +
@@ -118,7 +118,7 @@ const approvePermit = async (req, res) => {
 
             // WA: notify HSE about step 1 completion
             await notifyRoles(['HSE', 'Admin'],
-                `✅ *[NURAGA HSE — PTW Disetujui Supervisor]*\n\n` +
+                `✅ *[NURAGA SAFETY — PTW Disetujui Supervisor]*\n\n` +
                 `PTW #${permit.id_permit} telah disetujui oleh *${approverNama}* (Supervisor).\n` +
                 `Jenis Pekerjaan: ${permit.jenis_permit}\n` +
                 `Lokasi: ${permit.lokasi}\n` +
@@ -127,7 +127,7 @@ const approvePermit = async (req, res) => {
             // Notify requester
             const req1 = await User.findByPk(permit.id_user);
             await notifyUser(req1,
-                `✅ *[NURAGA HSE — PTW Tahap 1 Disetujui]*\n\n` +
+                `✅ *[NURAGA SAFETY — PTW Tahap 1 Disetujui]*\n\n` +
                 `PTW #${permit.id_permit} Anda telah disetujui oleh Supervisor.\n` +
                 `Status berikutnya: Menunggu persetujuan HSE Officer.`
             );
@@ -148,7 +148,7 @@ const approvePermit = async (req, res) => {
 
             // WA: notify Manager about step 2 completion
             await notifyRoles(['Manager', 'Admin'],
-                `✅ *[NURAGA HSE — PTW Disetujui HSE]*\n\n` +
+                `✅ *[NURAGA SAFETY — PTW Disetujui HSE]*\n\n` +
                 `PTW #${permit.id_permit} telah disetujui oleh *${approverNama}* (HSE Officer).\n` +
                 `Jenis Pekerjaan: ${permit.jenis_permit}\n` +
                 `Lokasi: ${permit.lokasi}\n` +
@@ -157,7 +157,7 @@ const approvePermit = async (req, res) => {
             // Notify requester
             const req2 = await User.findByPk(permit.id_user);
             await notifyUser(req2,
-                `✅ *[NURAGA HSE — PTW Tahap 2 Disetujui]*\n\n` +
+                `✅ *[NURAGA SAFETY — PTW Tahap 2 Disetujui]*\n\n` +
                 `PTW #${permit.id_permit} Anda telah disetujui oleh HSE Officer.\n` +
                 `Status berikutnya: Menunggu persetujuan final Manager.`
             );
@@ -181,7 +181,7 @@ const approvePermit = async (req, res) => {
             // WA: notify requester — PTW fully approved!
             const req3 = await User.findByPk(permit.id_user);
             await notifyUser(req3,
-                `🎉 *[NURAGA HSE — PTW DISETUJUI PENUH]*\n\n` +
+                `🎉 *[NURAGA SAFETY — PTW DISETUJUI PENUH]*\n\n` +
                 `PTW #${permit.id_permit} Anda telah mendapat persetujuan penuh dari Manager.\n` +
                 `Jenis Pekerjaan: ${permit.jenis_permit}\n` +
                 `Lokasi: ${permit.lokasi}\n` +
