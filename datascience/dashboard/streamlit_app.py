@@ -137,6 +137,38 @@ class WellGuardModel(nn.Module):
         for block in self.blocks:
             x = block(x)
         return self.head(x)
+    
+# =====================================================
+# DEBUG: CEK FILE DI FOLDER
+# =====================================================
+
+import os
+
+# Tampilkan debug info di sidebar
+st.sidebar.write("### 🔍 Debug Info")
+st.sidebar.write(f"Current directory: {os.getcwd()}")
+
+# Cek semua file di folder
+all_files = os.listdir('.')
+st.sidebar.write(f"Total files: {len(all_files)}")
+
+# Cari file .pt
+pt_files = [f for f in all_files if f.endswith('.pt')]
+st.sidebar.write(f"PT files found: {pt_files}")
+
+# Cek ukuran file model
+if 'wellguard_model.pt' in all_files:
+    size = os.path.getsize('wellguard_model.pt')
+    st.sidebar.success(f"✅ wellguard_model.pt ditemukan! Size: {size:,} bytes")
+else:
+    st.sidebar.error("❌ wellguard_model.pt TIDAK ditemukan!")
+    
+    # Tampilkan 10 file pertama untuk inspect
+    st.sidebar.write("Sample files (first 10):")
+    for f in all_files[:10]:
+        st.sidebar.write(f"  - {f}")
+
+
 
 
 # =====================================================
