@@ -8,13 +8,25 @@ const createIncident = async (req, res) => {
     const t = await sequelize.transaction();
     try {
         const { kategori, kronologi, korban, loss_cost, five_whys } = req.body;
+        
+        // Guard JSON parsing for five_whys
+        let parsedFiveWhys = null;
+        if (five_whys) {
+            try {
+                parsedFiveWhys = typeof five_whys === 'string' ? JSON.parse(five_whys) : five_whys;
+            } catch (parseError) {
+                await t.rollback();
+                return res.status(400).json({ message: 'Format JSON five_whys tidak valid' });
+            }
+        }
+        
         const incident = await IncidentReport.create({
             id_user: req.user.id,
             kategori,
             kronologi,
             korban,
             loss_cost: loss_cost ? parseFloat(loss_cost) : 0,
-            five_whys: five_whys ? (typeof five_whys === 'string' ? JSON.parse(five_whys) : five_whys) : null,
+            five_whys: parsedFiveWhys,
             foto: req.file ? req.file.filename : null,
         }, { transaction: t });
         
@@ -48,9 +60,15 @@ const createIncident = async (req, res) => {
 
 const getIncidents = async (req, res) => {
     try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const offset = (page - 1) * limit;
+
         const queryOptions = {
             include: [{ model: User, attributes: ['nama', 'role'] }],
             order: [['createdAt', 'DESC']],
+            limit,
+            offset,
         };
 
         // Vendors may only view their own incident reports.
@@ -58,8 +76,15 @@ const getIncidents = async (req, res) => {
             queryOptions.where = { id_user: req.user.id };
         }
 
-        const incidents = await IncidentReport.findAll(queryOptions);
-        res.json(incidents);
+        const results = await IncidentReport.findAndCountAll(queryOptions);
+        const totalPages = Math.ceil(results.count / limit);
+
+        res.json({
+            data: results.rows,
+            totalItems: results.count,
+            totalPages,
+            currentPage: page
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -87,7 +112,13 @@ const updateIncident = async (req, res) => {
             incident.loss_cost = parseFloat(loss_cost) || 0;
         }
         if (five_whys !== undefined) {
-            incident.five_whys = typeof five_whys === 'string' ? JSON.parse(five_whys) : five_whys;
+            // Guard JSON parsing for five_whys
+            try {
+                incident.five_whys = typeof five_whys === 'string' ? JSON.parse(five_whys) : five_whys;
+            } catch (parseError) {
+                await t.rollback();
+                return res.status(400).json({ message: 'Format JSON five_whys tidak valid' });
+            }
         }
 
         await incident.save({ transaction: t });

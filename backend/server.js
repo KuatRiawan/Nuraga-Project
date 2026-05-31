@@ -3,6 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const sequelize = require('./config/db');
 const { Server } = require('socket.io');
+const jwt = require('jsonwebtoken');
 
 // Import models to sync
 const User = require('./models/User');
@@ -21,12 +22,24 @@ const Attendance = require('./models/Attendance');
 const LeaveRequest = require('./models/LeaveRequest');
 const { autoExpirePermits } = require('./controllers/workPermitController');
 const whatsappService = require('./services/whatsappService');
+const { startFileCleanupScheduler } = require('./utils/fileCleanup');
 
 dotenv.config();
 
+// Validate JWT secret on startup - server cannot run without security
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.trim() === '') {
+    console.error('FATAL: JWT_SECRET environment variable is missing or empty. Server cannot start without security.');
+    process.exit(1);
+}
+
 const app = express();
 
-app.use(cors());
+const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+
+app.use(cors({
+    origin: clientUrl,
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -120,15 +133,33 @@ function startServer(port, retries = 5) {
 
     const io = new Server(server, {
         cors: {
-            origin: "*",
-            methods: ["GET", "POST"]
+            origin: clientUrl,
+            methods: ["GET", "POST"],
+            credentials: true
+        }
+    });
+
+    // JWT Authentication middleware for Socket.io
+    io.use((socket, next) => {
+        const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.replace('Bearer ', '');
+
+        if (!token) {
+            return next(new Error('Authentication error'));
+        }
+
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            socket.user = decoded;
+            next();
+        } catch (err) {
+            return next(new Error('Authentication error'));
         }
     });
 
     io.on('connection', (socket) => {
-        console.log('A user connected to WebSocket');
+        console.log(`User ${socket.user?.id || 'unknown'} connected to WebSocket`);
         socket.on('disconnect', () => {
-            console.log('User disconnected from WebSocket');
+            console.log(`User ${socket.user?.id || 'unknown'} disconnected from WebSocket`);
         });
     });
 
@@ -241,6 +272,13 @@ sequelize.sync({ force: false }).then(async () => {
         console.log('Auto-expiration scheduler started');
     } catch (err) {
         console.error('Failed to start auto-expiration scheduler:', err.message);
+    }
+
+    // Start file cleanup scheduler (deletes files older than 90 days)
+    try {
+        startFileCleanupScheduler();
+    } catch (err) {
+        console.error('Failed to start file cleanup scheduler:', err.message);
     }
 
     // Seed default configurations if empty

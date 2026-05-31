@@ -5,6 +5,10 @@ const Certification = require('../models/Certification');
 const WorkPermit = require('../models/WorkPermit');
 const wa = require('../services/whatsappService');
 
+// Simple in-memory cooldown cache for SOS spam prevention
+const sosCooldownCache = new Map();
+const COOLDOWN_SECONDS = 60;
+
 
 
 const triggerEmergency = async (req, res) => {
@@ -12,6 +16,18 @@ const triggerEmergency = async (req, res) => {
         const { jenis_kejadian, lokasi } = req.body;
         const now = new Date();
         let victimZone = lokasi || 'Main Production Zone (Auto-detected)';
+
+        // Check cooldown for SOS spam prevention
+        const userId = req.user.id;
+        const lastTriggerTime = sosCooldownCache.get(userId);
+        if (lastTriggerTime) {
+            const timeSinceLastTrigger = (now - lastTriggerTime) / 1000; // Convert to seconds
+            if (timeSinceLastTrigger < COOLDOWN_SECONDS) {
+                return res.status(429).json({ message: "Terlalu banyak permintaan darurat. Harap tunggu 60 detik." });
+            }
+        }
+        // Update the cooldown cache
+        sosCooldownCache.set(userId, now);
 
         // 1. Static location routing: retrieve the user's active work permit zone today
         const activePermits = await WorkPermit.findAll({
@@ -150,11 +166,25 @@ const triggerEmergency = async (req, res) => {
                 }
             }
 
-            // Also notify responders directly
+            // Also notify responders directly - batch query to avoid N+1
+            const responderIds = finalResponders
+                .filter(r => r && r.id_user)
+                .map(r => r.id_user);
+            
+            const responderUsersMap = new Map();
+            if (responderIds.length > 0) {
+                const responderUsers = await User.findAll({
+                    attributes: ['id_user', 'nama', 'role', 'no_whatsapp'],
+                    where: {
+                        id_user: { [Op.in]: responderIds }
+                    }
+                });
+                responderUsers.forEach(u => responderUsersMap.set(u.id_user, u));
+            }
+
             for (const responder of finalResponders) {
                 try {
-                    // responder may already be a User instance or partial object
-                    const responderUser = responder && responder.id_user ? await User.findByPk(responder.id_user) : null;
+                    const responderUser = responder && responder.id_user ? responderUsersMap.get(responder.id_user) : null;
                     const phone = (responderUser && responderUser.no_whatsapp) || (responder && responder.no_whatsapp);
                     if (phone) {
                         await wa.sendMessage(phone,

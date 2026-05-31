@@ -103,7 +103,7 @@ const IncidentPage = () => {
         queryKey: ['incidents'],
         queryFn: async () => {
             const res = await api.get('/incidents');
-            return res.data;
+            return res.data.data || res.data;
         }
     });
 
@@ -305,7 +305,7 @@ const IncidentPage = () => {
                                                 />
                                                 {preview ? (
                                                     <div className="relative rounded-2xl overflow-hidden h-36">
-                                                        <img src={preview} alt="preview" className="w-full h-full object-cover" />
+                                                        <img src={preview} alt="preview" className="w-full h-full object-cover" onError={(e) => { e.target.src = '/fallback.png'; e.target.onerror = null; }} />
                                                         <div className="absolute inset-0 bg-black/30 flex items-center justify-center text-white text-xs font-bold">Klik untuk ganti</div>
                                                     </div>
                                                 ) : (
@@ -443,7 +443,7 @@ const IncidentPage = () => {
                                 <div className="space-y-1.5">
                                     <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">Foto Dokumentasi</h3>
                                     <div className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 max-h-60 flex items-center justify-center bg-slate-900">
-                                        <img src={`/uploads/${selectedIncident.foto}`} alt="Dokumentasi Insiden" className="w-full h-full object-contain" />
+                                        <img src={`/uploads/${selectedIncident.foto}`} alt="Dokumentasi Insiden" className="w-full h-full object-contain" onError={(e) => { e.target.src = '/fallback.png'; e.target.onerror = null; }} />
                                     </div>
                                 </div>
                             )}

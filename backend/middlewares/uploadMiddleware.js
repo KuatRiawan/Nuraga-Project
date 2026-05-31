@@ -16,8 +16,6 @@ const storage = multer.diskStorage({
             'image/jpeg': '.jpg',
             'image/jpg': '.jpg',
             'image/png': '.png',
-            'image/webp': '.webp',
-            'image/heic': '.heic',
         };
         const ext = path.extname(file.originalname) || mimeToExt[file.mimetype] || '.jpg';
         cb(null, `${Date.now()}${ext}`);
@@ -25,16 +23,19 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-    // Accept any image/* mimetype — covers jpeg, png, webp, heic (from iPhone cameras)
-    if (file.mimetype.startsWith('image/')) {
-        return cb(null, true);
+    // Block .svg and script execution - only allow jpg, jpeg, png
+    const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    
+    // Check mimetype
+    if (allowedMimeTypes.includes(file.mimetype)) {
+        // Also verify extension to prevent mime type spoofing
+        const allowedExt = /\.(jpeg|jpg|png)$/i;
+        if (allowedExt.test(path.extname(file.originalname))) {
+            return cb(null, true);
+        }
     }
-    // Also accept by extension as fallback
-    const allowedExt = /\.(jpeg|jpg|png|webp|heic)$/i;
-    if (allowedExt.test(path.extname(file.originalname))) {
-        return cb(null, true);
-    }
-    cb(new Error('Hanya file gambar yang diizinkan (jpg, png, webp)'));
+    
+    cb(new Error('Hanya file gambar yang diizinkan (jpg, jpeg, png). File .svg atau script tidak diperbolehkan.'));
 };
 
 const upload = multer({

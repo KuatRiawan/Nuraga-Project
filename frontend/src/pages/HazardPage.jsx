@@ -91,7 +91,7 @@ const HazardPage = () => {
         queryKey: ['hazards'],
         queryFn: async () => {
             const res = await api.get('/hazards');
-            return res.data;
+            return res.data.data || res.data;
         }
     });
 
@@ -296,7 +296,7 @@ const HazardPage = () => {
                                             <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
                                             {preview ? (
                                                 <div className="relative rounded-2xl overflow-hidden h-36">
-                                                    <img src={preview} alt="preview" className="w-full h-full object-cover" />
+                                                    <img src={preview} alt="preview" className="w-full h-full object-cover" onError={(e) => { e.target.src = '/fallback.png'; e.target.onerror = null; }} />
                                                     <div className="absolute inset-0 bg-black/30 flex items-center justify-center text-white text-xs font-bold">Klik untuk ganti</div>
                                                 </div>
                                             ) : (
@@ -534,7 +534,7 @@ const HazardPage = () => {
                                 <div className="space-y-2">
                                     <h3 className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Foto Bukti / Dokumentasi</h3>
                                     <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 max-h-72 flex items-center justify-center bg-slate-900">
-                                        <img src={imageUrl} alt="Hazard Attachment" className="max-h-72 object-contain" />
+                                        <img src={imageUrl} alt="Hazard Attachment" className="max-h-72 object-contain" onError={(e) => { e.target.src = '/fallback.png'; e.target.onerror = null; }} />
                                     </div>
                                 </div>
                             )}

@@ -183,11 +183,11 @@ const DashboardPage = () => {
 
         return {
             stats: statsRes.data,
-            permits: permitsRes.data,
+            permits: permitsRes.data.data || permitsRes.data,
             report: reportRes.data,
-            incidents: incidentsRes.data,
+            incidents: incidentsRes.data.data || incidentsRes.data,
             certs: certsRes.data,
-            hazards: hazardsRes.data,
+            hazards: hazardsRes.data.data || hazardsRes.data,
             actions: actionsRes.data,
             users: usersRes.data
         };

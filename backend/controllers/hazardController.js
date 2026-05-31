@@ -56,9 +56,15 @@ const createHazard = async (req, res) => {
 
 const getHazards = async (req, res) => {
     try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const offset = (page - 1) * limit;
+
         const queryOptions = {
             include: [{ model: User, attributes: ['nama', 'role'] }],
             order: [['createdAt', 'DESC']],
+            limit,
+            offset,
         };
 
         // Vendors may only view their own hazard reports.
@@ -66,8 +72,15 @@ const getHazards = async (req, res) => {
             queryOptions.where = { id_user: req.user.id };
         }
 
-        const hazards = await HazardReport.findAll(queryOptions);
-        res.json(hazards);
+        const results = await HazardReport.findAndCountAll(queryOptions);
+        const totalPages = Math.ceil(results.count / limit);
+
+        res.json({
+            data: results.rows,
+            totalItems: results.count,
+            totalPages,
+            currentPage: page
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -132,28 +145,35 @@ const overrideRisk = async (req, res) => {
 };
 
 const verifyHazard = async (req, res) => {
+    const t = await sequelize.transaction();
     try {
-        const hazard = await HazardReport.findByPk(req.params.id);
-        if (!hazard) return res.status(404).json({ message: 'Laporan bahaya tidak ditemukan' });
+        const hazard = await HazardReport.findByPk(req.params.id, { transaction: t });
+        if (!hazard) {
+            await t.rollback();
+            return res.status(404).json({ message: 'Laporan bahaya tidak ditemukan' });
+        }
 
         if (hazard.is_verified) {
+            await t.rollback();
             return res.status(400).json({ message: 'Laporan bahaya ini sudah divalidasi sebelumnya' });
         }
 
         hazard.is_verified = true;
-        await hazard.save();
+        await hazard.save({ transaction: t });
 
         // Award points to the reporter (hazard.id_user)
-        const reporter = await User.findByPk(hazard.id_user);
+        const reporter = await User.findByPk(hazard.id_user, { transaction: t });
         if (reporter) {
             reporter.points = (reporter.points || 0) + 100;
-            await reporter.save();
+            await reporter.save({ transaction: t });
         }
 
+        await t.commit();
         clearStatsCache();
         await recordLog(req, 'VERIFY_HAZARD', `${req.user.nama} (${req.user.role}) memvalidasi Laporan Bahaya #${hazard.id_hazard} (+100 Poin diberikan kepada pelapor).`);
         res.json({ message: 'Laporan bahaya berhasil diverifikasi dan 100 poin dikirim ke pelapor', hazard });
     } catch (error) {
+        await t.rollback();
         res.status(500).json({ message: error.message });
     }
 };

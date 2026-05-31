@@ -15,11 +15,16 @@ exports.logFatigue = async (req, res) => {
             const aiResponse = await axios.post(`${AI_SERVICE_URL}/predict-fatigue`, {
                 sleep_hours,
                 stress_level
-            });
+            }, { timeout: 5000 });
             aiPrediction = aiResponse.data;
         } catch (error) {
-            console.error("AI Service Error:", error.message);
-            return res.status(503).json({ message: "AI Service unavailable. Failed to analyze fatigue." });
+            if (error.code === 'ECONNABORTED') {
+                console.error("AI Service Timeout:", error.message);
+                return res.status(503).json({ message: "Layanan AI sedang sibuk" });
+            } else {
+                console.error("AI Service Error:", error.message);
+                return res.status(503).json({ message: "AI Service unavailable. Failed to analyze fatigue." });
+            }
         }
 
         // 2. Save to database

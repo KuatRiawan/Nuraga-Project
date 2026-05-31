@@ -197,9 +197,9 @@ const DashboardLayout = ({ children }) => {
             ]);
 
             const compiled = compileNotifications(
-                permitsRes.data || [],
-                hazardsRes.data || [],
-                actionsRes.data || [],
+                permitsRes.data.data || permitsRes.data || [],
+                hazardsRes.data.data || hazardsRes.data || [],
+                actionsRes.data.data || actionsRes.data || [],
                 attendanceRes.data?.leaves || [],
                 user
             );
@@ -213,7 +213,7 @@ const DashboardLayout = ({ children }) => {
         if (!user) return;
 
         fetchNotifications();
-        const interval = setInterval(fetchNotifications, 10000); // Poll every 10 seconds
+        const interval = setInterval(fetchNotifications, 60000); // Poll every 60 seconds (WebSocket handles real-time updates)
 
         return () => clearInterval(interval);
     }, [fetchNotifications, user]);

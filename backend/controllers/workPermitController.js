@@ -71,12 +71,18 @@ const requestPermit = async (req, res) => {
 
 const getPermits = async (req, res) => {
     try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const offset = (page - 1) * limit;
+
         const queryOptions = {
             include: [
                 { model: User, attributes: ['nama'], as: 'User' },
                 { model: User, attributes: ['nama'], as: 'approver' }
             ],
-            order: [['createdAt', 'DESC']]
+            order: [['createdAt', 'DESC']],
+            limit,
+            offset,
         };
 
         // Staff and Vendors can only see their own permits.
@@ -85,8 +91,15 @@ const getPermits = async (req, res) => {
             queryOptions.where = { id_user: req.user.id };
         }
 
-        const permits = await WorkPermit.findAll(queryOptions);
-        res.json(permits);
+        const results = await WorkPermit.findAndCountAll(queryOptions);
+        const totalPages = Math.ceil(results.count / limit);
+
+        res.json({
+            data: results.rows,
+            totalItems: results.count,
+            totalPages,
+            currentPage: page
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

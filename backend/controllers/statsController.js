@@ -113,6 +113,7 @@ const getReportData = async (req, res) => {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
+        // Limit columns to avoid loading long text fields (deskripsi, five_whys, kronologi, etc.)
         const hazards = await HazardReport.findAll({
             where: { createdAt: { [Op.gte]: thirtyDaysAgo } },
             order: [['createdAt', 'DESC']]

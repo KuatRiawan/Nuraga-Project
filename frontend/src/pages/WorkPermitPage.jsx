@@ -33,7 +33,7 @@ const WorkPermitPage = () => {
         queryKey: ['permits'],
         queryFn: async () => {
             const res = await api.get('/permits');
-            return res.data;
+            return res.data.data || res.data;
         }
     });
 

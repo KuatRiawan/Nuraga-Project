@@ -2,12 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { ShieldCheck, AlertTriangle, Heart, Camera, Clock, UserX, FileText, Check, Download, CheckCircle, XCircle, X } from 'lucide-react';
 import { useAuth } from '../store/AuthContext';
-import io from 'socket.io-client';
+import { useSocket } from '../hooks/useSocket';
 
 const API_URL = '/api';
 
 const AttendancePage = () => {
   const { user } = useAuth();
+  const { socket } = useSocket();
   const isAdmin = user?.role === 'Admin';
   const [activeTab, setActiveTab] = useState('absensi'); // absensi, izin, laporan
   const [todayStatus, setTodayStatus] = useState({ clockedIn: false, clockedOut: false, fatigue_status: null });
@@ -129,14 +130,14 @@ const AttendancePage = () => {
 
   // ━━━ WebSocket listener untuk notifikasi approval & submit izin ━━━
   useEffect(() => {
-    const socket = io();
+    if (!socket) return;
 
     // Handle approval/rejection notifications untuk user
     const handleLeaveUpdate = (data) => {
       const userId = user?.id_user || user?.id;
       if (data.id_user === userId || user?.role === 'Admin') {
         const popupType = data.status === 'Approved' ? 'success' : 'error';
-        const message = data.status === 'Approved' 
+        const message = data.status === 'Approved'
           ? `✅ ${data.userName}: Pengajuan ${data.type} disetujui!`
           : `❌ ${data.userName}: Pengajuan ${data.type} ditolak.`;
         showPopup(popupType, message);
@@ -154,7 +155,7 @@ const AttendancePage = () => {
     const handleNewLeaveRequest = (data) => {
       if (user?.role === 'Admin') {
         showPopup('success', `Pengajuan ${data.type} baru dari ${data.userName}\n${data.start_date} s/d ${data.end_date}`);
-        
+
         // Refresh history untuk admin
         setTimeout(() => fetchAllHistory(), 1000);
       }
@@ -166,9 +167,9 @@ const AttendancePage = () => {
     return () => {
       socket.off('LEAVE_REQUEST_UPDATE', handleLeaveUpdate);
       socket.off('NEW_LEAVE_REQUEST', handleNewLeaveRequest);
-      socket.disconnect();
+      // Don't disconnect - socket is managed by useSocket singleton
     };
-  }, [user]);
+  }, [socket, user, isAdmin]);
 
   useEffect(() => {
     fetchTodayStatus();
@@ -195,7 +196,7 @@ const AttendancePage = () => {
 
       const interval = setInterval(() => {
         refreshHistory();
-      }, 30000);
+      }, 60000); // Slow down from 30s to 60s (WebSocket handles real-time updates)
 
       return () => clearInterval(interval);
     }

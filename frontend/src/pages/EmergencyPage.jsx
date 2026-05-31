@@ -60,11 +60,11 @@ const EmergencyPage = () => {
         fetchEmergencies();
         fetchHazards();
 
-        // Auto poll every 10 seconds to keep live map/log updated
+        // Auto poll every 60 seconds to keep live map/log updated (WebSocket handles real-time updates)
         const timer = setInterval(() => {
             fetchEmergencies();
             fetchHazards();
-        }, 10000);
+        }, 60000);
 
         return () => clearInterval(timer);
     }, []);
@@ -72,7 +72,7 @@ const EmergencyPage = () => {
     const fetchEmergencies = async () => {
         try {
             const res = await api.get('/emergency');
-            setEmergencies(res.data);
+            setEmergencies(res.data.data || res.data);
         } catch (err) {
             console.error('[Emergency] Error fetching emergencies:', err);
         }
@@ -81,15 +81,15 @@ const EmergencyPage = () => {
     const fetchHazards = async () => {
         try {
             const res = await api.get('/hazards');
-            setHazards(res.data);
+            setHazards(res.data.data || res.data);
         } catch (err) {
             console.error('[Emergency] Error fetching hazards:', err);
         }
     };
 
     // Filter active emergencies and unverified hazards for display on the GIS Map
-    const activeEmergencies = emergencies.filter(e => e.status === 'Triggered' || e.status === 'Active');
-    const unverifiedHazards = hazards.filter(h => !h.is_verified);
+    const activeEmergencies = (emergencies || []).filter(e => e.status === 'Triggered' || e.status === 'Active');
+    const unverifiedHazards = (hazards || []).filter(h => !h.is_verified);
 
     // Build pin arrays
     const pins = [];

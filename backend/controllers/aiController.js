@@ -9,7 +9,7 @@ const analyzeRisk = async (req, res) => {
         const aiResponse = await axios.post(`${AI_SERVICE_URL}/predict-risk`, {
             description: deskripsi,
             location: lokasi
-        });
+        }, { timeout: 5000 });
 
         const data = aiResponse.data || {};
 
@@ -19,12 +19,17 @@ const analyzeRisk = async (req, res) => {
             recommendation: data.recommendation || 'Manual review required.'
         });
     } catch (error) {
-        console.error('AI analyze failed:', error.message, error.response?.data || 'No response data');
-        res.json({
-            predicted_risk: 'Unknown',
-            confidence: 0,
-            recommendation: 'AI service tidak tersedia, silakan tinjau secara manual.'
-        });
+        if (error.code === 'ECONNABORTED') {
+            console.error('AI Service Timeout:', error.message);
+            return res.status(503).json({ message: "Layanan AI sedang sibuk" });
+        } else {
+            console.error('AI analyze failed:', error.message, error.response?.data || 'No response data');
+            res.json({
+                predicted_risk: 'Unknown',
+                confidence: 0,
+                recommendation: 'AI service tidak tersedia, silakan tinjau secara manual.'
+            });
+        }
     }
 };
 

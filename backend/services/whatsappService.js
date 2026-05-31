@@ -46,12 +46,33 @@ const getReconnectDelay = () => {
     return delay;
 };
 
+// ── Clean up old socket to prevent memory leak ─────────────────────────────────
+const cleanupOldSocket = async () => {
+    if (sock) {
+        try {
+            // Remove all event listeners
+            sock.ev.removeAllListeners('creds.update');
+            sock.ev.removeAllListeners('connection.update');
+            
+            // End the socket connection
+            await sock.end();
+            console.log('[WhatsApp] 🧹 Old socket cleaned up successfully');
+        } catch (err) {
+            console.error('[WhatsApp] ⚠️ Error cleaning up old socket:', err.message);
+        }
+        sock = null;
+    }
+};
+
 // ── Connect / Reconnect ───────────────────────────────────────────────────────
 const connect = async () => {
     if (reconnectTimeout) {
         clearTimeout(reconnectTimeout);
         reconnectTimeout = null;
     }
+
+    // Clean up old socket to prevent memory leak
+    await cleanupOldSocket();
 
     try {
         const { state, saveCreds } = await useMultiFileAuthState(SESSION_DIR);

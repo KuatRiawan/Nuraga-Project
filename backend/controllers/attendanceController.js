@@ -36,11 +36,16 @@ exports.clockIn = async (req, res) => {
                 const aiResponse = await axios.post(`${AI_SERVICE_URL}/predict-fatigue`, {
                     sleep_hours: parseFloat(sleep_hours),
                     stress_level: parseFloat(stress_level)
-                });
+                }, { timeout: 5000 });
                 aiPrediction = aiResponse.data;
             } catch (error) {
-                console.error("AI Service Error:", error.message);
-                // We don't fail the clock-in, just record it as unknown
+                if (error.code === 'ECONNABORTED') {
+                    console.error("AI Service Timeout:", error.message);
+                    // We don't fail the clock-in, just record it as unknown
+                } else {
+                    console.error("AI Service Error:", error.message);
+                    // We don't fail the clock-in, just record it as unknown
+                }
             }
         }
 

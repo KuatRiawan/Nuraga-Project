@@ -259,29 +259,35 @@ const redeemPoints = async (req, res) => {
 
 const getLeaderboard = async (req, res) => {
     try {
+        const { Sequelize } = require('sequelize');
+        
+        // Single query with aggregation to get users and their verified report counts
         const users = await User.findAll({
-            attributes: ['id_user', 'nama', 'role', 'points'],
+            attributes: [
+                'id_user',
+                'nama',
+                'role',
+                'points',
+                [Sequelize.fn('COUNT', Sequelize.col('HazardReports.id_hazard')), 'reportsCount']
+            ],
+            include: [{
+                model: HazardReport,
+                attributes: [],
+                where: { is_verified: true },
+                required: false
+            }],
+            group: ['User.id_user', 'User.nama', 'User.role', 'User.points'],
             order: [['points', 'DESC']]
         });
         
-        const leaderboardData = [];
-        for (const u of users) {
-            const reportsCount = await HazardReport.count({
-                where: {
-                    id_user: u.id_user,
-                    is_verified: true
-                }
-            });
-            leaderboardData.push({
-                name: u.nama,
-                dept: u.role,
-                points: u.points,
-                reports: reportsCount,
-                badge: u.points > 1000 ? 'Safety Champion' : u.points > 500 ? 'Hazard Hunter' : ''
-            });
-        }
+        const leaderboardData = users.map(u => ({
+            name: u.nama,
+            dept: u.role,
+            points: u.points,
+            reports: parseInt(u.dataValues.reportsCount) || 0,
+            badge: u.points > 1000 ? 'Safety Champion' : u.points > 500 ? 'Hazard Hunter' : ''
+        }));
         
-        leaderboardData.sort((a, b) => b.points - a.points);
         res.json(leaderboardData);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -319,7 +325,7 @@ module.exports = {
     register,
     login,
     getMe,
-    forgotPassword,
+    // forgotPassword, // Removed for security (H10) - mock endpoint disabled
     updateProfile,
     changePassword,
     redeemPoints,

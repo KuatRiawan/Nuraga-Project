@@ -11,8 +11,15 @@ export const useSocket = () => {
             const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '';
             const backendUrl = import.meta.env.VITE_SOCKET_URL ||
                 (apiBaseUrl.startsWith('http') ? apiBaseUrl.replace(/\/api\/?$/, '') : window.location.origin);
-                
-            socket = io(backendUrl);
+
+            // Get JWT token from localStorage
+            const token = localStorage.getItem('token');
+
+            socket = io(backendUrl, {
+                auth: {
+                    token: token
+                }
+            });
 
             socket.on('connect', () => {
                 setIsConnected(true);
@@ -20,6 +27,13 @@ export const useSocket = () => {
 
             socket.on('disconnect', () => {
                 setIsConnected(false);
+            });
+
+            socket.on('connect_error', (error) => {
+                console.error('Socket connection error:', error.message);
+                if (error.message === 'Authentication error') {
+                    console.error('Socket authentication failed - invalid or missing token');
+                }
             });
         }
 

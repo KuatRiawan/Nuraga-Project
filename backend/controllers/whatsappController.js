@@ -3,6 +3,7 @@
  * REST + SSE endpoints for WhatsApp management panel (Admin Settings page).
  */
 
+const jwt = require('jsonwebtoken');
 const wa = require('../services/whatsappService');
 
 // GET /api/wa/status  — current connection status + QR if qr_ready
@@ -19,6 +20,23 @@ const getStatus = (req, res) => {
 
 // GET /api/wa/stream  — SSE stream, pushes { type, status, qr } events
 const stream = (req, res) => {
+    // Strict token validation for SSE stream (token passed in query string)
+    const token = req.query.token;
+    if (!token) {
+        res.writeHead(401, { 'Content-Type': 'text/plain' });
+        res.end('Unauthorized: Missing token');
+        return;
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        // Token is valid, proceed with stream
+    } catch (err) {
+        res.writeHead(401, { 'Content-Type': 'text/plain' });
+        res.end('Unauthorized: Invalid token');
+        return;
+    }
+
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
