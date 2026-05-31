@@ -44,6 +44,14 @@ exports.clockIn = async (req, res) => {
             }
         }
 
+        if (aiPrediction.fatigue_status === 'Tinggi') {
+            return res.status(403).json({
+                message: 'Akses ditolak: Tingkat kelelahan Anda sangat tinggi. Silakan lapor ke HSE.',
+                fatigue_status: aiPrediction.fatigue_status,
+                recommendation: aiPrediction.recommendation,
+            });
+        }
+
         const attendance = await Attendance.create({
             id_user,
             type: 'Datang',

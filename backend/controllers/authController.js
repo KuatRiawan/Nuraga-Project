@@ -5,15 +5,28 @@ const Voucher = require('../models/Voucher');
 const HazardReport = require('../models/HazardReport');
 const { recordLog } = require('./logController');
 
+/** Public self-registration: role is never taken from the client (C1). */
+const PUBLIC_REGISTER_ROLE = 'Staff';
+
 const register = async (req, res) => {
     try {
-        const { nama, email, password, role, no_whatsapp, jenis_kelamin } = req.body;
+        const { nama, email, password, no_whatsapp, jenis_kelamin } = req.body;
         const userExists = await User.findOne({ where: { email } });
         if (userExists) {
             return res.status(400).json({ message: 'User already exists' });
         }
-        const user = await User.create({ nama, email, password, role, no_whatsapp, jenis_kelamin });
-        res.status(201).json({ message: 'User registered successfully' });
+        const user = await User.create({
+            nama,
+            email,
+            password,
+            role: PUBLIC_REGISTER_ROLE,
+            no_whatsapp,
+            jenis_kelamin,
+        });
+        res.status(201).json({
+            message: 'User registered successfully',
+            role: user.role,
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -107,24 +120,6 @@ const forgotPassword = async (req, res) => {
     }
 };
 
-const resetPassword = async (req, res) => {
-    try {
-        const { email, newPassword } = req.body;
-        const user = await User.findOne({ where: { email } });
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        // Update password (Model will hash it in beforeUpdate hook)
-        user.password = newPassword;
-        await user.save();
-
-        res.json({ message: 'Password updated successfully' });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
 const updateProfile = async (req, res) => {
     try {
         const { email, no_whatsapp, jenis_kelamin } = req.body;
@@ -172,21 +167,41 @@ const updateProfile = async (req, res) => {
     }
 };
 
+/** Authenticated password change only — requires current password (C2). */
 const changePassword = async (req, res) => {
     try {
-        const { currentPassword, newPassword } = req.body;
+        const { oldPassword, newPassword, currentPassword } = req.body;
+        const previousPassword = oldPassword ?? currentPassword;
+
+        if (!previousPassword || !newPassword) {
+            return res.status(400).json({
+                message: 'oldPassword dan newPassword wajib diisi',
+            });
+        }
+        if (newPassword.length < 8) {
+            return res.status(400).json({
+                message: 'Password baru minimal 8 karakter',
+            });
+        }
+
         const user = await User.findByPk(req.user.id);
         if (!user) {
             return res.status(404).json({ message: 'User tidak ditemukan' });
         }
 
-        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        const isMatch = await bcrypt.compare(previousPassword, user.password);
         if (!isMatch) {
-            return res.status(400).json({ message: 'Password saat ini salah' });
+            return res.status(400).json({ message: 'Password lama salah' });
         }
 
         user.password = newPassword;
         await user.save();
+
+        await recordLog(
+            req,
+            'CHANGE_PASSWORD',
+            `User ${user.nama} mengubah password akun.`
+        );
 
         res.json({ message: 'Password berhasil diperbarui' });
     } catch (error) {
@@ -300,6 +315,16 @@ const getRewards = async (req, res) => {
     }
 };
 
-module.exports = { register, login, getMe, forgotPassword, resetPassword, updateProfile, changePassword, redeemPoints, getLeaderboard, getRewards };
+module.exports = {
+    register,
+    login,
+    getMe,
+    forgotPassword,
+    updateProfile,
+    changePassword,
+    redeemPoints,
+    getLeaderboard,
+    getRewards,
+};
 
 

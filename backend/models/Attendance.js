@@ -13,8 +13,9 @@ const Attendance = sequelize.define('Attendance', {
         allowNull: false,
         references: {
             model: User,
-            key: 'id_user'
-        }
+            key: 'id_user',
+            onDelete: 'CASCADE',
+        },
     },
     type: {
         type: DataTypes.ENUM('Datang', 'Pulang'),
@@ -44,8 +45,5 @@ const Attendance = sequelize.define('Attendance', {
     timestamps: true,
     tableName: 'Attendances'
 });
-
-Attendance.belongsTo(User, { foreignKey: 'id_user' });
-User.hasMany(Attendance, { foreignKey: 'id_user' });
 
 module.exports = Attendance;

@@ -3,10 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import Input from '../components/Input';
 import Button from '../components/Button';
-import { Shield, UserPlus, ChevronDown } from 'lucide-react';
+import { Shield, UserPlus } from 'lucide-react';
 
 const RegisterPage = () => {
-    const [formData, setFormData] = useState({ nama: '', email: '', password: '', role: 'Staff', no_whatsapp: '', jenis_kelamin: 'Laki-laki' });
+    const [formData, setFormData] = useState({ nama: '', email: '', password: '', no_whatsapp: '', jenis_kelamin: 'Laki-laki' });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const navigate = useNavigate();
@@ -84,44 +84,22 @@ const RegisterPage = () => {
                             onChange={(e) => setFormData({ ...formData, no_whatsapp: e.target.value })}
                         />
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="flex flex-col gap-1.5 w-full">
-                                <label className="text-sm font-medium text-slate-600 dark:text-slate-300">Assign Role</label>
-                                <div className="relative w-full">
-                                    <select
-                                        className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium appearance-none pr-10"
-                                        value={formData.role}
-                                        onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                    >
-                                        <option value="Staff">Staff</option>
-                                        <option value="Supervisor">Supervisor</option>
-                                        <option value="HSE">HSE Officer</option>
-                                        <option value="Manager">Manager</option>
-                                        <option value="Admin">Administrator</option>
-                                    </select>
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 dark:text-slate-500">
-                                        <ChevronDown size={18} />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col gap-1.5 w-full">
-                                <label className="text-sm font-medium text-slate-600 dark:text-slate-300">Jenis Kelamin</label>
-                                <div className="relative w-full">
-                                    <select
-                                        className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium appearance-none pr-10"
-                                        value={formData.jenis_kelamin}
-                                        onChange={(e) => setFormData({ ...formData, jenis_kelamin: e.target.value })}
-                                    >
-                                        <option value="Laki-laki">Laki-laki</option>
-                                        <option value="Perempuan">Perempuan</option>
-                                    </select>
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 dark:text-slate-500">
-                                        <ChevronDown size={18} />
-                                    </div>
-                                </div>
-                            </div>
+                        <div className="flex flex-col gap-1.5 w-full">
+                            <label className="text-sm font-medium text-slate-600 dark:text-slate-300">Jenis Kelamin</label>
+                            <select
+                                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+                                value={formData.jenis_kelamin}
+                                onChange={(e) => setFormData({ ...formData, jenis_kelamin: e.target.value })}
+                            >
+                                <option value="Laki-laki">Laki-laki</option>
+                                <option value="Perempuan">Perempuan</option>
+                            </select>
                         </div>
+
+                        <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                            Akun publik didaftarkan sebagai <span className="font-semibold text-slate-700 dark:text-slate-300">Staff</span>.
+                            Peran lain (HSE, Supervisor, Admin) hanya dapat ditetapkan oleh Administrator.
+                        </p>
 
                         <Button type="submit" className="w-full h-12 flex items-center justify-center gap-2 mt-4" loading={loading}>
                             <UserPlus size={18} /> {loading ? 'Creating Account...' : 'Get Started'}

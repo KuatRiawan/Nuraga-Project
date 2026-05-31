@@ -37,12 +37,9 @@ const ForgotPasswordPage = () => {
                         We have sent a password reset link to <span className="text-slate-900 dark:text-white font-bold">{email}</span>.
                     </p>
                     <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800 text-sm">
-                        <p className="text-blue-700 dark:text-blue-400 font-medium">
-                            [Demo Mode] Real email service not configured.
-                            <br />
-                            <Link to="/reset-password" state={{ email }} className="underline font-bold">
-                                Click here to go to Reset Password Page
-                            </Link>
+                        <p className="text-blue-700 dark:text-blue-400 font-medium leading-relaxed">
+                            Layanan email belum dikonfigurasi. Setelah masuk, ubah password di{' '}
+                            <strong>Pengaturan → Keamanan</strong>, atau hubungi Administrator untuk bantuan.
                         </p>
                     </div>
 

@@ -13,8 +13,9 @@ const FatigueLog = sequelize.define('FatigueLog', {
         allowNull: false,
         references: {
             model: User,
-            key: 'id_user'
-        }
+            key: 'id_user',
+            onDelete: 'CASCADE',
+        },
     },
     sleep_hours: {
         type: DataTypes.FLOAT,
@@ -35,8 +36,5 @@ const FatigueLog = sequelize.define('FatigueLog', {
 }, {
     timestamps: true,
 });
-
-User.hasMany(FatigueLog, { foreignKey: 'id_user' });
-FatigueLog.belongsTo(User, { foreignKey: 'id_user' });
 
 module.exports = FatigueLog;

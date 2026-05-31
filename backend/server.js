@@ -33,33 +33,56 @@ app.use(express.urlencoded({ extended: true }));
 // Serve uploads
 app.use('/uploads', express.static('uploads'));
 
-// Associations
-User.hasMany(HazardReport, { foreignKey: 'id_user', sourceKey: 'id_user' });
-HazardReport.belongsTo(User, { foreignKey: 'id_user', targetKey: 'id_user' });
+const { applyUserCascadeConstraints } = require('./migrations/applyUserCascadeConstraints');
 
-User.hasMany(IncidentReport, { foreignKey: 'id_user', sourceKey: 'id_user' });
-IncidentReport.belongsTo(User, { foreignKey: 'id_user', targetKey: 'id_user' });
+// Associations — ON DELETE rules for User removal (C3)
+const cascade = { onDelete: 'CASCADE', hooks: true };
+const setNull = { onDelete: 'SET NULL', hooks: true };
 
-HazardReport.hasMany(CorrectiveAction, { foreignKey: 'id_hazard', sourceKey: 'id_hazard' });
-CorrectiveAction.belongsTo(HazardReport, { foreignKey: 'id_hazard', targetKey: 'id_hazard' });
+User.hasMany(HazardReport, { foreignKey: 'id_user', sourceKey: 'id_user', ...cascade });
+HazardReport.belongsTo(User, { foreignKey: 'id_user', targetKey: 'id_user', ...cascade });
 
-Audit.belongsTo(User, { as: 'auditor', foreignKey: 'auditor_id', targetKey: 'id_user' });
-CorrectiveAction.belongsTo(User, { as: 'assignee', foreignKey: 'assigned_to', targetKey: 'id_user' });
+User.hasMany(IncidentReport, { foreignKey: 'id_user', sourceKey: 'id_user', ...cascade });
+IncidentReport.belongsTo(User, { foreignKey: 'id_user', targetKey: 'id_user', ...cascade });
 
-User.hasMany(Certification, { foreignKey: 'id_user', sourceKey: 'id_user' });
-Certification.belongsTo(User, { foreignKey: 'id_user', targetKey: 'id_user' });
+HazardReport.hasMany(CorrectiveAction, { foreignKey: 'id_hazard', sourceKey: 'id_hazard', ...cascade });
+CorrectiveAction.belongsTo(HazardReport, { foreignKey: 'id_hazard', targetKey: 'id_hazard', ...cascade });
 
-User.hasMany(WorkPermit, { foreignKey: 'id_user', sourceKey: 'id_user' });
-WorkPermit.belongsTo(User, { foreignKey: 'id_user', targetKey: 'id_user' });
+IncidentReport.hasMany(CorrectiveAction, { foreignKey: 'id_incident', sourceKey: 'id_incident', ...cascade });
+CorrectiveAction.belongsTo(IncidentReport, { foreignKey: 'id_incident', targetKey: 'id_incident', ...cascade });
 
-EmergencyCall.belongsTo(User, { as: 'responder', foreignKey: 'handled_by', targetKey: 'id_user' });
-WorkPermit.belongsTo(User, { as: 'approver', foreignKey: 'approved_by', targetKey: 'id_user' });
+User.hasMany(Audit, { as: 'auditsConducted', foreignKey: 'auditor_id', sourceKey: 'id_user', ...cascade });
+Audit.belongsTo(User, { as: 'auditor', foreignKey: 'auditor_id', targetKey: 'id_user', ...cascade });
 
-User.hasMany(Voucher, { foreignKey: 'id_user', sourceKey: 'id_user' });
-Voucher.belongsTo(User, { foreignKey: 'id_user', targetKey: 'id_user' });
+User.hasMany(CorrectiveAction, { as: 'assignedActions', foreignKey: 'assigned_to', sourceKey: 'id_user', ...cascade });
+CorrectiveAction.belongsTo(User, { as: 'assignee', foreignKey: 'assigned_to', targetKey: 'id_user', ...cascade });
 
-User.hasMany(AuditLog, { foreignKey: 'id_user', sourceKey: 'id_user' });
-AuditLog.belongsTo(User, { foreignKey: 'id_user', targetKey: 'id_user' });
+User.hasMany(Certification, { foreignKey: 'id_user', sourceKey: 'id_user', ...cascade });
+Certification.belongsTo(User, { foreignKey: 'id_user', targetKey: 'id_user', ...cascade });
+
+User.hasMany(WorkPermit, { foreignKey: 'id_user', sourceKey: 'id_user', ...cascade });
+WorkPermit.belongsTo(User, { foreignKey: 'id_user', targetKey: 'id_user', ...cascade });
+
+User.hasMany(WorkPermit, { as: 'approvedPermits', foreignKey: 'approved_by', sourceKey: 'id_user', ...setNull });
+WorkPermit.belongsTo(User, { as: 'approver', foreignKey: 'approved_by', targetKey: 'id_user', ...setNull });
+
+User.hasMany(EmergencyCall, { as: 'handledEmergencies', foreignKey: 'handled_by', sourceKey: 'id_user', ...setNull });
+EmergencyCall.belongsTo(User, { as: 'responder', foreignKey: 'handled_by', targetKey: 'id_user', ...setNull });
+
+User.hasMany(Voucher, { foreignKey: 'id_user', sourceKey: 'id_user', ...cascade });
+Voucher.belongsTo(User, { foreignKey: 'id_user', targetKey: 'id_user', ...cascade });
+
+User.hasMany(AuditLog, { foreignKey: 'id_user', sourceKey: 'id_user', ...setNull });
+AuditLog.belongsTo(User, { foreignKey: 'id_user', targetKey: 'id_user', ...setNull });
+
+User.hasMany(Attendance, { foreignKey: 'id_user', sourceKey: 'id_user', ...cascade });
+Attendance.belongsTo(User, { foreignKey: 'id_user', targetKey: 'id_user', ...cascade });
+
+User.hasMany(LeaveRequest, { foreignKey: 'id_user', sourceKey: 'id_user', ...cascade });
+LeaveRequest.belongsTo(User, { foreignKey: 'id_user', targetKey: 'id_user', ...cascade });
+
+User.hasMany(FatigueLog, { foreignKey: 'id_user', sourceKey: 'id_user', ...cascade });
+FatigueLog.belongsTo(User, { foreignKey: 'id_user', targetKey: 'id_user', ...cascade });
 
 
 // Routes
@@ -131,6 +154,12 @@ function startServer(port, retries = 5) {
 
 sequelize.sync({ force: false }).then(async () => {
     console.log('Database synced');
+
+    try {
+        await applyUserCascadeConstraints(sequelize);
+    } catch (err) {
+        console.error('Failed to apply User cascade FK constraints:', err.message);
+    }
 
     // Safety Migrations for Users
     try {

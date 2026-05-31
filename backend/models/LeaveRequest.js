@@ -13,8 +13,9 @@ const LeaveRequest = sequelize.define('LeaveRequest', {
         allowNull: false,
         references: {
             model: User,
-            key: 'id_user'
-        }
+            key: 'id_user',
+            onDelete: 'CASCADE',
+        },
     },
     type: {
         type: DataTypes.ENUM('Izin', 'Cuti', 'Sakit'),
@@ -44,8 +45,5 @@ const LeaveRequest = sequelize.define('LeaveRequest', {
     timestamps: true,
     tableName: 'LeaveRequests'
 });
-
-LeaveRequest.belongsTo(User, { foreignKey: 'id_user' });
-User.hasMany(LeaveRequest, { foreignKey: 'id_user' });
 
 module.exports = LeaveRequest;

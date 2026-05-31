@@ -222,14 +222,28 @@ const DashboardLayout = ({ children }) => {
         if (!socket || !user) return;
 
         const refresh = () => fetchNotifications();
-        socket.on('NEW_LEAVE_REQUEST', refresh);
-        socket.on('LEAVE_REQUEST_UPDATE', refresh);
+
+        const handleLeaveRequestUpdate = (data) => {
+            const userId = user?.id_user || user?.id;
+            if (data.id_user === userId || user?.role === 'Admin') {
+                fetchNotifications();
+            }
+        };
+
+        const handleNewLeaveRequest = () => {
+            if (user?.role === 'Admin') {
+                fetchNotifications();
+            }
+        };
+
+        socket.on('NEW_LEAVE_REQUEST', handleNewLeaveRequest);
+        socket.on('LEAVE_REQUEST_UPDATE', handleLeaveRequestUpdate);
         socket.on('PTW_REQUEST_CREATED', refresh);
         socket.on('PTW_STATUS_UPDATE', refresh);
 
         return () => {
-            socket.off('NEW_LEAVE_REQUEST', refresh);
-            socket.off('LEAVE_REQUEST_UPDATE', refresh);
+            socket.off('NEW_LEAVE_REQUEST', handleNewLeaveRequest);
+            socket.off('LEAVE_REQUEST_UPDATE', handleLeaveRequestUpdate);
             socket.off('PTW_REQUEST_CREATED', refresh);
             socket.off('PTW_STATUS_UPDATE', refresh);
         };

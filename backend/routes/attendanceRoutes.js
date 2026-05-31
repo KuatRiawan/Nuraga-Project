@@ -21,7 +21,7 @@ router.post('/clock-in', protect, handleUpload('foto_bukti'), clockIn);
 router.post('/clock-out', protect, clockOut);
 router.get('/today', protect, getTodayStatus);
 router.get('/my-history', protect, getMyHistory);
-router.get('/all', protect, authorize('Admin', 'HSE', 'Manager', 'Supervisor'), getAllHistory);
+router.get('/all', protect, authorize('Admin'), getAllHistory);
 
 router.post('/leave', protect, handleUpload('document_proof'), submitLeave);
 router.put('/leave/:id_leave', protect, authorize('Admin', 'Supervisor'), approveLeave);

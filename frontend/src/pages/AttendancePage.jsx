@@ -8,6 +8,7 @@ const API_URL = '/api';
 
 const AttendancePage = () => {
   const { user } = useAuth();
+  const isAdmin = user?.role === 'Admin';
   const [activeTab, setActiveTab] = useState('absensi'); // absensi, izin, laporan
   const [todayStatus, setTodayStatus] = useState({ clockedIn: false, clockedOut: false, fatigue_status: null });
   const [historyData, setHistoryData] = useState({ attendance: [], leaves: [] });
@@ -23,7 +24,7 @@ const AttendancePage = () => {
   const [leaveForm, setLeaveForm] = useState({ type: 'Izin', start_date: '', end_date: '', reason: '' });
   const [leaveDoc, setLeaveDoc] = useState(null);
 
-  // User & Date Filter state for Admin/Manager
+  // User & Date Filter state (Admin only — global attendance view)
   const [selectedUserId, setSelectedUserId] = useState('all');
   const [startDateFilter, setStartDateFilter] = useState('');
   const [endDateFilter, setEndDateFilter] = useState('');
@@ -42,7 +43,7 @@ const AttendancePage = () => {
   const userList = userOptions.length > 0 ? userOptions : uniqueUsers;
 
   const filteredAttendance = historyData.attendance.filter(log => {
-    const matchesUser = !(user.role === 'Admin' || user.role === 'Supervisor') || selectedUserId === 'all' || log.id_user === Number(selectedUserId);
+    const matchesUser = !isAdmin || selectedUserId === 'all' || log.id_user === Number(selectedUserId);
     
     const logDate = new Date(log.createdAt).toISOString().slice(0, 10);
     
@@ -132,7 +133,8 @@ const AttendancePage = () => {
 
     // Handle approval/rejection notifications untuk user
     const handleLeaveUpdate = (data) => {
-      if (data.id_user === user?.id_user || user?.role === 'Admin') {
+      const userId = user?.id_user || user?.id;
+      if (data.id_user === userId || user?.role === 'Admin') {
         const popupType = data.status === 'Approved' ? 'success' : 'error';
         const message = data.status === 'Approved' 
           ? `✅ ${data.userName}: Pengajuan ${data.type} disetujui!`
@@ -140,7 +142,7 @@ const AttendancePage = () => {
         showPopup(popupType, message);
 
         // Refresh history
-        if (user?.role === 'Admin' || user?.role === 'Supervisor') {
+        if (isAdmin) {
           setTimeout(() => fetchAllHistory(), 1000);
         } else {
           setTimeout(() => fetchMyHistory(), 1000);
@@ -170,7 +172,7 @@ const AttendancePage = () => {
 
   useEffect(() => {
     fetchTodayStatus();
-    if (user.role === 'Admin' || user.role === 'Supervisor') {
+    if (isAdmin) {
         fetchAllHistory();
     } else {
         fetchMyHistory();
@@ -181,7 +183,7 @@ const AttendancePage = () => {
     if (!user) return;
 
     const refreshHistory = async () => {
-      if (user.role === 'Admin' || user.role === 'Supervisor') {
+      if (isAdmin) {
         await fetchAllHistory();
       } else {
         await fetchMyHistory();
@@ -220,6 +222,9 @@ const AttendancePage = () => {
   };
 
   const fetchAllHistory = async () => {
+    if (!isAdmin) {
+      return fetchMyHistory();
+    }
     try {
       const token = localStorage.getItem('token');
       const [historyRes, usersRes] = await Promise.all([
@@ -263,7 +268,7 @@ const AttendancePage = () => {
       });
       showPopup('success', 'Absen Datang (Clock-In) berhasil! Selamat bekerja 🎉');
       fetchTodayStatus();
-      if (user.role === 'Admin' || user.role === 'Supervisor') fetchAllHistory(); else fetchMyHistory();
+      if (isAdmin) fetchAllHistory(); else fetchMyHistory();
       setFotoBukti(null);
       setPreviewUrl(null);
     } catch (error) {
@@ -280,7 +285,7 @@ const AttendancePage = () => {
       await axios.post(`${API_URL}/attendance/clock-out`, {}, { headers: { Authorization: `Bearer ${token}` } });
       showPopup('success', 'Absen Pulang (Clock-Out) berhasil! Selamat istirahat 👋');
       fetchTodayStatus();
-      if (user.role === 'Admin' || user.role === 'Supervisor') fetchAllHistory(); else fetchMyHistory();
+      if (isAdmin) fetchAllHistory(); else fetchMyHistory();
     } catch (error) {
       showPopup('error', error.response?.data?.message || 'Gagal Clock-Out. Coba lagi.');
     } finally {
@@ -306,7 +311,7 @@ const AttendancePage = () => {
         showPopup('success', 'Pengajuan berhasil dikirim! Menunggu persetujuan.');
         setLeaveForm({ type: 'Izin', start_date: '', end_date: '', reason: '' });
         setLeaveDoc(null);
-        if (user.role === 'Admin' || user.role === 'Supervisor') fetchAllHistory(); else fetchMyHistory();
+        if (isAdmin) fetchAllHistory(); else fetchMyHistory();
       } catch (error) {
         showPopup('error', 'Gagal mengirim pengajuan. Coba lagi.');
       } finally {
@@ -315,6 +320,7 @@ const AttendancePage = () => {
   };
 
   const handleApproveLeave = async (id, status) => {
+      if (!isAdmin) return;
       try {
         const token = localStorage.getItem('token');
         await axios.put(`${API_URL}/attendance/leave/${id}`, { status }, { headers: { Authorization: `Bearer ${token}` } });
@@ -625,7 +631,7 @@ const AttendancePage = () => {
                     <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
                         <FileText className="w-5 h-5 text-blue-500"/> Riwayat Absensi & Fatigue
                     </h2>
-                    {user.role === 'Admin' && (
+                    {isAdmin && (
                         <button
                             onClick={downloadCSV}
                             className="px-5 py-2.5 rounded-xl font-black text-sm bg-emerald-500 hover:bg-emerald-600 text-white flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-emerald-500/10 w-full sm:w-auto justify-center"
@@ -635,8 +641,8 @@ const AttendancePage = () => {
                     )}
                 </div>
 
-                <div className={`grid grid-cols-1 sm:grid-cols-${user.role === 'Admin' ? '3' : '2'} gap-4`}>
-                    {user.role === 'Admin' && (
+                <div className={`grid grid-cols-1 sm:grid-cols-${isAdmin ? '3' : '2'} gap-4`}>
+                    {isAdmin && (
                         <div className="flex flex-col gap-1.5">
                             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Pekerja</label>
                             <select
@@ -678,7 +684,7 @@ const AttendancePage = () => {
                 <thead>
                     <tr className="bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 text-sm border-b border-slate-200 dark:border-slate-800">
                     <th className="py-4 px-4 font-semibold">Waktu</th>
-                    {(user.role === 'Admin' || user.role === 'Supervisor') && <th className="py-4 px-4 font-semibold">Pekerja</th>}
+                    {isAdmin && <th className="py-4 px-4 font-semibold">Pekerja</th>}
                     <th className="py-4 px-4 font-semibold">Tipe</th>
                     <th className="py-4 px-4 font-semibold">Metrik</th>
                     <th className="py-4 px-4 font-semibold">Status AI</th>
@@ -690,7 +696,7 @@ const AttendancePage = () => {
                         <td className="py-4 px-4 text-slate-700 dark:text-slate-300 font-medium">
                         {new Date(log.createdAt).toLocaleString('id-ID')}
                         </td>
-                        {(user.role === 'Admin' || user.role === 'Supervisor') && <td className="py-4 px-4 text-slate-700 dark:text-slate-300 font-bold">{log.User?.nama || userList.find(u => u.id_user === log.id_user)?.nama || 'Tidak tersedia'}</td>}
+                        {(isAdmin) && <td className="py-4 px-4 text-slate-700 dark:text-slate-300 font-bold">{log.User?.nama || userList.find(u => u.id_user === log.id_user)?.nama || 'Tidak tersedia'}</td>}
                         <td className="py-4 px-4">
                             <span className={`px-3 py-1 rounded-full text-xs font-bold ${log.type === 'Datang' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700'}`}>{log.type}</span>
                         </td>
@@ -719,18 +725,18 @@ const AttendancePage = () => {
                 <table className="w-full text-left border-collapse">
                 <thead>
                     <tr className="bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 text-sm border-b border-slate-200 dark:border-slate-800">
-                    {(user.role === 'Admin' || user.role === 'Supervisor') && <th className="py-4 px-4 font-semibold">Pekerja</th>}
+                    {isAdmin && <th className="py-4 px-4 font-semibold">Pekerja</th>}
                     <th className="py-4 px-4 font-semibold">Tipe</th>
                     <th className="py-4 px-4 font-semibold">Tanggal</th>
                     <th className="py-4 px-4 font-semibold">Alasan</th>
                     <th className="py-4 px-4 font-semibold">Status</th>
-                    {(user.role === 'Admin' || user.role === 'Supervisor') && <th className="py-4 px-4 font-semibold text-right">Aksi</th>}
+                    {isAdmin && <th className="py-4 px-4 font-semibold text-right">Aksi</th>}
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 text-sm">
                     {historyData.leaves.map((leave) => (
                     <tr key={leave.id_leave} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-slate-100 dark:border-slate-800/40">
-                        {(user.role === 'Admin' || user.role === 'Supervisor') && <td className="py-4 px-4 text-slate-700 dark:text-slate-300 font-bold">{leave.User?.nama}</td>}
+                        {isAdmin && <td className="py-4 px-4 text-slate-700 dark:text-slate-300 font-bold">{leave.User?.nama}</td>}
                         <td className="py-4 px-4 font-medium text-slate-700 dark:text-slate-300">{leave.type}</td>
                         <td className="py-4 px-4 text-slate-500 dark:text-slate-400">{leave.start_date} s/d {leave.end_date}</td>
                         <td className="py-4 px-4 text-slate-600 dark:text-slate-350">{leave.reason}</td>
@@ -740,7 +746,7 @@ const AttendancePage = () => {
                                 leave.status === 'Rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
                             }`}>{leave.status}</span>
                         </td>
-                        {(user.role === 'Admin' || user.role === 'Supervisor') && (
+                        {isAdmin && (
                             <td className="py-4 px-4 text-right">
                                 {leave.status === 'Pending' && (
                                     <div className="flex gap-2 justify-end">

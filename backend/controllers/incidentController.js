@@ -48,10 +48,17 @@ const createIncident = async (req, res) => {
 
 const getIncidents = async (req, res) => {
     try {
-        const incidents = await IncidentReport.findAll({
+        const queryOptions = {
             include: [{ model: User, attributes: ['nama', 'role'] }],
             order: [['createdAt', 'DESC']],
-        });
+        };
+
+        // Vendors may only view their own incident reports.
+        if (req.user.role === 'Vendor') {
+            queryOptions.where = { id_user: req.user.id };
+        }
+
+        const incidents = await IncidentReport.findAll(queryOptions);
         res.json(incidents);
     } catch (error) {
         res.status(500).json({ message: error.message });

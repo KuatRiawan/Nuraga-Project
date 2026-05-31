@@ -1,10 +1,25 @@
 const HazardReport = require('../models/HazardReport');
 const User = require('../models/User');
 const CorrectiveAction = require('../models/CorrectiveAction');
+const sequelize = require('../config/db');
 const { clearStatsCache } = require('./statsController');
 const { recordLog } = require('./logController');
 
+const resolveCapaAssignee = async (transaction) => {
+    const queryOptions = {
+        where: { role: 'HSE' },
+        order: [['id_user', 'ASC']],
+    };
+    if (transaction) {
+        queryOptions.transaction = transaction;
+    }
+
+    const hseUser = await User.findOne(queryOptions);
+    return hseUser ? hseUser.id_user : 1;
+};
+
 const createHazard = async (req, res) => {
+    const t = await sequelize.transaction();
     try {
         const { lokasi, deskripsi, risiko, koordinat_gps } = req.body;
         const hazard = await HazardReport.create({
@@ -15,33 +30,43 @@ const createHazard = async (req, res) => {
             original_risiko: risiko,
             koordinat_gps,
             foto: req.file ? req.file.filename : null,
-        });
+        }, { transaction: t });
 
         // Auto-create CAPA for High/Critical risks
         if (risiko === 'High' || risiko === 'Critical') {
+            const assignedTo = await resolveCapaAssignee(t);
             await CorrectiveAction.create({
                 id_hazard: hazard.id_hazard,
                 description: `Immediate corrective action required for: ${deskripsi}`,
-                assigned_to: 1, // Default to HSE Manager (User 1)
+                assigned_to: assignedTo,
                 deadline: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hour deadline
                 status: 'Open'
-            });
+            }, { transaction: t });
         }
 
+        await t.commit();
         clearStatsCache();
         await recordLog(req, 'CREATE_HAZARD', `User ${req.user.nama} (${req.user.role}) melaporkan temuan bahaya baru di ${lokasi} (Tingkat Risiko: ${risiko}).`);
         res.status(201).json(hazard);
     } catch (error) {
+        await t.rollback();
         res.status(500).json({ message: error.message });
     }
 };
 
 const getHazards = async (req, res) => {
     try {
-        const hazards = await HazardReport.findAll({
+        const queryOptions = {
             include: [{ model: User, attributes: ['nama', 'role'] }],
             order: [['createdAt', 'DESC']],
-        });
+        };
+
+        // Vendors may only view their own hazard reports.
+        if (req.user.role === 'Vendor') {
+            queryOptions.where = { id_user: req.user.id };
+        }
+
+        const hazards = await HazardReport.findAll(queryOptions);
         res.json(hazards);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -78,10 +103,11 @@ const overrideRisk = async (req, res) => {
         if (risiko === 'High' || risiko === 'Critical') {
             const existingCapa = await CorrectiveAction.findOne({ where: { id_hazard: hazard.id_hazard } });
             if (!existingCapa) {
+                const assignedTo = await resolveCapaAssignee();
                 await CorrectiveAction.create({
                     id_hazard: hazard.id_hazard,
                     description: `Immediate corrective action required (Overridden) for: ${hazard.deskripsi}`,
-                    assigned_to: 1, // Default to HSE Manager
+                    assigned_to: assignedTo,
                     deadline: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hour deadline
                     status: 'Open'
                 });

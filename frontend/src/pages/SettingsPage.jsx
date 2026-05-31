@@ -241,7 +241,7 @@ const SettingsPage = () => {
         }
 
         try {
-            await api.put('/auth/change-password', { currentPassword, newPassword });
+            await api.put('/auth/change-password', { oldPassword: currentPassword, newPassword });
             setPasswordSuccess('Password berhasil diubah!');
             setCurrentPassword('');
             setNewPassword('');

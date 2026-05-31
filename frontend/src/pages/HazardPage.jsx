@@ -101,7 +101,7 @@ const HazardPage = () => {
             return res.data;
         },
         onSuccess: (data) => {
-            setSelectedHazard(data);
+            setSelectedHazard(data.hazard || data);
             queryClient.invalidateQueries(['hazards']);
         }
     });
