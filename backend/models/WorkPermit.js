@@ -63,6 +63,10 @@ const WorkPermit = sequelize.define('WorkPermit', {
         type: DataTypes.STRING,
         allowNull: true,
     },
+    foto_lokasi: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
     jsa_content: {
         type: DataTypes.JSON,
         allowNull: true,

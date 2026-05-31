@@ -4,7 +4,7 @@ import { useLocation } from 'react-router-dom';
 import api from '../api/axios';
 import Button from '../components/Button';
 import Input from '../components/Input';
-import { Plus, Info, Users, MapPin, Camera, ClipboardList, Download, X } from 'lucide-react';
+import { Plus, Info, Users, MapPin, Camera, ClipboardList, Download, X, CheckCircle2 } from 'lucide-react';
 import { generateIncidentReport } from '../utils/reportGenerator';
 import { useAuth } from '../store/AuthContext';
 
@@ -14,6 +14,8 @@ const IncidentPage = () => {
     const location = useLocation();
     const [showForm, setShowForm] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
     const [formData, setFormData] = useState({
         kategori: 'Near Miss',
         kronologi: '',
@@ -149,11 +151,13 @@ const IncidentPage = () => {
         onSuccess: () => {
             setSelectedIncident(null);
             queryClient.invalidateQueries(['incidents']);
-            alert('Hasil investigasi berhasil disimpan.');
+            setSuccessMessage('Hasil investigasi berhasil disimpan.');
+            setShowSuccessModal(true);
         },
         onError: (err) => {
             console.error(err);
-            alert(err.response?.data?.message || 'Gagal menyimpan hasil investigasi.');
+            setSuccessMessage(err.response?.data?.message || 'Gagal menyimpan hasil investigasi.');
+            setShowSuccessModal(true);
         },
         onSettled: () => {
             setLoading(false);
@@ -531,6 +535,37 @@ const IncidentPage = () => {
                                     </div>
                                 </div>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Success Modal */}
+            {showSuccessModal && (
+                <div 
+                    onClick={() => setShowSuccessModal(false)}
+                    className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                >
+                    <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200"
+                    >
+                        <div className="flex flex-col items-center text-center space-y-4">
+                            <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                                <CheckCircle2 size={32} className="text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                            <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">
+                                {successMessage.includes('Gagal') ? 'Perhatian' : 'Berhasil'}
+                            </h2>
+                            <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                {successMessage}
+                            </p>
+                            <button
+                                onClick={() => setShowSuccessModal(false)}
+                                className="w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
+                            >
+                                OK
+                            </button>
                         </div>
                     </div>
                 </div>

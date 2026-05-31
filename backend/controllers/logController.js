@@ -39,7 +39,8 @@ const getLogs = async (req, res) => {
         });
         res.json(logs);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 

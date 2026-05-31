@@ -8,7 +8,13 @@ const createIncident = async (req, res) => {
     const t = await sequelize.transaction();
     try {
         const { kategori, kronologi, korban, loss_cost, five_whys } = req.body;
-        
+
+        // Data length validation
+        if (kronologi && kronologi.length > 5000) {
+            await t.rollback();
+            return res.status(400).json({ message: 'Kronologi terlalu panjang. Maksimal 5000 karakter.' });
+        }
+
         // Guard JSON parsing for five_whys
         let parsedFiveWhys = null;
         if (five_whys) {
@@ -86,7 +92,8 @@ const getIncidents = async (req, res) => {
             currentPage: page
         });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 

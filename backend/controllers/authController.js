@@ -4,6 +4,7 @@ const User = require('../models/User');
 const Voucher = require('../models/Voucher');
 const HazardReport = require('../models/HazardReport');
 const { recordLog } = require('./logController');
+const sequelize = require('../config/db');
 
 /** Public self-registration: role is never taken from the client (C1). */
 const PUBLIC_REGISTER_ROLE = 'Staff';
@@ -11,6 +12,13 @@ const PUBLIC_REGISTER_ROLE = 'Staff';
 const register = async (req, res) => {
     try {
         const { nama, email, password, no_whatsapp, jenis_kelamin } = req.body;
+
+        // Email format validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (email && !emailRegex.test(email)) {
+            return res.status(400).json({ message: 'Invalid email format' });
+        }
+
         const userExists = await User.findOne({ where: { email } });
         if (userExists) {
             return res.status(400).json({ message: 'User already exists' });
@@ -28,7 +36,8 @@ const register = async (req, res) => {
             role: user.role,
         });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -73,7 +82,8 @@ const login = async (req, res) => {
             },
         });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -102,7 +112,8 @@ const getMe = async (req, res) => {
             updatedAt: user.updatedAt
         });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -116,7 +127,8 @@ const forgotPassword = async (req, res) => {
         // In a real app, send email with reset link. Here we just mock success.
         res.json({ message: 'Password reset link sent to your email' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -163,7 +175,8 @@ const updateProfile = async (req, res) => {
             }
         });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -205,7 +218,8 @@ const changePassword = async (req, res) => {
 
         res.json({ message: 'Password berhasil diperbarui' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -296,7 +310,8 @@ const getLeaderboard = async (req, res) => {
         
         res.json(leaderboardData);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -323,7 +338,32 @@ const getRewards = async (req, res) => {
         }
         res.json(rewardsWithRemaining);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+const getUserStats = async (req, res) => {
+    try {
+        const userId = req.user.id_user || req.user.id;
+
+        // Count rewards claimed (vouchers)
+        const rewardsClaimed = await Voucher.count({
+            where: { id_user: userId }
+        });
+
+        // Count hazards reported
+        const hazardsReported = await HazardReport.count({
+            where: { id_user: userId }
+        });
+
+        res.json({
+            rewardsClaimed,
+            hazardsReported
+        });
+    } catch (error) {
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -337,6 +377,7 @@ module.exports = {
     redeemPoints,
     getLeaderboard,
     getRewards,
+    getUserStats,
 };
 
 

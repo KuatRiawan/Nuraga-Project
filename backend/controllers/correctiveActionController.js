@@ -15,7 +15,8 @@ const createAction = async (req, res) => {
         clearStatsCache();
         res.status(201).json(action);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -30,7 +31,8 @@ const getActions = async (req, res) => {
         });
         res.json(actions);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -45,7 +47,8 @@ const updateActionStatus = async (req, res) => {
         clearStatsCache();
         res.json(action);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 

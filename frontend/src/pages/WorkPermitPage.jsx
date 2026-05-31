@@ -39,11 +39,31 @@ const WorkPermitPage = () => {
 
     const createMutation = useMutation({
         mutationFn: async (formData) => {
-            await api.post('/permits', formData);
+            const formDataToSend = new FormData();
+            
+            // Append all fields
+            Object.keys(formData).forEach(key => {
+                if (key === 'daftar_pekerja' || key === 'bahaya' || key === 'apd') {
+                    formDataToSend.append(key, JSON.stringify(formData[key]));
+                } else if (key === 'gas_test' && formData[key]) {
+                    formDataToSend.append(key, JSON.stringify(formData[key]));
+                } else if (key === 'applicant_sig') {
+                    formDataToSend.append(key, formData[key] ? 'true' : 'false');
+                } else if (key === 'foto_lokasi' && formData[key]) {
+                    formDataToSend.append('foto_bukti', formData[key]);
+                } else if (formData[key] !== null && formData[key] !== undefined) {
+                    formDataToSend.append(key, formData[key]);
+                }
+            });
+            
+            await api.post('/permits', formDataToSend, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
         },
         onSuccess: () => {
             setShowForm(false);
             queryClient.invalidateQueries(['permits']);
+            setError('');
         },
         onError: (err) => {
             console.error(err);
@@ -165,20 +185,20 @@ const WorkPermitPage = () => {
 
                                 <div className="flex flex-col gap-2 text-sm">
                                     <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 font-bold uppercase text-[11px]">
-                                        <MapPin size={14} className="text-blue-500" /> {permit.lokasi}
+                                        <MapPin size={14} className="text-blue-500" /> {permit.lokasi || '-'}
                                     </div>
                                     <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 font-bold uppercase text-[11px]">
-                                        <User size={14} className="text-indigo-500" /> {permit.User?.nama} <span className="text-slate-300 dark:text-slate-700 mx-1">|</span> {permit.perusahaan}
+                                        <User size={14} className="text-indigo-500" /> {permit.User?.nama || '-'} <span className="text-slate-300 dark:text-slate-700 mx-1">|</span> {permit.perusahaan || '-'}
                                     </div>
                                     <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500 text-[11px] font-bold">
-                                        <Clock size={14} /> {new Date(permit.waktu_mulai).toLocaleDateString()} • {new Date(permit.waktu_mulai).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        <Clock size={14} /> {permit.waktu_mulai ? new Date(permit.waktu_mulai).toLocaleDateString() : '-'} • {permit.waktu_mulai ? new Date(permit.waktu_mulai).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
                                     </div>
                                 </div>
 
                                 <div className="pt-4 flex items-center gap-4 text-xs font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">
-                                    <span>{permit.daftar_pekerja?.length || 0} Personel</span>
+                                    <span>{Array.isArray(permit.daftar_pekerja) ? permit.daftar_pekerja.length : 0} Personel</span>
                                     <span className="w-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800" />
-                                    <span>{permit.bahaya?.length || 0} Bahaya</span>
+                                    <span>{Array.isArray(permit.bahaya) ? permit.bahaya.length : 0} Bahaya</span>
                                 </div>                                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/50 flex items-center justify-between gap-1 text-[9px] font-black uppercase tracking-wider">
                                     <div className="flex items-center gap-1.5">
                                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
@@ -270,7 +290,7 @@ const WorkPermitPage = () => {
                                         <p className="text-[9px] font-black uppercase text-emerald-600 leading-tight">Staff</p>
                                         <p className="text-[8px] text-slate-450 dark:text-slate-500 font-bold uppercase mt-0.5">Signed</p>
                                         <p className="text-[7px] text-slate-400 dark:text-slate-550 mt-0.5 font-medium leading-none">
-                                            {new Date(selectedPermit.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit' })} {new Date(selectedPermit.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            {selectedPermit?.createdAt ? new Date(selectedPermit.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit' }) : '-'} {selectedPermit?.createdAt ? new Date(selectedPermit.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                                         </p>
                                     </div>
                                     <div className={`h-0.5 flex-1 mx-1.5 rounded-full mt-4 ${selectedPermit.supervisor_sig
@@ -305,7 +325,7 @@ const WorkPermitPage = () => {
                                         <p className="text-[8px] text-slate-450 dark:text-slate-500 font-bold uppercase mt-0.5 leading-none">
                                             {selectedPermit.supervisor_sig ? 'Approved' : selectedPermit.status === 'Rejected' && selectedPermit.approval_step === 1 ? 'Rejected' : selectedPermit.approval_step === 1 ? 'Pending' : 'Queue'}
                                         </p>
-                                        {selectedPermit.supervisor_approved_at && (
+                                        {selectedPermit?.supervisor_approved_at && (
                                             <p className="text-[7px] text-slate-400 dark:text-slate-550 mt-1 font-medium leading-none">
                                                 {new Date(selectedPermit.supervisor_approved_at).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit' })} {new Date(selectedPermit.supervisor_approved_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </p>
@@ -343,7 +363,7 @@ const WorkPermitPage = () => {
                                         <p className="text-[8px] text-slate-450 dark:text-slate-500 font-bold uppercase mt-0.5 leading-none">
                                             {selectedPermit.safety_officer_sig ? 'Approved' : selectedPermit.status === 'Rejected' && selectedPermit.approval_step === 2 ? 'Rejected' : selectedPermit.approval_step === 2 ? 'Pending' : 'Queue'}
                                         </p>
-                                        {selectedPermit.safety_officer_approved_at && (
+                                        {selectedPermit?.safety_officer_approved_at && (
                                             <p className="text-[7px] text-slate-400 dark:text-slate-550 mt-1 font-medium leading-none">
                                                 {new Date(selectedPermit.safety_officer_approved_at).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit' })} {new Date(selectedPermit.safety_officer_approved_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </p>
@@ -381,7 +401,7 @@ const WorkPermitPage = () => {
                                         <p className="text-[8px] text-slate-450 dark:text-slate-500 font-bold uppercase mt-0.5 leading-none">
                                             {selectedPermit.approver_sig ? 'Approved' : selectedPermit.status === 'Rejected' && selectedPermit.approval_step === 3 ? 'Rejected' : selectedPermit.approval_step === 3 ? 'Pending' : 'Queue'}
                                         </p>
-                                        {selectedPermit.manager_approved_at && (
+                                        {selectedPermit?.manager_approved_at && (
                                             <p className="text-[7px] text-slate-400 dark:text-slate-550 mt-1 font-medium leading-none">
                                                 {new Date(selectedPermit.manager_approved_at).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit' })} {new Date(selectedPermit.manager_approved_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </p>
@@ -394,30 +414,30 @@ const WorkPermitPage = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-800">
                                 <div>
                                     <p className="text-[10px] font-black text-slate-450 uppercase tracking-widest">Perusahaan / Vendor</p>
-                                    <p className="font-bold text-slate-800 dark:text-slate-100 mt-1">{selectedPermit.perusahaan}</p>
+                                    <p className="font-bold text-slate-800 dark:text-slate-100 mt-1">{selectedPermit?.perusahaan || '-'}</p>
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-black text-slate-450 uppercase tracking-widest">Lokasi Pekerjaan</p>
                                     <p className="font-bold text-slate-800 dark:text-slate-100 mt-1 flex items-center gap-1">
-                                        <MapPin size={14} className="text-red-500" /> {selectedPermit.lokasi}
+                                        <MapPin size={14} className="text-red-500" /> {selectedPermit?.lokasi || '-'}
                                     </p>
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-black text-slate-450 uppercase tracking-widest">Waktu Mulai</p>
                                     <p className="font-bold text-slate-800 dark:text-slate-100 mt-1 flex items-center gap-1.5">
-                                        <Clock size={14} className="text-blue-500" /> {new Date(selectedPermit.waktu_mulai).toLocaleString('id-ID')}
+                                        <Clock size={14} className="text-blue-500" /> {selectedPermit?.waktu_mulai ? new Date(selectedPermit.waktu_mulai).toLocaleString('id-ID') : '-'}
                                     </p>
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-black text-slate-450 uppercase tracking-widest">Waktu Selesai</p>
                                     <p className="font-bold text-slate-800 dark:text-slate-100 mt-1 flex items-center gap-1.5">
-                                        <Clock size={14} className="text-blue-500" /> {new Date(selectedPermit.waktu_selesai).toLocaleString('id-ID')}
+                                        <Clock size={14} className="text-blue-500" /> {selectedPermit?.waktu_selesai ? new Date(selectedPermit.waktu_selesai).toLocaleString('id-ID') : '-'}
                                     </p>
                                 </div>
                                 <div className="md:col-span-2 border-t border-slate-200 dark:border-slate-700/50 pt-3 mt-1">
                                     <p className="text-[10px] font-black text-slate-450 uppercase tracking-widest">Deskripsi Pekerjaan</p>
                                     <p className="font-medium text-slate-800 dark:text-slate-200 mt-1 leading-relaxed">
-                                        {selectedPermit.deskripsi_pekerjaan || 'Tidak ada deskripsi pekerjaan.'}
+                                        {selectedPermit?.deskripsi_pekerjaan || 'Tidak ada deskripsi pekerjaan.'}
                                     </p>
                                 </div>
                             </div>
@@ -428,15 +448,20 @@ const WorkPermitPage = () => {
                                     <User size={14} /> Daftar Pekerja
                                 </h3>
                                 <div className="flex flex-wrap gap-2">
-                                    {selectedPermit.daftar_pekerja && selectedPermit.daftar_pekerja.length > 0 ? (
-                                        selectedPermit.daftar_pekerja.map((worker, i) => (
-                                            <span key={i} className="px-3 py-1.5 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-350">
-                                                👤 {worker}
-                                            </span>
-                                        ))
-                                    ) : (
-                                        <p className="text-slate-400 italic">Tidak ada pekerja terdaftar</p>
-                                    )}
+                                    {(() => {
+                                        const workers = typeof selectedPermit?.daftar_pekerja === 'string' 
+                                            ? JSON.parse(selectedPermit.daftar_pekerja) 
+                                            : selectedPermit?.daftar_pekerja;
+                                        return Array.isArray(workers) && workers.length > 0 ? (
+                                            workers.map((worker, i) => (
+                                                <span key={i} className="px-3 py-1.5 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-350">
+                                                    👤 {worker}
+                                                </span>
+                                            ))
+                                        ) : (
+                                            <p className="text-slate-400 italic">Tidak ada pekerja terdaftar</p>
+                                        );
+                                    })()}
                                 </div>
                             </div>
 
@@ -447,15 +472,20 @@ const WorkPermitPage = () => {
                                         <AlertCircle size={14} className="text-amber-500" /> Potensi Bahaya
                                     </h3>
                                     <div className="flex flex-wrap gap-1.5">
-                                        {selectedPermit.bahaya && selectedPermit.bahaya.length > 0 ? (
-                                            selectedPermit.bahaya.map((b, i) => (
-                                                <span key={i} className="px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg text-xs font-bold text-amber-700 dark:text-amber-400">
-                                                    {b}
-                                                </span>
-                                            ))
-                                        ) : (
-                                            <p className="text-slate-400 italic">Tidak ada bahaya terdaftar</p>
-                                        )}
+                                        {(() => {
+                                            const hazards = typeof selectedPermit?.bahaya === 'string' 
+                                                ? JSON.parse(selectedPermit.bahaya) 
+                                                : selectedPermit?.bahaya;
+                                            return Array.isArray(hazards) && hazards.length > 0 ? (
+                                                hazards.map((b, i) => (
+                                                    <span key={i} className="px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg text-xs font-bold text-amber-700 dark:text-amber-400">
+                                                        {b}
+                                                    </span>
+                                                ))
+                                            ) : (
+                                                <p className="text-slate-400 italic">Tidak ada bahaya terdaftar</p>
+                                            );
+                                        })()}
                                     </div>
                                 </div>
                                 <div>
@@ -463,34 +493,39 @@ const WorkPermitPage = () => {
                                         <FileCheck size={14} className="text-emerald-500" /> Alat Pelindung Diri (APD)
                                     </h3>
                                     <div className="flex flex-wrap gap-1.5">
-                                        {selectedPermit.apd && selectedPermit.apd.length > 0 ? (
-                                            selectedPermit.apd.map((a, i) => (
-                                                <span key={i} className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-xs font-bold text-emerald-700 dark:text-emerald-400">
-                                                    {a}
-                                                </span>
-                                            ))
-                                        ) : (
-                                            <p className="text-slate-400 italic">Tidak ada APD terdaftar</p>
-                                        )}
+                                        {(() => {
+                                            const apd = typeof selectedPermit?.apd === 'string' 
+                                                ? JSON.parse(selectedPermit.apd) 
+                                                : selectedPermit?.apd;
+                                            return Array.isArray(apd) && apd.length > 0 ? (
+                                                apd.map((a, i) => (
+                                                    <span key={i} className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                                                        {a}
+                                                    </span>
+                                                ))
+                                            ) : (
+                                                <p className="text-slate-400 italic">Tidak ada APD terdaftar</p>
+                                            );
+                                        })()}
                                     </div>
                                 </div>
                             </div>
 
                             {/* Section 4: Atmosfer & Isolasi */}
-                            {(selectedPermit.gas_test || selectedPermit.sistem_isolasi) && (
+                            {(selectedPermit?.gas_test || selectedPermit?.sistem_isolasi) && (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-slate-50 dark:bg-slate-900/30 rounded-2xl border border-slate-200 dark:border-slate-800">
-                                    {selectedPermit.gas_test && (
+                                    {selectedPermit?.gas_test && (
                                         <div>
                                             <p className="text-[10px] font-black text-slate-450 uppercase tracking-widest mb-1">Hasil Tes Atmosfer</p>
                                             <div className="grid grid-cols-2 gap-2 text-xs font-bold">
-                                                <div className="p-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">O2: {selectedPermit.gas_test.o2}%</div>
-                                                <div className="p-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">LEL: {selectedPermit.gas_test.lel}%</div>
-                                                <div className="p-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">H2S: {selectedPermit.gas_test.h2s}ppm</div>
-                                                <div className="p-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">CO: {selectedPermit.gas_test.co}ppm</div>
+                                                <div className="p-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">O2: {selectedPermit.gas_test?.o2 || '-'}%</div>
+                                                <div className="p-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">LEL: {selectedPermit.gas_test?.lel || '-'}%</div>
+                                                <div className="p-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">H2S: {selectedPermit.gas_test?.h2s || '-'}ppm</div>
+                                                <div className="p-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">CO: {selectedPermit.gas_test?.co || '-'}ppm</div>
                                             </div>
                                         </div>
                                     )}
-                                    {selectedPermit.sistem_isolasi && (
+                                    {selectedPermit?.sistem_isolasi && (
                                         <div>
                                             <p className="text-[10px] font-black text-slate-450 uppercase tracking-widest mb-1">Sistem Isolasi (LOTO)</p>
                                             <p className="font-bold text-slate-850 dark:text-slate-250 bg-white dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700">{selectedPermit.sistem_isolasi}</p>

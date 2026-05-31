@@ -8,13 +8,21 @@ const getAllUsers = async (req, res) => {
         });
         res.json(users);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
 const createUser = async (req, res) => {
     try {
         const { nama, email, password, role, nik, jabatan, area_kerja, no_whatsapp, jenis_kelamin } = req.body;
+
+        // Email format validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (email && !emailRegex.test(email)) {
+            return res.status(400).json({ message: 'Invalid email format' });
+        }
+
         const userExists = await User.findOne({ where: { email } });
         if (userExists) {
             return res.status(400).json({ message: 'User already exists' });
@@ -25,7 +33,8 @@ const createUser = async (req, res) => {
         await recordLog(req, 'CREATE_USER', `Admin mendaftarkan user baru: ${nama} (${email}) dengan peran ${role}.`);
         res.status(201).json(userResponse);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -64,7 +73,8 @@ const updateUser = async (req, res) => {
         await recordLog(req, 'UPDATE_USER', `Admin memperbarui data user: ${user.nama} (${user.email}).`);
         res.json(userResponse);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -86,7 +96,8 @@ const deleteUser = async (req, res) => {
         await recordLog(req, 'DELETE_USER', `Admin menghapus user: ${deletedUserName} (${deletedUserEmail}).`);
         res.json({ message: 'User deleted successfully' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 

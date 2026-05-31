@@ -9,7 +9,8 @@ const getMyVouchers = async (req, res) => {
         });
         res.json(vouchers);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -21,7 +22,8 @@ const getAllVouchers = async (req, res) => {
         });
         res.json(vouchers);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -35,7 +37,8 @@ const claimVoucher = async (req, res) => {
         await voucher.save();
         res.json(voucher);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import {
     AlertTriangle, Shield, Wind, Clock, MapPin,
     User, HardHat, CheckCircle2, ChevronRight,
-    ChevronLeft, Zap, Flame, Thermometer, Box, Layers, X
+    ChevronLeft, Zap, Flame, Thermometer, Box, Layers, X, ShieldCheck
 } from 'lucide-react';
 import Button from './Button';
 import Input from './Input';
@@ -45,7 +45,8 @@ const PermitForm = ({ onSubmit, onCancel }) => {
         sistem_isolasi: '',
         gas_test: { o2: 20.9, h2s: 0, co: 0, lel: 0 },
         kondisi_cuaca: 'Cerah',
-        applicant_sig: false
+        applicant_sig: false,
+        foto_lokasi: null
     });
 
     const nextStep = () => setStep(s => Math.min(s + 1, 5));
@@ -70,20 +71,27 @@ const PermitForm = ({ onSubmit, onCancel }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSubmit(formData);
+        // Filter out empty worker entries before submitting
+        const cleanedData = {
+            ...formData,
+            daftar_pekerja: formData.daftar_pekerja.filter(worker => worker.trim() !== ''),
+            bahaya: formData.bahaya,
+            apd: formData.apd
+        };
+        onSubmit(cleanedData);
     };
 
     const renderStepNumbers = () => (
         <div className="flex justify-between items-center mb-8 px-2 overflow-x-auto">
             {[1, 2, 3, 4, 5].map((num) => (
-                <div key={num} className="flex items-center">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 shadow-sm ${step === num
+                <div key={num} className="flex items-center flex-1">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 shadow-sm flex-shrink-0 ${step === num
                         ? 'bg-blue-600 text-white ring-4 ring-blue-500/20'
                         : step > num ? 'bg-emerald-500 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
                         }`}>
                         {step > num ? <CheckCircle2 size={20} /> : num}
                     </div>
-                    {num < 5 && <div className={`w-8 sm:w-16 h-1 mx-1 rounded-full ${step > num ? 'bg-emerald-500' : 'bg-slate-100 dark:bg-slate-700'}`} />}
+                    {num < 5 && <div className={`flex-1 h-1 mx-2 rounded-full ${step > num ? 'bg-emerald-500' : 'bg-slate-100 dark:bg-slate-700'}`} />}
                 </div>
             ))}
         </div>
@@ -247,9 +255,18 @@ const PermitForm = ({ onSubmit, onCancel }) => {
                                         <p className="mb-2 text-sm text-slate-500 dark:text-slate-400 font-bold">Klik untuk unggah foto</p>
                                         <p className="text-xs text-slate-400">PNG, JPG (MAX. 5MB)</p>
                                     </div>
-                                    <input type="file" className="hidden" accept="image/*" />
+                                    <input 
+                                        type="file" 
+                                        className="hidden" 
+                                        accept="image/*" 
+                                        capture="environment"
+                                        onChange={(e) => setFormData({ ...formData, foto_lokasi: e.target.files[0] })}
+                                    />
                                 </label>
                             </div>
+                            {formData.foto_lokasi && (
+                                <p className="text-xs text-emerald-600 font-bold">✓ Foto dipilih: {formData.foto_lokasi.name}</p>
+                            )}
                         </div>
 
                         <div className="space-y-4">
@@ -291,7 +308,7 @@ const PermitForm = ({ onSubmit, onCancel }) => {
 
                         <div className="p-6 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-3xl text-center">
                             <p className="text-xs text-slate-500 dark:text-slate-400 font-bold mb-4 uppercase tracking-widest text-center">Alur Persetujuan Bertingkat</p>
-                            <div className="flex justify-between items-center max-w-md mx-auto">
+                            <div className="flex justify-between items-center max-w-lg mx-auto">
                                 <div className="text-center">
                                     <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center mx-auto mb-2 text-blue-600"><User size={24} /></div>
                                     <p className="text-[10px] font-black uppercase text-slate-400">Pemohon</p>
@@ -299,11 +316,16 @@ const PermitForm = ({ onSubmit, onCancel }) => {
                                 <div className="h-px bg-slate-300 flex-1 mx-2" />
                                 <div className="text-center opacity-40">
                                     <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-2 text-slate-600"><HardHat size={24} /></div>
-                                    <p className="text-[10px] font-black uppercase text-slate-400">HSE Officer</p>
+                                    <p className="text-[10px] font-black uppercase text-slate-400">Supervisor</p>
                                 </div>
                                 <div className="h-px bg-slate-300 flex-1 mx-2" />
                                 <div className="text-center opacity-40">
                                     <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-2 text-slate-600"><Shield size={24} /></div>
+                                    <p className="text-[10px] font-black uppercase text-slate-400">HSE Officer</p>
+                                </div>
+                                <div className="h-px bg-slate-300 flex-1 mx-2" />
+                                <div className="text-center opacity-40">
+                                    <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-2 text-slate-600"><ShieldCheck size={24} /></div>
                                     <p className="text-[10px] font-black uppercase text-slate-400">Manager</p>
                                 </div>
                             </div>

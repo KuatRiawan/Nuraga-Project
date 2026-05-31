@@ -15,7 +15,8 @@ const getConfig = async (req, res) => {
 
         res.json(configMap);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -27,7 +28,18 @@ const updateConfig = async (req, res) => {
 
         const payload = req.body; // e.g. { whatsapp_gateway_number: '+62...', ... }
 
+        // Whitelist of allowed config keys to prevent injection attacks
+        const ALLOWED_KEYS = [
+            'whatsapp_gateway_number',
+            'whatsapp_api_key',
+            'ai_fastapi_endpoint',
+            'open_meteo_endpoint'
+        ];
+
         for (const [key, value] of Object.entries(payload)) {
+            if (!ALLOWED_KEYS.includes(key)) {
+                return res.status(400).json({ message: `Konfigurasi key '${key}' tidak diizinkan.` });
+            }
             await SystemConfig.upsert({
                 key,
                 value: String(value)
@@ -38,7 +50,8 @@ const updateConfig = async (req, res) => {
 
         res.json({ message: 'Konfigurasi berhasil disimpan.' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 

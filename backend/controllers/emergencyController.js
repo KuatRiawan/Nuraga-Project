@@ -224,7 +224,8 @@ const triggerEmergency = async (req, res) => {
             });
         });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -236,7 +237,8 @@ const getEmergencies = async (req, res) => {
         });
         res.json(emergencies);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -308,7 +310,8 @@ const resolveEmergency = async (req, res) => {
             });
         });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 

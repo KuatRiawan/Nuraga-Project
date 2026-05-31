@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { requestPermit, getPermits, approvePermit, closePermit } = require('../controllers/workPermitController');
 const { protect, authorize } = require('../middlewares/authMiddleware');
+const upload = require('../middlewares/uploadMiddleware');
 
-router.post('/', protect, requestPermit);
+router.post('/', protect, upload.single('foto_bukti'), requestPermit);
 router.get('/', protect, getPermits);
 router.patch('/:id/approve', protect, authorize('HSE', 'Supervisor', 'Manager', 'Admin'), approvePermit);
 router.patch('/:id/close', protect, closePermit);

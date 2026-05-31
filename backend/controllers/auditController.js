@@ -16,7 +16,8 @@ const createAudit = async (req, res) => {
         clearStatsCache();
         res.status(201).json(audit);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -28,7 +29,8 @@ const getAudits = async (req, res) => {
         });
         res.json(audits);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 

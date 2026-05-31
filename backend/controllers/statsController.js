@@ -50,7 +50,8 @@ const getDashboardStats = async (req, res) => {
 
         res.json(statsData);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -99,7 +100,8 @@ const getMonthlyAnalytics = async (req, res) => {
 
         res.json(analyticsData);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -148,7 +150,8 @@ const getReportData = async (req, res) => {
 
         res.json(reportData);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 

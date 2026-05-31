@@ -13,6 +13,14 @@ exports.clockIn = async (req, res) => {
         const id_user = req.user.id;
         const foto_bukti = req.file ? req.file.filename : null;
 
+        // Bounds check for sleep_hours and stress_level
+        if (sleep_hours !== undefined && (sleep_hours < 0 || sleep_hours > 24)) {
+            return res.status(400).json({ message: 'Sleep hours must be between 0 and 24.' });
+        }
+        if (stress_level !== undefined && (stress_level < 1 || stress_level > 10)) {
+            return res.status(400).json({ message: 'Stress level must be between 1 and 10.' });
+        }
+
         // Check if already clocked in today
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);

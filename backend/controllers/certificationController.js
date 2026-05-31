@@ -3,17 +3,21 @@ const User = require('../models/User');
 
 const addCertification = async (req, res) => {
     try {
-        const { id_user } = req.body;
+        const { id_user, nama_sertifikasi, penerbit, tanggal_terbit, tanggal_kadaluarsa } = req.body;
         // If Admin, they can assign it to any user via id_user payload, otherwise default to self
         const targetUserId = (req.user.role === 'Admin' && id_user) ? id_user : req.user.id;
         
         const certification = await Certification.create({
-            ...req.body,
+            nama_sertifikasi,
+            penerbit,
+            tanggal_terbit,
+            tanggal_kadaluarsa,
             id_user: targetUserId
         });
         res.status(201).json(certification);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -22,7 +26,8 @@ const getMyCertifications = async (req, res) => {
         const certs = await Certification.findAll({ where: { id_user: req.user.id } });
         res.json(certs);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -33,19 +38,27 @@ const getAllCertifications = async (req, res) => {
         });
         res.json(certs);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
 const updateCertification = async (req, res) => {
     try {
+        const { nama_sertifikasi, penerbit, tanggal_terbit, tanggal_kadaluarsa } = req.body;
         const cert = await Certification.findByPk(req.params.id);
         if (!cert) return res.status(404).json({ message: 'Sertifikasi tidak ditemukan' });
 
-        await cert.update(req.body);
+        if (nama_sertifikasi !== undefined) cert.nama_sertifikasi = nama_sertifikasi;
+        if (penerbit !== undefined) cert.penerbit = penerbit;
+        if (tanggal_terbit !== undefined) cert.tanggal_terbit = tanggal_terbit;
+        if (tanggal_kadaluarsa !== undefined) cert.tanggal_kadaluarsa = tanggal_kadaluarsa;
+        
+        await cert.save();
         res.json(cert);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -57,7 +70,8 @@ const deleteCertification = async (req, res) => {
         await cert.destroy();
         res.json({ message: 'Sertifikasi berhasil dihapus' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 

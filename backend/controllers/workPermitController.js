@@ -26,8 +26,51 @@ const notifyRoles = async (roles, message) => {
 const requestPermit = async (req, res) => {
     try {
         const io = req.app.get('io');
+        
+        // Handle FormData (multipart/form-data) or JSON
+        let permitData;
+        if (req.file) {
+            // FormData with file
+            permitData = {
+                jenis_permit: req.body.jenis_permit,
+                perusahaan: req.body.perusahaan,
+                lokasi: req.body.lokasi,
+                deskripsi_pekerjaan: req.body.deskripsi_pekerjaan,
+                supervisor_name: req.body.supervisor_name,
+                daftar_pekerja: req.body.daftar_pekerja ? JSON.parse(req.body.daftar_pekerja) : [],
+                bahaya: req.body.bahaya ? JSON.parse(req.body.bahaya) : [],
+                apd: req.body.apd ? JSON.parse(req.body.apd) : [],
+                sistem_isolasi: req.body.sistem_isolasi,
+                gas_test: req.body.gas_test ? JSON.parse(req.body.gas_test) : null,
+                kondisi_cuaca: req.body.kondisi_cuaca,
+                applicant_sig: req.body.applicant_sig === 'true',
+                foto_lokasi: req.file.filename,
+                waktu_mulai: req.body.waktu_mulai,
+                waktu_selesai: req.body.waktu_selesai
+            };
+        } else {
+            // JSON without file
+            permitData = {
+                jenis_permit: req.body.jenis_permit,
+                perusahaan: req.body.perusahaan,
+                lokasi: req.body.lokasi,
+                deskripsi_pekerjaan: req.body.deskripsi_pekerjaan,
+                supervisor_name: req.body.supervisor_name,
+                daftar_pekerja: req.body.daftar_pekerja || [],
+                bahaya: req.body.bahaya || [],
+                apd: req.body.apd || [],
+                sistem_isolasi: req.body.sistem_isolasi,
+                gas_test: req.body.gas_test || null,
+                kondisi_cuaca: req.body.kondisi_cuaca,
+                applicant_sig: req.body.applicant_sig || false,
+                foto_lokasi: req.body.foto_lokasi || null,
+                waktu_mulai: req.body.waktu_mulai,
+                waktu_selesai: req.body.waktu_selesai
+            };
+        }
+        
         const permit = await WorkPermit.create({
-            ...req.body,
+            ...permitData,
             id_user: req.user.id,
             status: 'Pending'
         });
@@ -60,12 +103,13 @@ const requestPermit = async (req, res) => {
                 `Lokasi: ${permit.lokasi}\n` +
                 `Status: Menunggu persetujuan Supervisor\n\n` +
                 `Silakan review di sistem Nuraga Safety.`
-            );
+            ).catch((err) => console.error('[WA Notify] Failed to notify supervisors:', err.message));
         });
 
         res.status(201).json(permit);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -101,7 +145,8 @@ const getPermits = async (req, res) => {
             currentPage: page
         });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -175,7 +220,7 @@ const approvePermit = async (req, res) => {
                     `Jenis Pekerjaan: ${permit.jenis_permit}\n` +
                     `Lokasi: ${permit.lokasi}\n` +
                     `Status: Menunggu persetujuan HSE Officer.`
-                );
+                ).catch((err) => console.error('[WA Notify] Failed to notify HSE:', err.message));
             });
             // Notify requester
             const req1 = await User.findByPk(permit.id_user);
@@ -210,7 +255,7 @@ const approvePermit = async (req, res) => {
                     `Jenis Pekerjaan: ${permit.jenis_permit}\n` +
                     `Lokasi: ${permit.lokasi}\n` +
                     `Status: Menunggu persetujuan final Manager.`
-                );
+                ).catch((err) => console.error('[WA Notify] Failed to notify Manager:', err.message));
             });
             // Notify requester
             const req2 = await User.findByPk(permit.id_user);
@@ -257,7 +302,8 @@ const approvePermit = async (req, res) => {
 
         return res.status(400).json({ message: 'This permit is already fully processed.' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -294,7 +340,8 @@ const closePermit = async (req, res) => {
         }
         res.json(permit);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 

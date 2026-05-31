@@ -136,7 +136,8 @@ function startServer(port, retries = 5) {
             origin: clientUrl,
             methods: ["GET", "POST"],
             credentials: true
-        }
+        },
+        maxHttpBufferSize: 1e6 // 1MB limit to prevent WebSocket memory bomb attacks
     });
 
     // JWT Authentication middleware for Socket.io

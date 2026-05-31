@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
-const { register, login, getMe, forgotPassword, updateProfile, changePassword, redeemPoints, getLeaderboard, getRewards } = require('../controllers/authController');
+const { register, login, getMe, forgotPassword, updateProfile, changePassword, redeemPoints, getLeaderboard, getRewards, getUserStats } = require('../controllers/authController');
 const { protect } = require('../middlewares/authMiddleware');
 const upload = require('../middlewares/uploadMiddleware');
 
@@ -28,5 +28,6 @@ router.put('/change-password', protect, changePassword);
 router.post('/redeem', protect, redeemPoints);
 router.get('/leaderboard', protect, getLeaderboard);
 router.get('/rewards', protect, getRewards);
+router.get('/user-stats', protect, getUserStats);
 
 module.exports = router;

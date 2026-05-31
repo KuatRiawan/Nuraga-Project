@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Trophy, Star, Zap, Award, Gift, TrendingUp, CheckCircle, Ticket, X, Search, Copy } from 'lucide-react';
+import { Trophy, Star, Zap, Award, Gift, TrendingUp, CheckCircle, Ticket, X, Search, Copy, CheckCircle2, XCircle } from 'lucide-react';
 import Button from '../components/Button';
 import { useAuth } from '../store/AuthContext';
 import api from '../api/axios';
@@ -26,6 +26,10 @@ const GamificationPage = () => {
     const [vouchers, setVouchers] = useState([]);
     const [showVouchersDrawer, setShowVouchersDrawer] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [notification, setNotification] = useState(null);
+    const [userStats, setUserStats] = useState({ rewardsClaimed: 0, hazardsReported: 0 });
+    const [showClaimModal, setShowClaimModal] = useState(false);
+    const [selectedVoucherId, setSelectedVoucherId] = useState(null);
 
     // Fetch real leaderboard and rewards from backend
     const [leaderboard, setLeaderboard] = useState([]);
@@ -36,9 +40,15 @@ const GamificationPage = () => {
     const myPoints = user?.points || 0;
     const isHseOrAdmin = user?.role === 'HSE' || user?.role === 'Admin';
 
+    const showNotification = (message, type = 'success') => {
+        setNotification({ message, type });
+        setTimeout(() => setNotification(null), 4000);
+    };
+
     useEffect(() => {
         fetchLeaderboard();
         fetchRewards();
+        fetchUserStats();
     }, []);
 
     useEffect(() => {
@@ -81,6 +91,22 @@ const GamificationPage = () => {
         }
     };
 
+    const fetchUserStats = async () => {
+        try {
+            const res = await api.get('/auth/user-stats');
+            setUserStats(res.data);
+        } catch (err) {
+            console.error('Failed to fetch user stats:', err);
+            // Fallback to counting from vouchers if endpoint doesn't exist
+            try {
+                const voucherRes = await api.get('/vouchers/my');
+                setUserStats({ rewardsClaimed: voucherRes.data.length, hazardsReported: 0 });
+            } catch (voucherErr) {
+                console.error('Failed to fetch vouchers for stats:', voucherErr);
+            }
+        }
+    };
+
     const handleRedeem = async (reward) => {
         setLoading(true);
         try {
@@ -90,27 +116,33 @@ const GamificationPage = () => {
                 points: reward.points
             });
             updateUser({ ...user, points: res.data.points });
-            alert(`Berhasil menukarkan poin dengan: ${reward.title}!\nKode Voucher Anda: ${res.data.voucher.code}\n\nSilakan tunjukkan kode voucher di menu 'Voucher Saya' ke HSE Officer.`);
+            showNotification(`Berhasil menukarkan poin dengan: ${reward.title}!\nKode Voucher: ${res.data.voucher.code}`, 'success');
             fetchRewards(); // Update quotas
             fetchLeaderboard(); // Update positions
+            fetchUserStats(); // Update user stats
             setShowRewards(false);
         } catch (err) {
             console.error(err);
-            alert(err.response?.data?.message || 'Gagal menukarkan poin');
+            showNotification(err.response?.data?.message || 'Gagal menukarkan poin', 'error');
         } finally {
             setLoading(false);
         }
     };
 
     const handleClaimVoucher = async (voucherId) => {
-        if (!window.confirm('Tandai voucher ini sebagai sudah diklaim secara fisik?')) return;
+        setSelectedVoucherId(voucherId);
+        setShowClaimModal(true);
+    };
+
+    const confirmClaimVoucher = async () => {
+        setShowClaimModal(false);
         try {
-            await api.patch(`/vouchers/${voucherId}/claim`);
-            alert('Voucher berhasil diklaim secara fisik!');
+            await api.patch(`/vouchers/${selectedVoucherId}/claim`);
+            showNotification('Voucher berhasil diklaim secara fisik!', 'success');
             fetchVouchers();
         } catch (err) {
             console.error('Failed to claim voucher:', err);
-            alert('Gagal mengeklaim voucher');
+            showNotification('Gagal mengeklaim voucher', 'error');
         }
     };
 
@@ -140,6 +172,28 @@ const GamificationPage = () => {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500 relative">
+            {/* Notification Toast */}
+            {notification && (
+                <div className={`fixed top-4 right-4 z-[200] flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-right duration-300 ${
+                    notification.type === 'success' 
+                        ? 'bg-emerald-600 text-white' 
+                        : 'bg-red-600 text-white'
+                }`}>
+                    {notification.type === 'success' ? (
+                        <CheckCircle2 size={20} className="shrink-0" />
+                    ) : (
+                        <XCircle size={20} className="shrink-0" />
+                    )}
+                    <p className="text-sm font-medium whitespace-pre-line">{notification.message}</p>
+                    <button
+                        onClick={() => setNotification(null)}
+                        className="p-1 hover:bg-white/20 rounded-lg transition-colors"
+                    >
+                        <X size={16} />
+                    </button>
+                </div>
+            )}
+
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
@@ -179,10 +233,10 @@ const GamificationPage = () => {
 
                     <div className="grid grid-cols-2 gap-4 w-full md:w-auto">
                         {[
-                            { label: 'Laporan Valid', value: '0', icon: <CheckCircle size={20} /> },
+                            { label: 'Laporan Valid', value: userStats.hazardsReported || '0', icon: <CheckCircle size={20} /> },
                             { label: 'Poin Bulan Ini', value: `+${myPoints}`, icon: <TrendingUp size={20} /> },
                             { label: 'Badge Diraih', value: myPoints > 1000 ? '2' : myPoints > 500 ? '1' : '0', icon: <Award size={20} /> },
-                            { label: 'Rewards Ditukar', value: myPoints < 1200 ? '1' : '0', icon: <Gift size={20} /> },
+                            { label: 'Rewards Ditukar', value: userStats.rewardsClaimed || '0', icon: <Gift size={20} /> },
                         ].map(s => (
                             <div key={s.label} className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
                                 <div className="text-blue-200 mb-1">{s.icon}</div>
@@ -360,7 +414,7 @@ const GamificationPage = () => {
                                         <div className="flex-1 font-mono font-black text-center bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 py-3 rounded-xl text-lg tracking-wider text-slate-800 dark:text-slate-200 select-all relative group">
                                             {v.code}
                                             <button
-                                                onClick={() => { navigator.clipboard.writeText(v.code); alert('Kode voucher berhasil disalin!'); }}
+                                                onClick={() => { navigator.clipboard.writeText(v.code); showNotification('Kode voucher berhasil disalin!', 'success'); }}
                                                 className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-slate-650 opacity-0 group-hover:opacity-100 transition-opacity"
                                                 title="Salin Kode"
                                             >
@@ -389,6 +443,45 @@ const GamificationPage = () => {
                     )}
                 </div>
             </div>
+
+            {/* Claim Confirmation Modal */}
+            {showClaimModal && (
+                <div 
+                    onClick={() => setShowClaimModal(false)}
+                    className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                >
+                    <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200"
+                    >
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter flex items-center gap-2">
+                                <Ticket className="text-blue-600" size={24} /> Konfirmasi Klaim Voucher
+                            </h2>
+                            <button onClick={() => setShowClaimModal(false)} className="text-slate-400 hover:text-red-500 transition-colors">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <p className="text-sm text-slate-600 dark:text-slate-300 mb-6 leading-relaxed">
+                            Tandai voucher ini sebagai sudah diklaim secara fisik? Tindakan ini tidak dapat dibatalkan.
+                        </p>
+                        <div className="flex gap-4">
+                            <button
+                                onClick={() => setShowClaimModal(false)}
+                                className="flex-1 py-4 rounded-2xl flex items-center justify-center gap-2 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                onClick={confirmClaimVoucher}
+                                className="flex-1 py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
+                            >
+                                <CheckCircle2 size={18} /> Ya, Klaim
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -22,6 +22,20 @@ const createHazard = async (req, res) => {
     const t = await sequelize.transaction();
     try {
         const { lokasi, deskripsi, risiko, koordinat_gps } = req.body;
+
+        // Data length validation
+        if (deskripsi && deskripsi.length > 5000) {
+            await t.rollback();
+            return res.status(400).json({ message: 'Deskripsi terlalu panjang. Maksimal 5000 karakter.' });
+        }
+
+        // Manual enum validation for risiko
+        const validRisks = ['Low', 'Medium', 'High', 'Critical'];
+        if (risiko && !validRisks.includes(risiko)) {
+            await t.rollback();
+            return res.status(400).json({ message: 'Invalid risk level. Valid values: Low, Medium, High, Critical' });
+        }
+
         const hazard = await HazardReport.create({
             id_user: req.user.id,
             lokasi,
@@ -82,7 +96,8 @@ const getHazards = async (req, res) => {
             currentPage: page
         });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -98,13 +113,21 @@ const updateStatus = async (req, res) => {
         await recordLog(req, 'UPDATE_HAZARD_STATUS', `${req.user.nama} (${req.user.role}) memperbarui status Laporan Bahaya #${hazard.id_hazard} menjadi: ${status}.`);
         res.json(hazard);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
 const overrideRisk = async (req, res) => {
     try {
         const { risiko } = req.body; // 'Low', 'Medium', 'High', 'Critical'
+        
+        // Manual enum validation for risiko
+        const validRisks = ['Low', 'Medium', 'High', 'Critical'];
+        if (risiko && !validRisks.includes(risiko)) {
+            return res.status(400).json({ message: 'Invalid risk level. Valid values: Low, Medium, High, Critical' });
+        }
+        
         const hazard = await HazardReport.findByPk(req.params.id);
         if (!hazard) return res.status(404).json({ message: 'Hazard not found' });
 
@@ -140,7 +163,8 @@ const overrideRisk = async (req, res) => {
         await recordLog(req, 'OVERRIDE_HAZARD_RISK', `${req.user.nama} (${req.user.role}) mengubah paksa tingkat risiko Laporan Bahaya #${hazard.id_hazard} menjadi ${risiko}.`);
         res.json(hazard);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
