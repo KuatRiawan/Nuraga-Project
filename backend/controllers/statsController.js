@@ -3,6 +3,8 @@ const HazardReport = require('../models/HazardReport');
 const IncidentReport = require('../models/IncidentReport');
 const Audit = require('../models/Audit');
 const CorrectiveAction = require('../models/CorrectiveAction');
+const User = require('../models/User');
+const Attendance = require('../models/Attendance');
 
 // Simple In-memory Cache
 let cache = {
@@ -38,11 +40,40 @@ const getDashboardStats = async (req, res) => {
         const totalAudits = await Audit.count();
         const pendingActions = await CorrectiveAction.count({ where: { status: 'Open' } });
 
+        // Calculate work hours for TRIR/LTI (last 30 days)
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        // Count unique users who clocked in during the last 30 days
+        const activeUsers = await Attendance.findAll({
+            where: { 
+                type: 'Datang',
+                createdAt: { [Op.gte]: thirtyDaysAgo }
+            },
+            attributes: ['id_user'],
+            group: ['id_user']
+        });
+        
+        const numberOfWorkers = activeUsers.length || 1; // Avoid division by zero
+        const workingDays = 30; // Last 30 days
+        const hoursPerDay = 8; // Standard 8-hour workday
+        const totalWorkHours = numberOfWorkers * workingDays * hoursPerDay;
+
+        // TRIR = (Total Incidents * 200,000) / Total Work Hours
+        const trir = totalIncidents > 0 ? (totalIncidents * 200000) / totalWorkHours : 0;
+
+        // LTI Rate = (Lost Time Incidents * 200,000) / Total Work Hours
+        // For simplicity, we'll use total incidents as LTI incidents (can be refined later)
+        const ltiRate = totalIncidents > 0 ? (totalIncidents * 200000) / totalWorkHours : 0;
+
         const statsData = {
             totalHazards,
             totalIncidents,
             totalAudits,
             pendingActions,
+            trir: parseFloat(trir.toFixed(2)),
+            ltiRate: parseFloat(ltiRate.toFixed(2)),
+            totalWorkHours
         };
 
         cache.stats = statsData;

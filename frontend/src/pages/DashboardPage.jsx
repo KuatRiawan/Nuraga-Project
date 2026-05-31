@@ -331,20 +331,20 @@ const DashboardPage = () => {
         },
         {
             title: 'TRIR Index',
-            value: '0.00',
+            value: stats.trir || '0.00',
             icon: <Zap className="text-emerald-400" />,
             trend: 'Target < 1.5',
-            trendPercentage: '0%',
-            trendColor: 'text-slate-400 dark:text-slate-500',
+            trendPercentage: stats.trir > 1.5 ? '+5%' : '0%',
+            trendColor: stats.trir > 1.5 ? 'text-red-500' : 'text-slate-400 dark:text-slate-500',
             color: 'bg-emerald-500/10'
         },
         {
             title: 'LTI Rate',
-            value: '0.00',
+            value: stats.ltiRate || '0.00',
             icon: <CheckCircle className="text-blue-400" />,
             trend: '365 Hari Terakhir',
-            trendPercentage: '0%',
-            trendColor: 'text-slate-400 dark:text-slate-500',
+            trendPercentage: stats.ltiRate > 0 ? '+3%' : '0%',
+            trendColor: stats.ltiRate > 0 ? 'text-red-500' : 'text-slate-400 dark:text-slate-500',
             color: 'bg-blue-500/10'
         },
     ];

@@ -46,3 +46,6 @@ coverage-html/
 
 # Ignore build artifacts produced by tooling
 *.tgz
+
+# WhatsApp Session
+wa_session/
