@@ -1401,6 +1401,901 @@ Leaderboard (view/cache):
 
 ---
 
+## 3.11 MODUL AI & DATA SCIENCE INTELLIGENCE
+
+### 3.11.1 Deskripsi
+
+Modul AI & Data Science mengintegrasikan machine learning models dan advanced analytics untuk memberikan **predictive insights**, **intelligent recommendations**, dan **anomaly detection**. Sistem menggunakan historical data dari semua modules untuk menciptakan actionable intelligence yang mendukung preventive safety management (zero accident culture).
+
+### 3.11.2 AI Components & Machine Learning Models
+
+#### 3.11.2.1 Fatigue Risk Prediction Model [CORE - PHASE 1]
+
+**Objective:** Predict pekerja's fatigue risk level dengan akurasi >85% untuk early intervention.
+
+**Model Specification:**
+- **Algorithm:** Gradient Boosting (XGBoost) atau Deep Neural Network (2-3 hidden layers)
+- **Use Case:** Real-time fatigue status prediction saat check-in
+- **Latency Target:** <100ms inference time
+
+**Input Features (Multivariate):**
+```
+Personal Factors:
+├─ sleep_hours (0-12, normalized)
+├─ stress_level (1-10 Likert scale)
+├─ physical_fatigue_score (1-10)
+├─ mental_fatigue_score (1-10)
+
+Work History:
+├─ hours_worked_yesterday (0-24)
+├─ cumulative_hours_this_week (0-168)
+├─ overtime_count_this_month (0-30)
+├─ shift_type (early/day/night - one-hot encoded)
+
+Environmental:
+├─ temperature (°C, 15-45 range)
+├─ humidity (%, 20-100 range)
+├─ air_quality_index (0-500)
+└─ noise_level (dB, 60-100 range)
+
+Historical Patterns:
+├─ avg_fatigue_last_7_days (0-100)
+├─ fatigue_trend_direction (increasing/stable/decreasing)
+├─ red_status_count_last_month (0-30)
+└─ incident_count_when_red (0-5)
+```
+
+**Output:** 
+```
+Fatigue Risk Score: 0-100 (continuous)
+Classification: GREEN (0-30) | YELLOW (31-60) | RED (61-100)
+Confidence Level: 0-100% (prediction reliability)
+Recommendation: Actionable text based on status
+```
+
+**Model Training:**
+- **Training Data:** 50,000+ records dari diverse worker profiles
+- **Data Sources:** Attendance module, historical assessments, incident correlation
+- **Feature Engineering:** Domain experts collaborate untuk relevant features
+- **Validation:** 70/20/10 train/val/test split, 5-fold cross-validation
+
+**Performance Metrics:**
+```
+Classification Performance:
+├─ Overall Accuracy: >85%
+├─ Precision (RED status): >90% (minimize false alarms)
+├─ Recall (RED status): >80% (catch real risks)
+├─ F1-Score: >0.85
+└─ AUC-ROC: >0.92
+
+Business Metrics:
+├─ Incident prediction capability: Incidents when RED > incidents when GREEN
+├─ Model monitoring: Track performance monthly
+└─ Retraining: Weekly with new data
+```
+
+**Deployment Architecture:**
+```
+Attendance Check-in
+    ↓
+Real-time Feature Extraction
+    ↓
+Model Inference (TensorFlow Serving)
+    ↓
+Fatigue Risk Score & Status
+    ↓
+Database & Dashboard Update
+    ↓
+Notification (if RED)
+```
+
+#### 3.11.2.2 Incident Prediction & Risk Scoring Model [PHASE 2]
+
+**Objective:** Predict high-risk situations dan incident likelihood 7 hari ke depan.
+
+**Model Specification:**
+- **Algorithm:** Random Forest (interpretability) + Gradient Boosting (accuracy)
+- **Ensemble:** Combined score untuk robustness
+- **Update Frequency:** Daily batch processing
+
+**Prediction Types:**
+1. **Incident Probability:** Will an incident occur dalam next 7 days? (0-100%)
+2. **Risk Location:** Which area/department most at risk?
+3. **Incident Type:** Likely incident type (medical/fire/chemical/structural)
+4. **Severity:** Predicted severity level (minor/serious/lost-time)
+
+**Feature Engineering:**
+```
+Hazard Features:
+├─ hazard_density_per_area (reports/week/100 workers)
+├─ hazard_resolution_rate (% closed on time)
+├─ high_risk_hazard_count (current open)
+└─ repeat_hazard_percentage (same issue >1x in 30 days)
+
+Incident History:
+├─ incident_frequency_trend (increasing/stable/decreasing)
+├─ incident_count_last_90_days (0-100)
+├─ incident_recency_weight (recent worse than old)
+├─ incident_by_location (hotspot mapping)
+└─ incident_by_type_distribution (category frequency)
+
+Environmental & Contextual:
+├─ weather_risk_factors (temperature extremes, humidity)
+├─ shift_time_pattern (night shift higher risk?)
+├─ day_of_week_pattern (Monday vs Friday?)
+├─ seasonal_pattern (Q1 vs Q3)
+├─ work_permit_volume (overlapping high-risk permits)
+├─ worker_fatigue_aggregate (team-level RED count)
+└─ equipment_age_and_maintenance_status
+
+External Factors:
+├─ industry_benchmark_incident_rate
+├─ regulatory_compliance_audit_score
+└─ recent_industry_incidents (external learning)
+```
+
+**Output:**
+```
+Risk Scoring Dashboard:
+├─ Overall Organizational Risk: 0-100 score
+├─ Risk by Location: Map heatmap visualization
+├─ Risk by Shift: Time-based risk distribution
+├─ Risk by Department: Department-level scores
+├─ Predicted Incidents: Expected number in next 7 days (0-10)
+├─ Confidence Interval: 95% CI untuk predictions
+└─ Top 5 Recommended Actions: Prioritized interventions
+```
+
+**Model Performance:**
+```
+Accuracy Targets:
+├─ Incident Occurrence Prediction: AUC >0.80
+├─ Location Prediction: Accuracy >70%
+├─ Type Prediction: Accuracy >65%
+└─ Severity Prediction: AUC >0.75
+
+Business Impact:
+├─ Incident Prevention Rate: Target 25-30% through early intervention
+├─ False Positive Rate: <10% (minimize unnecessary alerts)
+└─ Lead Time: 3-7 days advance warning
+```
+
+**Deployment:**
+```
+Daily Batch Pipeline (3 AM):
+├─ Extract operational data (incidents, hazards, attendance)
+├─ Calculate features dari raw data
+├─ Score all areas/locations/shifts
+├─ Generate recommendations
+├─ Store scores dalam time-series database
+└─ Alert dashboard & HSE officer
+
+Real-time Scoring (on event):
+├─ New hazard report → immediate risk re-evaluation
+├─ New incident → update location/area risk score
+├─ Major fatigue status change → worker risk assessment
+└─ Permit creation → overlap check dengan predicted high-risk
+```
+
+#### 3.11.2.3 5-Whys Root Cause Analysis Assistant [PHASE 2]
+
+**Objective:** AI-assisted guidance untuk systematic root cause analysis, reducing bias dan improving consistency.
+
+**Model Architecture:**
+- **NLP Approach:** BERT (Bidirectional Encoder Representations from Transformers)
+- **Fine-tuning:** Domain-specific fine-tuning pada 500+ labeled incident cases
+- **Inference:** Real-time suggestion generation
+
+**Functionality:**
+```
+Interactive 5-Whys Wizard:
+
+Step 1: Incident Context
+  Input: Incident description, type, hazards
+  AI Suggestion: Likely incident category (system/human/process/environmental)
+  
+Step 2: First Why
+  Question: "Why did [incident] occur?"
+  AI Suggestion: List of likely root cause categories with examples
+  - Equipment Failure (e.g., maintenance gap, defective part)
+  - Procedure Gap (e.g., unclear SOP, not communicated)
+  - Human Error (e.g., fatigue, lack of training, distraction)
+  - Environmental (e.g., weather, facility condition)
+  
+Step 3-5: Deeper Analysis
+  Question: "Why did [previous answer] happen?"
+  AI Suggestion: Progressively narrower categorization
+  Example: Equipment Failure → Lack of Maintenance → Maintenance Scheduling Error
+  
+Final: Root Cause Statement
+  AI Generates: Likely root cause summary dengan confidence score
+  Historical Reference: Similar incidents with documented root causes
+```
+
+**Knowledge Base:**
+```
+Root Cause Taxonomy:
+├─ System Failures (40 subtypes)
+├─ Human Factors (35 subtypes)
+├─ Process Gaps (30 subtypes)
+├─ Environmental Issues (15 subtypes)
+└─ External Factors (10 subtypes)
+
+Domain Knowledge:
+├─ 500+ labeled incident-RCA pairs
+├─ K3 safety guidelines database (UU 13/2003, SNI standards)
+├─ Industry best practices (OSHA, ISO 45001)
+└─ Common incident patterns per industry
+```
+
+**ML Component:**
+- **Text Classification:** Categorize free-text descriptions
+- **Similarity Matching:** Find similar historical incidents
+- **Confidence Scoring:** Rate suggestion quality (0-100%)
+- **Feedback Loop:** Learn from user corrections
+
+**User Experience:**
+```
+Assistant Response Example:
+
+User Input Why 3: 
+"Why didn't maintenance catch the faulty bearing?"
+
+AI Response:
+┌─────────────────────────────────────────────┐
+│ Suggested Categories (Confidence):          │
+│ 1. Lack of preventive maintenance (92%)     │
+│ 2. Inadequate inspection protocol (85%)     │
+│ 3. Maintenance staff training gap (78%)     │
+│ 4. Schedule optimization failure (72%)      │
+│                                             │
+│ Historical Similar Cases:                   │
+│ • Case #2024-156: Equipment bearing        │
+│   Root Cause: Maintenance interval too long│
+│   Corrective Action: Reduce interval by 30%│
+│                                             │
+│ Model Confidence: 87%                      │
+│ Alternative Paths: 3 other possibilities   │
+└─────────────────────────────────────────────┘
+```
+
+#### 3.11.2.4 Anomaly Detection & Pattern Recognition [PHASE 2-3]
+
+**Objective:** Automatically detect unusual patterns yang mungkin indicate emerging safety risks.
+
+**Anomaly Types:**
+
+1. **Workforce Anomalies:**
+   - Sudden increase dalam fatigue status (RED count up 200%?)
+   - Sick leave spike (correlate dengan hazard reports?)
+   - Overtime concentration (few workers doing all OT?)
+   - Shift attendance patterns (no-shows increasing?)
+
+2. **Incident Pattern Anomalies:**
+   - Incident cluster (3+ incidents same location dalam 1 week?)
+   - Incident timing cluster (all happens pada shift transition?)
+   - New incident type emergence (chemical incidents increasing?)
+   - Repeat incident rapid recurrence (same issue within 14 days?)
+
+3. **Operational Anomalies:**
+   - Permit approval delay (average approval time increased 50%?)
+   - Audit compliance drop (score decreased >10 points?)
+   - Corrective action backlog (overdue actions >100?)
+   - Hazard reporting rate drop (indicates underreporting?)
+
+4. **Environmental Anomalies:**
+   - Weather impact on incidents (temperature extreme → incident spike?)
+   - Seasonal deviation (Q1 incident rate very different from historical Q1?)
+   - External factor correlation (industry event → local incident?)
+
+**Detection Methods:**
+```
+Statistical Methods:
+├─ Z-score anomaly detection (>3 std deviations)
+├─ Isolation Forest (for multivariate anomalies)
+├─ LSTM Autoencoder (for time-series anomalies)
+└─ Moving average comparison (compare vs rolling window)
+
+Time-Series Methods:
+├─ Change point detection (PELT algorithm)
+├─ Seasonal decomposition (STL)
+└─ Trend analysis (polynomial fit)
+
+Graph-based Methods:
+├─ Location correlation (incident clustering)
+├─ Worker network analysis (common factors in related incidents)
+└─ Equipment network (failures cascading?)
+```
+
+**Alert Configuration:**
+```
+Anomaly Alert Thresholds:
+
+Critical Alerts (immediate notification):
+├─ Fatigue RED count >50% of workforce
+├─ Incident cluster >3 in 24 hours
+├─ Hazard hotspot activation (area risk score >80)
+└─ Corrective action overdue >5 items
+
+Warning Alerts (daily summary):
+├─ Incident trend increasing >20% vs baseline
+├─ Hazard reporting rate drop >30%
+├─ Permit approval delay >2x normal
+└─ Audit compliance trend declining
+
+Informational (weekly report):
+├─ Anomaly detection results & root causes
+├─ Corrective actions recommended
+└─ Model performance metrics
+```
+
+### 3.11.3 Analytics & Reporting Engine
+
+#### 3.11.3.1 Real-time Data Pipeline
+
+**FR-11.1.1 [MUST]** ETL (Extract, Transform, Load) Architecture:
+
+```
+Operational Modules
+  ├─ Attendance
+  ├─ Incidents/Hazards
+  ├─ Work Permits
+  ├─ Audits
+  └─ User Activity Logs
+        ↓
+    Change Data Capture (CDC)
+    ├─ Real-time: Incidents, Hazards, SOS
+    ├─ Hourly: Activity logs, metrics
+    └─ Daily: Attendance, permits
+        ↓
+    Data Validation & Cleaning
+    ├─ Schema validation
+    ├─ Null value handling
+    ├─ Outlier detection
+    └─ Deduplication
+        ↓
+    Feature Engineering
+    ├─ Derived metrics (cumulative, averages)
+    ├─ Time-based features (day of week, season)
+    ├─ Aggregations (team, location, department)
+    └─ Window functions (7-day rolling, 30-day)
+        ↓
+    Analytics Data Warehouse (PostgreSQL + Time-series DB)
+    ├─ Fact tables (incidents, hazards)
+    ├─ Dimension tables (workers, locations)
+    ├─ Historical snapshots (daily)
+    └─ Time-series metrics (hourly)
+        ↓
+    ML Models & Analytics Engine
+    ├─ Model inference
+    ├─ Metric calculation
+    ├─ Dashboard queries
+    └─ Report generation
+```
+
+**Pipeline Implementation:**
+- **Technology:** Apache Airflow (orchestration), Spark (processing)
+- **Frequency:** Real-time (Kafka streams for events), Hourly batch, Daily batch
+- **Data Quality:** Great Expectations untuk validation, dbt untuk transformation
+- **Monitoring:** Datadog/New Relic untuk pipeline health
+
+#### 3.11.3.2 Advanced Analytics Dashboard
+
+**FR-11.1.2 [MUST]** Multi-level analytics dashboard dengan real-time & predictive metrics:
+
+**Level 1: Executive Dashboard (Strategic)**
+```
+Real-time Metrics:
+├─ Safety Score (0-100) with trend
+├─ TRIR with prediction (next month)
+├─ LTI trend vs target
+├─ Days Since Last Serious Accident
+├─ Compliance Score vs regulatory target
+
+Key Indicators:
+├─ Current HIGH-risk incidents (count, map)
+├─ Workers at risk (HIGH fatigue count)
+├─ Corrective actions overdue (count, trend)
+├─ Audit compliance by area (color-coded)
+└─ Safety culture maturity score
+
+Predictive Insights:
+├─ Predicted incident count next 7 days
+├─ High-risk areas alert
+├─ Recommended interventions
+└─ Estimated cost impact (potential loss avoidance)
+```
+
+**Level 2: HSE Officer Dashboard (Tactical)**
+```
+Current Status:
+├─ Active incidents & hazards (detailed list)
+├─ Pending approvals (work permits, audits)
+├─ Overdue corrective actions
+├─ Workers with RED fatigue status
+
+Analysis & Investigation:
+├─ Incident root cause trends (top 5 RCA categories)
+├─ Hazard resolution funnel (open → closed conversion)
+├─ Area hotspot heatmap (location with most incidents)
+├─ Department comparison (HSE metrics per dept)
+
+Historical & Trending:
+├─ 12-month TRIR trend with forecast
+├─ Incident distribution (by type, severity, shift)
+├─ Hazard reporting rate (indicates culture)
+├─ Audit compliance history
+└─ Corrective action effectiveness (repeat rate)
+
+Anomalies & Alerts:
+├─ Unusual pattern detection
+├─ Risk score changes
+├─ Data quality issues
+└─ Model performance alerts
+```
+
+**Level 3: Worker Dashboard (Operational)**
+```
+Personal Status:
+├─ Today's fatigue status (GREEN/YELLOW/RED)
+├─ Personalized recommendations (rest, buddy, breaks)
+├─ Scheduled work permits & safety briefings
+
+Engagement:
+├─ Personal safety points & leaderboard rank
+├─ Achievements & badges unlocked
+├─ Hazards reported (count, recent)
+├─ Certifications validity status
+└─ Training completed
+```
+
+**Visualization Components:**
+```
+Chart Types:
+├─ Time-series: TRIR trend, incident rate, metric over time
+├─ Distribution: Incident by category, shift, location
+├─ Heatmap: Area risk, time-of-day pattern
+├─ Gauge: Current safety score, compliance %
+├─ Funnel: Hazard resolution progression
+├─ Correlation: Hazard → Incident conversion
+├─ Map: Geographic incident distribution
+├─ Sankey: Root cause flow (incident → causes → corrections)
+├─ Waterfall: Safety metrics contribution analysis
+└─ Anomaly charts: Time-series with anomaly highlighting
+```
+
+**Interactivity:**
+- Drill-down capability (metric → details → individual records)
+- Filter by date range, location, department, incident type
+- Comparison: vs previous period, vs target, vs industry benchmark
+- Export: PDF, Excel, interactive Tableau/Power BI embedded
+- Alerts: Real-time notification untuk critical metrics
+
+#### 3.11.3.3 Custom Report Builder
+
+**FR-11.1.3 [SHOULD]** Self-service reporting untuk non-technical users:
+
+**Pre-built Report Templates:**
+
+1. **Monthly Safety Report** (Most common)
+   - KPI summary (TRIR, LTI, DLSA, incidents)
+   - Trend comparison vs previous month & YoY
+   - Top 5 incidents & hazards
+   - Open corrective actions
+   - Audit findings summary
+   - Auto-generated insights & recommendations
+
+2. **Area/Department Compliance Report**
+   - Safety metrics per area
+   - Incident distribution
+   - Hazard density
+   - Audit scores
+   - Corrective actions backlog
+   - Workforce fatigue trends
+
+3. **Incident Deep-Dive Report**
+   - Incident details (date, location, type, severity)
+   - Root cause analysis (5-Whys results)
+   - Injury details & treatment
+   - Loss cost breakdown
+   - Corrective actions & timeline
+   - Lessons learned & prevention
+
+4. **Trend Analysis Report**
+   - 3-month, 6-month, 12-month trends
+   - Comparative analysis (this period vs last period)
+   - Seasonal patterns
+   - Forecast (predicted next quarter)
+   - Best practices & worst performers identification
+
+**Custom Report Builder:**
+```
+Step 1: Select Template or Blank
+Step 2: Choose Metrics/Dimensions
+  ├─ Available metrics (TRIR, LTI, incidents, hazards, etc)
+  ├─ Dimensions to break-down by (date, location, type, etc)
+  └─ Filters (date range, department, severity, etc)
+Step 3: Select Visualizations
+  ├─ Chart type (line, bar, pie, heatmap, etc)
+  └─ Layout (1-col, 2-col, grid)
+Step 4: Configure Schedule & Distribution
+  ├─ Run once, weekly, monthly
+  ├─ Recipients (email, Slack, dashboard)
+  └─ Format (PDF, Excel, HTML)
+Step 5: Review & Create
+  ├─ Preview report
+  ├─ Save template untuk future use
+  └─ Schedule delivery
+```
+
+**Report Examples:**
+- Regulatory compliance report (untuk Ministry audit)
+- Insurance claim report (untuk premium negotiation)
+- Investor metrics report (ESG disclosures)
+- Benchmarking report (vs industry peers)
+
+#### 3.11.3.4 Predictive Analytics & Forecasting
+
+**FR-11.1.4 [SHOULD]** Forecast future safety metrics untuk planning:
+
+**Forecasting Models:**
+
+1. **TRIR Forecasting (Time-series)**
+   - Input: Historical TRIR (12+ months)
+   - Method: ARIMA, Exponential Smoothing, Prophet
+   - Output: Next month/quarter TRIR forecast dengan confidence interval
+   - Use case: Target setting, performance assessment
+
+2. **Incident Count Forecast**
+   - Input: Historical incident frequency, causation patterns, leading indicators
+   - Method: Regression, ensemble methods
+   - Output: Expected incident count dalam next week/month
+   - Accuracy: >70% for week ahead
+
+3. **Hazard Resolution Time Forecast**
+   - Input: Historical resolution times by hazard type/location
+   - Output: Expected closure time untuk new hazards
+   - Use case: Prioritization, resource planning
+
+4. **Safety Culture Maturity Forecast**
+   - Input: Compliance scores, incident trends, engagement metrics
+   - Output: Predicted safety culture improvement (3, 6, 12 months)
+   - Use case: Long-term planning, investment justification
+
+**Forecast Confidence & Uncertainty:**
+```
+Point Forecast: TRIR next month = 2.8
+
+Confidence Intervals:
+├─ 50% CI: 2.6 - 3.0 (medium confidence)
+├─ 90% CI: 2.3 - 3.5 (higher uncertainty)
+└─ 95% CI: 2.1 - 3.8 (very uncertain)
+
+Factors Contributing to Uncertainty:
+├─ Historical volatility (high = more uncertainty)
+├─ External factors (unpredictable)
+├─ Data quality (missing values reduce confidence)
+└─ Model uncertainty (ensemble vs single model)
+```
+
+### 3.11.4 Data Governance & ML Lifecycle
+
+**FR-11.1.5 [MUST]** Model governance framework untuk responsible AI:
+
+**Model Development Lifecycle:**
+```
+1. Problem Definition → 2. Data Preparation → 3. Model Training 
+    ↓
+4. Model Validation → 5. A/B Testing Deployment → 6. Monitoring 
+    ↓
+7. Performance Degradation? → 8. Retraining → Loop
+```
+
+**Governance Checkpoints:**
+```
+Development Phase:
+├─ [✓] Business requirement validation (stakeholder sign-off)
+├─ [✓] Data quality audit (completeness, accuracy, bias check)
+├─ [✓] Feature selection review (domain expert validation)
+├─ [✓] Model selection rationale (documented)
+└─ [✓] Test set performance (meets acceptance criteria)
+
+Deployment Phase:
+├─ [✓] Production readiness checklist (performance, latency, scalability)
+├─ [✓] Explainability review (model is interpretable)
+├─ [✓] Bias mitigation assessment (demographic parity check)
+├─ [✓] Data privacy review (PII handling, anonymization)
+└─ [✓] Monitoring plan (alert thresholds, retraining triggers)
+
+Production Phase:
+├─ [✓] Performance monitoring (accuracy, latency, throughput)
+├─ [✓] Data drift detection (input distribution changes)
+├─ [✓] Model drift detection (output distribution changes)
+├─ [✓] Feedback loop (user corrections → retraining signal)
+└─ [✓] Regular audits (quarterly model review)
+```
+
+**Model Registry & Versioning:**
+```
+Model Metadata:
+├─ Model ID: nuraga-fatigue-v1.0
+├─ Version: 1.0 (major.minor.patch semantic versioning)
+├─ Training Date: 2026-06-15
+├─ Training Data Version: 2026-06-15-full-dataset
+├─ Algorithm: XGBoost with hyperparameters JSON
+├─ Performance Metrics: Accuracy 87%, AUC 0.92
+├─ Input Features: [sleep_hours, stress, physical_fatigue, ...]
+├─ Output Format: {score: 0-100, status: GREEN/YELLOW/RED, confidence: 0-100}
+├─ Last Updated: 2026-09-01
+├─ Deployment Status: PRODUCTION
+├─ Deployment Date: 2026-08-01
+├─ Deployed In: TensorFlow Serving, replica count: 3
+└─ Monitoring Score: 92/100 (healthy)
+
+Model Lineage:
+├─ Previous Version: v0.9 (replaced due to bias issues)
+├─ Replaced By: v1.1 (better performance on night shift workers)
+├─ Training Code: github.com/nuraga/ml/fatigue-model@v1.0
+├─ Dataset: S3://nuraga-ml/datasets/fatigue-2026-06-15/
+└─ Experiment Tracking: MLflow run ID: abc123def456
+```
+
+**Monitoring & Alerting:**
+```
+Model Performance Monitoring:
+
+Daily Checks:
+├─ Prediction volume (is model being called?)
+├─ Latency distribution (P50, P95, P99)
+├─ Error rate (<0.5% target)
+└─ Cache hit rate (if applicable)
+
+Weekly Checks:
+├─ Accuracy estimation (if labels available, from accidents)
+├─ Data drift (feature distribution changes?)
+├─ Model drift (output distribution changes?)
+└─ Sample diversity (is model seeing variety of cases?)
+
+Monthly Checks:
+├─ Full retraining experiment
+├─ Compare new model vs current production model
+├─ Bias audit (performance across demographics)
+├─ Cost-benefit analysis (is model ROI positive?)
+
+Alerts & Actions:
+├─ IF latency P95 > 200ms → ALERT, investigate bottleneck
+├─ IF error rate > 2% → ALERT, check data quality
+├─ IF accuracy drop > 5% → RETRAINING, potentially ROLLBACK
+├─ IF data drift detected → investigate, consider retraining
+└─ IF model unused 7 days → decommission check
+```
+
+### 3.11.5 ML Infrastructure & Technology Stack
+
+**FR-11.1.6 [MUST]** ML Ops infrastructure untuk production ML system:
+
+**Development Environment:**
+```
+Local Development:
+├─ Jupyter Notebook (prototyping & exploration)
+├─ Git version control (ML code, notebooks)
+├─ Conda environment (reproducible dependencies)
+├─ DVC (Data Version Control) untuk datasets
+└─ Pre-commit hooks (code quality, unit tests)
+
+Experiment Tracking:
+├─ MLflow (hyperparameters, metrics, model versioning)
+├─ Weights & Biases (W&B) alternative
+├─ Experiment naming convention: [model]-[date]-[description]
+└─ Artifact storage: S3 atau local filesystem
+```
+
+**Training Infrastructure:**
+```
+Compute Resources:
+├─ CPU: 32-core instances untuk feature engineering
+├─ GPU: NVIDIA Tesla V100/A100 untuk model training
+├─ Memory: 256 GB untuk large datasets
+└─ Auto-scaling: Kubernetes untuk elastic scaling
+
+Training Tools:
+├─ Scikit-learn (traditional ML models)
+├─ XGBoost, LightGBM (gradient boosting)
+├─ TensorFlow, PyTorch (deep learning)
+├─ Optuna, Ray Tune (hyperparameter optimization)
+├─ Dask (distributed computing)
+└─ Apache Spark (big data processing)
+
+Training Pipeline (Airflow DAG):
+├─ Task 1: Data extraction dari production DB
+├─ Task 2: Feature engineering & transformation
+├─ Task 3: Train test split dengan stratified sampling
+├─ Task 4: Model training dengan cross-validation
+├─ Task 5: Model evaluation pada test set
+├─ Task 6: Performance comparison vs baseline
+├─ Task 7: Conditional deployment (if meets criteria)
+└─ Task 8: Alert stakeholders & log results
+```
+
+**Model Serving:**
+```
+Production Deployment:
+├─ Framework: TensorFlow Serving atau Seldon Core
+├─ API: REST endpoints untuk model inference
+├─ Containerization: Docker containers untuk consistency
+├─ Orchestration: Kubernetes untuk scaling & management
+├─ Load Balancing: Nginx/Envoy untuk request distribution
+├─ Caching: Redis untuk frequent predictions (fatigue status cache)
+└─ Versioning: Multiple versions running A/B test simultaneously
+
+Inference Pipeline (Real-time):
+├─ Request arrives (worker check-in + fatigue assessment)
+├─ Input validation & feature extraction
+├─ Model inference (batch size 1 for latency)
+├─ Output post-processing (confidence, category)
+├─ Caching result (for immediate UI update)
+├─ Async logging (metrics, predictions untuk monitoring)
+└─ Response returned (<100ms latency)
+```
+
+**Monitoring & Observability:**
+```
+Metrics Collection:
+├─ Application Metrics: Prometheus scrape targets
+├─ Model Metrics: Prediction accuracy, latency, throughput
+├─ Infrastructure Metrics: CPU, memory, GPU utilization
+├─ Data Metrics: Feature statistics, drift indicators
+└─ Business Metrics: Incident reduction, false positive rate
+
+Dashboards:
+├─ ML Dashboard (MLflow UI, model performance over time)
+├─ System Dashboard (Grafana, infrastructure health)
+├─ Business Dashboard (incident reduction, ROI)
+└─ Alert Dashboard (model drift, performance degradation)
+
+Logging:
+├─ Structured logging (JSON format untuk parsing)
+├─ Centralized log aggregation (ELK stack, Loki)
+├─ Log retention: 90 days
+└─ Audit logging untuk model decisions (traceability)
+```
+
+**Tech Stack Summary:**
+```
+ML Framework: Python 3.10+
+├─ Data Processing: Pandas, Polars, DuckDB
+├─ Feature Engineering: Feature-engine, featuretools
+├─ Model Building: Scikit-learn, XGBoost, TensorFlow 2.14
+├─ Hyperparameter Tuning: Optuna, Ray Tune
+├─ Model Evaluation: Scikit-learn metrics, custom validation
+├─ NLP: HuggingFace Transformers (BERT fine-tuning)
+└─ AutoML: AutoGluon untuk baseline models
+
+ML Ops:
+├─ Version Control: Git + DVC
+├─ Experiment Tracking: MLflow
+├─ Model Registry: MLflow Model Registry
+├─ CI/CD: GitHub Actions untuk automated testing
+├─ Orchestration: Apache Airflow
+├─ Container: Docker, docker-compose
+└─ Orchestration: Kubernetes (EKS/GKE/AKS)
+
+Serving & Deployment:
+├─ Batch Inference: Airflow DAG, Spark jobs
+├─ Real-time Inference: TensorFlow Serving, FastAPI
+├─ Caching: Redis
+├─ Message Queue: Kafka, RabbitMQ (untuk async processing)
+└─ Feature Store: Feast (for feature consistency)
+
+Monitoring:
+├─ Metrics: Prometheus
+├─ Visualization: Grafana
+├─ Logging: ELK Stack (Elasticsearch, Logstash, Kibana)
+├─ APM: New Relic atau Datadog
+└─ Alerting: PagerDuty integration
+```
+
+### 3.11.6 Data Strategy & Privacy
+
+**FR-11.1.7 [MUST]** Data governance untuk responsible data usage:
+
+**Data Collection Principles:**
+- Consent: Explicit user consent untuk data collection
+- Minimization: Collect only what's necessary
+- Purpose Limitation: Use data only untuk stated purpose
+- Retention: Delete data after retention period
+
+**Data Privacy Measures:**
+```
+Personal Data Protection:
+├─ Anonymization: Remove direct identifiers (name → worker_id)
+├─ Pseudonymization: Use consistent non-identifiable IDs
+├─ Encryption: TLS in-transit, AES-256 at-rest
+├─ Access Control: RBAC, audit logging untuk data access
+└─ Breach Response: Incident response plan, user notification
+
+Regulatory Compliance:
+├─ GDPR compliance (if EU operations)
+├─ Indonesia data protection law (if applicable)
+├─ Right to be forgotten (data deletion capability)
+├─ Data portability (user can export their data)
+└─ Transparency (explain model decisions)
+
+Data Retention Policy:
+├─ Operational data: 7 years (regulatory requirement)
+├─ ML training data: 5-year rolling window
+├─ Model artifacts: Keep all historical versions
+├─ Backup data: 30-day retention
+└─ Deletion: Automated archival & deletion workflows
+```
+
+**Synthetic Data & Privacy-Preserving ML:**
+```
+Privacy-Preserving Techniques [FUTURE]:
+├─ Federated Learning: Train models on-device, aggregate gradients
+├─ Differential Privacy: Add noise untuk individual privacy
+├─ Homomorphic Encryption: Compute on encrypted data
+├─ Synthetic Data Generation: Create realistic yet private datasets
+└─ Data Anonymization: k-anonymity, l-diversity
+```
+
+### 3.11.7 Cost & Resource Planning
+
+**FR-11.1.8 [SHOULD]** ML infrastructure cost optimization:
+
+**Estimated Annual ML Budget (Year 1):**
+```
+Personnel:
+├─ Machine Learning Engineer (1): Rp 180M/year
+├─ Data Engineer (1): Rp 160M/year
+├─ Data Scientist (1 part-time): Rp 100M/year
+└─ Subtotal: Rp 440M
+
+Infrastructure:
+├─ GPU instances (training): Rp 60M/month = Rp 720M/year
+├─ Model serving infrastructure: Rp 40M/month = Rp 480M/year
+├─ Data storage (S3/GCS): Rp 15M/month = Rp 180M/year
+├─ Monitoring & tools: Rp 20M/month = Rp 240M/year
+└─ Subtotal: Rp 1.62B
+
+Tools & Services:
+├─ MLflow, Weights & Biases: Rp 20M/month = Rp 240M/year
+├─ GPU cloud credits (Paperspace, Lambda): Rp 100M/year
+├─ Data labeling service (Labelbox): Rp 50M/year
+└─ Subtotal: Rp 390M
+
+Total ML Budget Year 1: Rp 2.45B (~12% of revenue for dedicated ML team + infra)
+```
+
+**Cost Optimization Strategies:**
+```
+Reduction Tactics:
+├─ Spot/preemptible instances: 70% cost reduction for training
+├─ Model quantization: Reduce model size, faster inference, cheaper serving
+├─ Cached features: Avoid recomputing features
+├─ Batch processing: Group predictions untuk throughput optimization
+├─ Open-source tools: MLflow (free) vs proprietary solutions
+└─ Bring-your-own-data: Customers contribute training data
+```
+
+**ROI & Business Impact:**
+```
+Safety Impact:
+├─ Incident prevention: 25-30% reduction via early warning
+├─ Cost per incident prevented: Rp 10-100M
+├─ Year 1 prevented incidents: ~50-100
+├─ Total economic benefit: Rp 500M - Rp 5B
+└─ ML investment ROI: 200-2000% (excellent)
+
+Business Metrics:
+├─ Feature adoption: Predictive analytics adoption >60% of HSE users
+├─ Customer satisfaction: NPS improvement +10 points
+├─ Retention: Churn reduction 50% for customers using AI features
+└─ Upsell: AI analytics add-on adoption 30% of customer base
+```
+
+---
+
 ## 4. KEBUTUHAN NON-FUNGSIONAL
 
 ### 4.1 Kebutuhan Kinerja (Performance)
