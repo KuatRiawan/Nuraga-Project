@@ -210,10 +210,12 @@ const changePassword = async (req, res) => {
 };
 
 const redeemPoints = async (req, res) => {
+    const t = await sequelize.transaction();
     try {
         const { rewardId, rewardTitle, points } = req.body;
-        const user = await User.findByPk(req.user.id);
+        const user = await User.findByPk(req.user.id, { transaction: t });
         if (!user) {
+            await t.rollback();
             return res.status(404).json({ message: 'User tidak ditemukan' });
         }
         const REWARDS_CONFIG = [
@@ -225,15 +227,17 @@ const redeemPoints = async (req, res) => {
         const rewardConfig = REWARDS_CONFIG.find(r => r.id === Number(rewardId));
         if (rewardConfig) {
             const count = await Voucher.count({
-                where: { reward_id: rewardId }
+                where: { reward_id: rewardId },
+                transaction: t
             });
             if (count >= rewardConfig.quota) {
+                await t.rollback();
                 return res.status(400).json({ message: 'Kuota penukaran untuk hadiah ini sudah habis!' });
             }
         }
 
         user.points -= points;
-        await user.save();
+        await user.save({ transaction: t });
 
         // Generate unique code, e.g. VCH-ABCD12
         const code = 'VCH-' + Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -245,14 +249,16 @@ const redeemPoints = async (req, res) => {
             points_spent: points,
             code: code,
             status: 'Pending'
-        });
+        }, { transaction: t });
 
+        await t.commit();
         res.json({
             message: 'Berhasil menukarkan poin',
             points: user.points,
             voucher
         });
     } catch (error) {
+        await t.rollback();
         res.status(500).json({ message: error.message });
     }
 };

@@ -8,6 +8,7 @@ const wa = require('../services/whatsappService');
 // Simple in-memory cooldown cache for SOS spam prevention
 const sosCooldownCache = new Map();
 const COOLDOWN_SECONDS = 60;
+const COOLDOWN_MS = COOLDOWN_SECONDS * 1000;
 
 
 
@@ -26,8 +27,13 @@ const triggerEmergency = async (req, res) => {
                 return res.status(429).json({ message: "Terlalu banyak permintaan darurat. Harap tunggu 60 detik." });
             }
         }
-        // Update the cooldown cache
+        // Update the cooldown cache with auto-cleanup to prevent memory leak
         sosCooldownCache.set(userId, now);
+        // Schedule automatic cleanup after cooldown period expires
+        setTimeout(() => {
+            sosCooldownCache.delete(userId);
+            console.log(`[EmergencyController] Cooldown expired for user ${userId}`);
+        }, COOLDOWN_MS);
 
         // 1. Static location routing: retrieve the user's active work permit zone today
         const activePermits = await WorkPermit.findAll({
