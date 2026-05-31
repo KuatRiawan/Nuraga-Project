@@ -196,9 +196,15 @@ const WorkPermitPage = () => {
                                 </div>
 
                                 <div className="pt-4 flex items-center gap-4 text-xs font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">
-                                    <span>{Array.isArray(permit.daftar_pekerja) ? permit.daftar_pekerja.length : 0} Personel</span>
+                                    <span>{(() => {
+                                        const workers = typeof permit.daftar_pekerja === 'string' ? JSON.parse(permit.daftar_pekerja) : permit.daftar_pekerja;
+                                        return Array.isArray(workers) ? workers.length : 0;
+                                    })()} Personel</span>
                                     <span className="w-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800" />
-                                    <span>{Array.isArray(permit.bahaya) ? permit.bahaya.length : 0} Bahaya</span>
+                                    <span>{(() => {
+                                        const hazards = typeof permit.bahaya === 'string' ? JSON.parse(permit.bahaya) : permit.bahaya;
+                                        return Array.isArray(hazards) ? hazards.length : 0;
+                                    })()} Bahaya</span>
                                 </div>                                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/50 flex items-center justify-between gap-1 text-[9px] font-black uppercase tracking-wider">
                                     <div className="flex items-center gap-1.5">
                                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />

@@ -138,8 +138,17 @@ const getPermits = async (req, res) => {
         const results = await WorkPermit.findAndCountAll(queryOptions);
         const totalPages = Math.ceil(results.count / limit);
 
+        // Parse JSON fields if they are stored as strings
+        const parsedRows = results.rows.map(permit => ({
+            ...permit.dataValues,
+            daftar_pekerja: typeof permit.daftar_pekerja === 'string' ? JSON.parse(permit.daftar_pekerja) : permit.daftar_pekerja,
+            bahaya: typeof permit.bahaya === 'string' ? JSON.parse(permit.bahaya) : permit.bahaya,
+            apd: typeof permit.apd === 'string' ? JSON.parse(permit.apd) : permit.apd,
+            gas_test: typeof permit.gas_test === 'string' ? JSON.parse(permit.gas_test) : permit.gas_test,
+        }));
+
         res.json({
-            data: results.rows,
+            data: parsedRows,
             totalItems: results.count,
             totalPages,
             currentPage: page
