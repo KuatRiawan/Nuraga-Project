@@ -129,22 +129,39 @@ const triggerEmergency = async (req, res) => {
                 `👷 Responder yang Diarahkan:\n${responderNames}\n\n` +
                 `Segera lakukan koordinasi respons darurat!`;
 
-            const hsePics = await User.findAll({ where: { role: ['HSE', 'Admin', 'Manager'] } });
+            const hsePics = await User.findAll({ where: { role: { [Op.in]: ['HSE', 'Admin', 'Manager'] } } });
+            console.log('[Emergency] HSE/Admin/Manager candidates:', hsePics.map(u => ({ id: u.id_user, nama: u.nama, no_whatsapp: !!u.no_whatsapp })));
             for (const u of hsePics) {
-                if (u.no_whatsapp) await wa.sendMessage(u.no_whatsapp, waMessage);
+                if (u.no_whatsapp) {
+                    try {
+                        await wa.sendMessage(u.no_whatsapp, waMessage);
+                    } catch (err) {
+                        console.error(`[WhatsApp] Failed to notify ${u.nama}:`, err.message);
+                    }
+                } else {
+                    console.warn(`[WhatsApp] Skipping ${u.nama} — no_whatsapp not set`);
+                }
             }
 
             // Also notify responders directly
             for (const responder of finalResponders) {
-                const responderUser = await User.findByPk(responder.id_user);
-                if (responderUser && responderUser.no_whatsapp) {
-                    await wa.sendMessage(responderUser.no_whatsapp,
-                        `🚨 *[NURAGA SAFETY — ANDA DITUGASKAN SEBAGAI RESPONDER]*\n\n` +
-                        `Jenis Kejadian: *${jenis_kejadian}*\n` +
-                        `Lokasi: *${victimZone}*\n` +
-                        `Pelapor: ${victimName || 'Tidak diketahui'}\n\n` +
-                        `Segera bergerak ke lokasi kejadian!`
-                    );
+                try {
+                    // responder may already be a User instance or partial object
+                    const responderUser = responder && responder.id_user ? await User.findByPk(responder.id_user) : null;
+                    const phone = (responderUser && responderUser.no_whatsapp) || (responder && responder.no_whatsapp);
+                    if (phone) {
+                        await wa.sendMessage(phone,
+                            `🚨 *[NURAGA SAFETY — ANDA DITUGASKAN SEBAGAI RESPONDER]*\n\n` +
+                            `Jenis Kejadian: *${jenis_kejadian}*\n` +
+                            `Lokasi: *${victimZone}*\n` +
+                            `Pelapor: ${victimName || 'Tidak diketahui'}\n\n` +
+                            `Segera bergerak ke lokasi kejadian!`
+                        );
+                    } else {
+                        console.warn(`[WhatsApp] Responder ${responder.nama || responderUser?.nama || responder.id_user} has no_whatsapp, skipping.`);
+                    }
+                } catch (err) {
+                    console.error('[WhatsApp] Error notifying responder:', err.message);
                 }
             }
         } catch (waErr) {
@@ -214,9 +231,18 @@ const resolveEmergency = async (req, res) => {
                 `Waktu Selesai: ${new Date().toLocaleString('id-ID')}\n\n` +
                 `Seluruh staf dapat kembali beraktivitas normal.`;
 
-            const hsePics = await User.findAll({ where: { role: ['HSE', 'Admin', 'Manager'] } });
+            const hsePics = await User.findAll({ where: { role: { [Op.in]: ['HSE', 'Admin', 'Manager'] } } });
+            console.log('[Emergency][Resolve] HSE/Admin/Manager candidates:', hsePics.map(u => ({ id: u.id_user, nama: u.nama, no_whatsapp: !!u.no_whatsapp })));
             for (const u of hsePics) {
-                if (u.no_whatsapp) await wa.sendMessage(u.no_whatsapp, waMessage);
+                if (u.no_whatsapp) {
+                    try {
+                        await wa.sendMessage(u.no_whatsapp, waMessage);
+                    } catch (err) {
+                        console.error(`[WhatsApp] Failed to notify ${u.nama} on resolve:`, err.message);
+                    }
+                } else {
+                    console.warn(`[WhatsApp] Skipping ${u.nama} on resolve — no_whatsapp not set`);
+                }
             }
         } catch (waErr) {
             console.error('[WhatsApp] Resolve notification failed:', waErr.message);

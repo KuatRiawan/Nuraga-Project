@@ -7,9 +7,13 @@ const wa = require('../services/whatsappService');
 
 // GET /api/wa/status  — current connection status + QR if qr_ready
 const getStatus = (req, res) => {
+    const reconnectInfo = wa.getReconnectInfo();
     res.json({
         status: wa.getStatus(),
         qr: wa.getCurrentQR() || null,
+        reconnectAttempts: reconnectInfo.reconnectAttempts,
+        maxReconnectAttempts: reconnectInfo.maxReconnectAttempts,
+        isConnected: reconnectInfo.isConnected
     });
 };
 
@@ -47,6 +51,13 @@ const logout = async (req, res) => {
     res.json({ message: 'WhatsApp session cleared. New QR will appear shortly.' });
 };
 
+// POST /api/wa/reconnect  — force manual reconnect (resets attempts counter)
+const manualReconnect = async (req, res) => {
+    console.log('[Controller] Manual reconnect requested');
+    await wa.manualReconnect();
+    res.json({ message: 'Manual reconnect triggered. Check QR status in stream.' });
+};
+
 // POST /api/wa/test  — send a test message (Admin only)
 const testMessage = async (req, res) => {
     const { phone } = req.body;
@@ -64,4 +75,4 @@ const testMessage = async (req, res) => {
     }
 };
 
-module.exports = { getStatus, stream, logout, testMessage };
+module.exports = { getStatus, stream, logout, manualReconnect, testMessage };

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { ShieldCheck, AlertTriangle, Heart, Camera, Clock, UserX, FileText, Check, Download, CheckCircle, XCircle, X } from 'lucide-react';
 import { useAuth } from '../store/AuthContext';
+import io from 'socket.io-client';
 
 const API_URL = '/api';
 
@@ -26,8 +27,9 @@ const AttendancePage = () => {
   const [selectedUserId, setSelectedUserId] = useState('all');
   const [startDateFilter, setStartDateFilter] = useState('');
   const [endDateFilter, setEndDateFilter] = useState('');
+  const [userOptions, setUserOptions] = useState([]);
 
-  // Extract unique users from historyData
+  // Extract unique users from historyData when no user list is available
   const uniqueUsers = Array.from(
     new Map(
       historyData.attendance
@@ -37,24 +39,21 @@ const AttendancePage = () => {
     ).values()
   );
 
+  const userList = userOptions.length > 0 ? userOptions : uniqueUsers;
+
   const filteredAttendance = historyData.attendance.filter(log => {
     const matchesUser = !(user.role === 'Admin' || user.role === 'Manager') || selectedUserId === 'all' || log.id_user === Number(selectedUserId);
     
-    const logDate = new Date(log.createdAt);
-    logDate.setHours(0,0,0,0);
+    const logDate = new Date(log.createdAt).toISOString().slice(0, 10);
     
     let matchesStart = true;
     if (startDateFilter) {
-      const start = new Date(startDateFilter);
-      start.setHours(0,0,0,0);
-      matchesStart = logDate >= start;
+      matchesStart = logDate >= startDateFilter;
     }
     
     let matchesEnd = true;
     if (endDateFilter) {
-      const end = new Date(endDateFilter);
-      end.setHours(0,0,0,0);
-      matchesEnd = logDate <= end;
+      matchesEnd = logDate <= endDateFilter;
     }
     
     return matchesUser && matchesStart && matchesEnd;
@@ -127,6 +126,50 @@ const AttendancePage = () => {
     };
   }, []);
 
+  // ━━━ WebSocket listener untuk notifikasi approval & submit izin ━━━
+  useEffect(() => {
+    const socket = io();
+
+    // Handle approval/rejection notifications untuk user
+    const handleLeaveUpdate = (data) => {
+      if (data.id_user === user?.id_user || user?.role === 'Admin') {
+        const popupType = data.status === 'Approved' ? 'success' : 'error';
+        const message = data.status === 'Approved' 
+          ? `✅ ${data.userName}: Pengajuan ${data.type} disetujui!`
+          : `❌ ${data.userName}: Pengajuan ${data.type} ditolak.`;
+        showPopup(popupType, message);
+
+        // Refresh history
+        if (user?.role === 'Admin' || user?.role === 'Manager') {
+          setTimeout(() => fetchAllHistory(), 1000);
+        } else {
+          setTimeout(() => fetchMyHistory(), 1000);
+        }
+      }
+    };
+
+    // Handle new leave request submission untuk admin
+    const handleNewLeaveRequest = (data) => {
+      if (user?.role === 'Admin' || user?.role === 'Manager' || user?.role === 'HSE' || user?.role === 'Supervisor') {
+        showPopup('info', `📋 Pengajuan ${data.type} baru dari ${data.userName}\n${data.start_date} s/d ${data.end_date}`);
+        
+        // Refresh history untuk admin
+        if (user?.role === 'Admin' || user?.role === 'Manager') {
+          setTimeout(() => fetchAllHistory(), 1000);
+        }
+      }
+    };
+
+    socket.on('LEAVE_REQUEST_UPDATE', handleLeaveUpdate);
+    socket.on('NEW_LEAVE_REQUEST', handleNewLeaveRequest);
+
+    return () => {
+      socket.off('LEAVE_REQUEST_UPDATE', handleLeaveUpdate);
+      socket.off('NEW_LEAVE_REQUEST', handleNewLeaveRequest);
+      socket.disconnect();
+    };
+  }, [user]);
+
   useEffect(() => {
     fetchTodayStatus();
     if (user.role === 'Admin' || user.role === 'Manager') {
@@ -135,6 +178,28 @@ const AttendancePage = () => {
         fetchMyHistory();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const refreshHistory = async () => {
+      if (user.role === 'Admin' || user.role === 'Manager') {
+        await fetchAllHistory();
+      } else {
+        await fetchMyHistory();
+      }
+    };
+
+    if (activeTab === 'laporan') {
+      refreshHistory();
+
+      const interval = setInterval(() => {
+        refreshHistory();
+      }, 30000);
+
+      return () => clearInterval(interval);
+    }
+  }, [user, activeTab]);
 
   const fetchTodayStatus = async () => {
     try {
@@ -159,8 +224,12 @@ const AttendancePage = () => {
   const fetchAllHistory = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`${API_URL}/attendance/all`, { headers: { Authorization: `Bearer ${token}` } });
-      setHistoryData(res.data);
+      const [historyRes, usersRes] = await Promise.all([
+        axios.get(`${API_URL}/attendance/all`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_URL}/users`, { headers: { Authorization: `Bearer ${token}` } }),
+      ]);
+      setHistoryData(historyRes.data);
+      setUserOptions(usersRes.data || []);
     } catch (error) {
       console.error(error);
     }
@@ -270,7 +339,7 @@ const AttendancePage = () => {
       if (selectedUserId === 'all' || !selectedUserId) {
           targetName = 'Semua_Pekerja';
       } else {
-          const targetUser = uniqueUsers.find(u => u.id_user === Number(selectedUserId));
+          const targetUser = userList.find(u => u.id_user === Number(selectedUserId));
           targetName = targetUser ? targetUser.nama : 'Pekerja';
       }
 
@@ -285,7 +354,7 @@ const AttendancePage = () => {
       
       filteredAttendance.forEach(row => {
           const type = row.type;
-          const nama = row.User?.nama || user.nama;
+          const nama = row.User?.nama || userList.find(u => u.id_user === row.id_user)?.nama || user.nama;
           const waktu = new Date(row.createdAt).toLocaleString('id-ID');
           const tidur = row.sleep_hours || '-';
           const stres = row.stress_level || '-';
@@ -578,7 +647,7 @@ const AttendancePage = () => {
                                 className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-4 py-3 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
                             >
                                 <option value="all">Semua Pekerja</option>
-                                {uniqueUsers.map(u => (
+                                {userList.map(u => (
                                     <option key={u.id_user} value={u.id_user}>{u.nama} ({u.role})</option>
                                 ))}
                             </select>
@@ -623,7 +692,7 @@ const AttendancePage = () => {
                         <td className="py-4 px-4 text-slate-700 dark:text-slate-300 font-medium">
                         {new Date(log.createdAt).toLocaleString('id-ID')}
                         </td>
-                        {(user.role === 'Admin' || user.role === 'Manager') && <td className="py-4 px-4 text-slate-700 dark:text-slate-300 font-bold">{log.User?.nama}</td>}
+                        {(user.role === 'Admin' || user.role === 'Manager') && <td className="py-4 px-4 text-slate-700 dark:text-slate-300 font-bold">{log.User?.nama || userList.find(u => u.id_user === log.id_user)?.nama || 'Tidak tersedia'}</td>}
                         <td className="py-4 px-4">
                             <span className={`px-3 py-1 rounded-full text-xs font-bold ${log.type === 'Datang' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700'}`}>{log.type}</span>
                         </td>

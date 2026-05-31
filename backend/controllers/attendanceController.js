@@ -3,6 +3,7 @@ const Attendance = require('../models/Attendance');
 const LeaveRequest = require('../models/LeaveRequest');
 const User = require('../models/User');
 const { Op } = require('sequelize');
+const wa = require('../services/whatsappService');
 
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
 
@@ -165,6 +166,12 @@ exports.submitLeave = async (req, res) => {
         const { type, start_date, end_date, reason } = req.body;
         const id_user = req.user.id;
         const document_proof = req.file ? req.file.filename : null;
+        const io = req.app.get('io');
+
+        // Fetch user data
+        const user = await User.findByPk(id_user, {
+            attributes: ['id_user', 'nama', 'no_whatsapp', 'role']
+        });
 
         const leave = await LeaveRequest.create({
             id_user,
@@ -175,6 +182,59 @@ exports.submitLeave = async (req, res) => {
             document_proof,
             status: 'Pending'
         });
+
+        // ━━━ Notifikasi ke Admin/Supervisor/Manager ━━━
+        try {
+            // Fetch all admins & supervisors
+            const admins = await User.findAll({
+                where: {
+                    role: ['Admin', 'Supervisor', 'Manager', 'HSE']
+                },
+                attributes: ['id_user', 'nama', 'no_whatsapp', 'role']
+            });
+
+            if (admins && admins.length > 0) {
+                // Send WhatsApp to each admin
+                const typeLabel = type === 'Izin' ? 'Izin' : (type === 'Cuti' ? 'Cuti' : 'Sakit');
+                const waMessage = `*[Nuraga] Pengajuan ${typeLabel} Baru*\n\n` +
+                    `Pekerja: *${user.nama}*\n` +
+                    `Tipe: ${typeLabel}\n` +
+                    `Periode: ${start_date} s/d ${end_date}\n` +
+                    `Alasan: ${reason}\n\n` +
+                    `Silakan buka aplikasi untuk menyetujui/menolak.`;
+
+                for (const admin of admins) {
+                    if (admin.no_whatsapp) {
+                        try {
+                            await wa.sendMessage(admin.no_whatsapp, waMessage);
+                            console.log(`[WhatsApp] Notifikasi pengajuan ${typeLabel} dikirim ke Admin: ${admin.nama}`);
+                        } catch (waErr) {
+                            console.error(`[WhatsApp] Gagal ke ${admin.nama}:`, waErr.message);
+                        }
+                    }
+                }
+
+                // Emit WebSocket to all connected admins
+                if (io) {
+                    io.emit('NEW_LEAVE_REQUEST', {
+                        id_leave: leave.id_leave,
+                        id_user: leave.id_user,
+                        userName: user.nama,
+                        type: leave.type,
+                        start_date: leave.start_date,
+                        end_date: leave.end_date,
+                        reason: leave.reason,
+                        status: 'Pending',
+                        createdAt: leave.createdAt,
+                        message: `Pengajuan ${typeLabel} baru dari ${user.nama}`
+                    });
+                    console.log(`[WebSocket] Event NEW_LEAVE_REQUEST dipancarkan`);
+                }
+            }
+        } catch (notifErr) {
+            console.error('[Notifikasi] Gagal mengirim notifikasi:', notifErr.message);
+            // Jangan fail jika notifikasi gagal, request tetap berhasil dibuat
+        }
 
         res.status(201).json({ message: "Pengajuan berhasil dikirim", data: leave });
     } catch (error) {
@@ -187,15 +247,61 @@ exports.approveLeave = async (req, res) => {
     try {
         const { id_leave } = req.params;
         const { status } = req.body; // Approved or Rejected
+        const io = req.app.get('io');
         
-        const leave = await LeaveRequest.findByPk(id_leave);
-        if (!leave) return res.status(404).json({ message: "Data tidak ditemukan" });
+        // Fetch leave with user data
+        const leave = await LeaveRequest.findByPk(id_leave, {
+            include: [{ model: User, attributes: ['id_user', 'nama', 'no_whatsapp', 'email'] }]
+        });
+        if (!leave) {
+            return res.status(404).json({ message: "Data tidak ditemukan" });
+        }
 
+        const oldStatus = leave.status;
         leave.status = status;
         await leave.save();
 
-        res.status(200).json({ message: `Pengajuan berhasil di-${status}`, data: leave });
+        // ━━━ Notifikasi ke User via WhatsApp ━━━
+        if (leave.User && leave.User.no_whatsapp) {
+            try {
+                const statusLabel = status === 'Approved' ? 'Disetujui ✅' : 'Ditolak ❌';
+                const typeLabel = leave.type === 'Izin' ? 'Izin' : (leave.type === 'Cuti' ? 'Cuti' : 'Sakit');
+                const waMessage = `*[Nuraga] Notifikasi ${typeLabel}*\n\n` +
+                    `Status: *${statusLabel}*\n` +
+                    `Tipe: ${typeLabel}\n` +
+                    `Periode: ${leave.start_date} s/d ${leave.end_date}\n` +
+                    `Alasan: ${leave.reason}\n\n` +
+                    `Silakan buka aplikasi untuk melihat detail lebih lanjut.`;
+                
+                await wa.sendMessage(leave.User.no_whatsapp, waMessage);
+                console.log(`[WhatsApp] Notifikasi ${typeLabel} ${status} dikirim ke ${leave.User.nama}`);
+            } catch (waErr) {
+                console.error('[WhatsApp] Gagal mengirim notifikasi:', waErr.message);
+                // Continue even if WhatsApp fails
+            }
+        }
+
+        // ━━━ Emit WebSocket notification ke User ━━━
+        if (io) {
+            io.emit('LEAVE_REQUEST_UPDATE', {
+                id_leave: leave.id_leave,
+                id_user: leave.id_user,
+                status: status,
+                type: leave.type,
+                userName: leave.User ? leave.User.nama : 'Pekerja',
+                start_date: leave.start_date,
+                end_date: leave.end_date,
+                message: `Pengajuan ${leave.type} Anda telah ${status === 'Approved' ? 'Disetujui ✅' : 'Ditolak ❌'}`
+            });
+            console.log(`[WebSocket] Event LEAVE_REQUEST_UPDATE dipancarkan untuk user ${leave.id_user}`);
+        }
+
+        res.status(200).json({ 
+            message: `Pengajuan berhasil di-${status}`, 
+            data: leave 
+        });
     } catch (error) {
-        res.status(500).json({ message: "Internal server error" });
+        console.error('Error in approveLeave:', error);
+        res.status(500).json({ message: "Internal server error", error: error.message });
     }
 };
