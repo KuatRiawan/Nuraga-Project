@@ -9,6 +9,9 @@ export default defineConfig({
     plugins: [react()],
     resolve: {
         mainFields: ['module', 'main', 'browser'],
+        alias: {
+            'recharts': 'recharts/dist/Recharts.js',
+        },
     },
     server: {
         host: '0.0.0.0',
@@ -53,12 +56,18 @@ export default defineConfig({
         target: 'es2020',
     },
     optimizeDeps: {
+        include: ['react', 'react-dom', 'react-is', 'recharts'],
         esbuildOptions: {
             loader: {
                 '.js': 'jsx'
             },
             target: 'es2020',
+            supported: {
+                bigint: false,
+                'top-level-await': false,
+                'optional-chaining': true,
+                'nullish-coalescing': true,
+            },
         },
-        include: ['react', 'react-dom', 'react-is', 'recharts']
     },
 })
