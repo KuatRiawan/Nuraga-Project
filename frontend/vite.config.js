@@ -3,12 +3,22 @@ import react from '@vitejs/plugin-react'
 import commonjs from '@rollup/plugin-commonjs'
 import tailwindcss from 'tailwindcss'
 import autoprefixer from 'autoprefixer'
+import { fileURLToPath } from 'url'
+import path from 'path'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // https://vitejs.dev/config/
 export default defineConfig({
     plugins: [react()],
     resolve: {
         mainFields: ['module', 'main', 'browser'],
+        alias: {
+            // recharts 2.11.0 has a packaging bug: es6/index.js references ./numberAxis/Funnel
+            // which is missing from the published package. Force the UMD pre-bundled build
+            // to avoid the broken ES6 module resolution during Vite/Rollup production build.
+            recharts: path.resolve(__dirname, 'node_modules/recharts/umd/Recharts.js'),
+        },
     },
     server: {
         host: '0.0.0.0',
