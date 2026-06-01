@@ -1,15 +1,12 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import commonjs from '@rollup/plugin-commonjs'
 import tailwindcss from 'tailwindcss'
 import autoprefixer from 'autoprefixer'
 
 // https://vitejs.dev/config/
 export default defineConfig({
     plugins: [react()],
-    resolve: {
-        mainFields: ['module', 'main', 'browser'],
-    },
+    // Pengaturan server Ngrok kamu tetap aman di sini
     server: {
         host: '0.0.0.0',
         allowedHosts: ['unfoolishly-horsiest-gudrun.ngrok-free.dev', '.ngrok-free.dev'],
@@ -30,6 +27,7 @@ export default defineConfig({
             },
         },
     },
+    // Pengaturan Tailwind tetap dipertahankan
     css: {
         postcss: {
             plugins: [
@@ -37,22 +35,5 @@ export default defineConfig({
                 autoprefixer(),
             ],
         },
-    },
-    build: {
-        rollupOptions: {
-            plugins: [
-                commonjs({
-                    transformMixedEsModules: true,
-                    include: /node_modules/,
-                })
-            ]
-        },
-        commonjsOptions: {
-            transformMixedEsModules: true,
-        },
-        target: 'es2020',
-    },
-    optimizeDeps: {
-        include: ['react', 'react-dom', 'react-is', 'recharts'],
-    },
+    }
 })
