@@ -3,15 +3,12 @@ import react from '@vitejs/plugin-react'
 import commonjs from '@rollup/plugin-commonjs'
 import tailwindcss from 'tailwindcss'
 import autoprefixer from 'autoprefixer'
-import { resolve } from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
     plugins: [react()],
     resolve: {
-        alias: {
-            'react-is': resolve(__dirname, 'node_modules/react-is/index.js'),
-        },
+        mainFields: ['module', 'main', 'browser'],
     },
     server: {
         host: '0.0.0.0',
@@ -53,13 +50,15 @@ export default defineConfig({
         commonjsOptions: {
             transformMixedEsModules: true,
         },
+        target: 'es2020',
     },
     optimizeDeps: {
         esbuildOptions: {
             loader: {
                 '.js': 'jsx'
-            }
+            },
+            target: 'es2020',
         },
-        include: ['react', 'react-dom', 'react-is', 'recharts', 'prop-types']
+        include: ['react', 'react-dom', 'react-is', 'recharts']
     },
 })
