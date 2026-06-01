@@ -2,7 +2,7 @@
 ## NURAGA - Integrated Safety Intelligence
 
 **Versi:** 1.0  
-**Tanggal:** 1 Juni 2026  
+**Tanggal:** 1 Mei 2026  
 **Status:** For Stakeholder Review  
 **Document Type:** PRD (Product Requirements Document)
 

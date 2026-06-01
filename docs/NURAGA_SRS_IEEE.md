@@ -2675,6 +2675,6 @@ Dokumen SRS ini menetapkan requirement komprehensif untuk sistem Nuraga - Integr
 
 **Document Version:** 1.0  
 **Last Updated:** 1 Juni 2026  
-**Created by:** Senior Systems Analyst & HSE Expert  
-**Contact:** [project-contact@company.com]
+**Created by:** Tim CC26-PRU428 
+**Contact:** [CC26-PRU428@student.devacademy.id]
 
