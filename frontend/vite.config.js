@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import commonjs from '@rollup/plugin-commonjs'
 import tailwindcss from 'tailwindcss'
 import autoprefixer from 'autoprefixer'
 
@@ -33,5 +34,26 @@ export default defineConfig({
                 autoprefixer(),
             ],
         },
+    },
+    build: {
+        rollupOptions: {
+            plugins: [
+                commonjs({
+                    transformMixedEsModules: true,
+                    include: /node_modules/,
+                })
+            ]
+        },
+        commonjsOptions: {
+            transformMixedEsModules: true,
+        },
+    },
+    optimizeDeps: {
+        esbuildOptions: {
+            loader: {
+                '.js': 'jsx'
+            }
+        },
+        include: ['react', 'react-dom', 'recharts', 'prop-types', 'react-is']
     },
 })
