@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * Ensures PostgreSQL FK constraints honor ON DELETE CASCADE / SET NULL
  * when an Admin deletes a User (C3).
