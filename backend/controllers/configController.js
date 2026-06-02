@@ -55,4 +55,30 @@ const updateConfig = async (req, res) => {
     }
 };
 
-module.exports = { getConfig, updateConfig };
+const getChecklistTemplates = async (req, res) => {
+    try {
+        const checklistConfig = await SystemConfig.findOne({ where: { key: 'checklist_templates' } });
+        let templates = {
+            'APAR': ['Tabung tidak berkarat', 'Segel dalam kondisi baik', 'Penunjuk tekanan pada posisi hijau', 'Label inspeksi terbaru', 'Akses tidak terhalang'],
+            'Perancah': ['Kaki perancah terkunci', 'Papan lantai tidak patah', 'Pagar pengaman terpasang', 'Beban tidak melebihi kapasitas'],
+            'Forklift': ['Rem berfungsi normal', 'Lampu peringatan hidup', 'Klakson berfungsi', 'Fork tidak bengkok', 'Sabuk pengaman ada'],
+            'APD': ['Helm dalam kondisi baik', 'Sepatu safety utuh', 'Rompi safety tersedia', 'Kacamata pelindung bersih', 'Sarung tangan tidak sobek'],
+            'Listrik': ['Kabel tidak terkelupas', 'Stopkontak terpasang benar', 'Label tegangan jelas', 'Grounding terpasang', 'Panel terkunci']
+        };
+
+        if (checklistConfig) {
+            try {
+                templates = JSON.parse(checklistConfig.value);
+            } catch (parseError) {
+                console.warn('Failed to parse checklist_templates from database, using fallback');
+            }
+        }
+
+        res.json(templates);
+    } catch (error) {
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+module.exports = { getConfig, updateConfig, getChecklistTemplates };

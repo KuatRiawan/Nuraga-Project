@@ -59,6 +59,16 @@ const User = sequelize.define('User', {
         type: DataTypes.INTEGER,
         defaultValue: 0,
     },
+    refresh_token: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        comment: 'JWT refresh token for automatic token renewal',
+    },
+    refresh_token_expires: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        comment: 'Expiration date for refresh token',
+    },
 
 }, {
     timestamps: true,

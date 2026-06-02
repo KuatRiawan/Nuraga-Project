@@ -1,22 +1,14 @@
 import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import { ClipboardCheck, Calendar, QrCode, CheckSquare, AlertTriangle, Camera, X } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
 
-const CHECKLIST_TEMPLATES = {
-    'APAR': ['Tabung tidak berkarat', 'Segel dalam kondisi baik', 'Penunjuk tekanan pada posisi hijau', 'Label inspeksi terbaru', 'Akses tidak terhalang'],
-    'Perancah': ['Kaki perancah terkunci', 'Papan lantai tidak patah', 'Pagar pengaman terpasang', 'Beban tidak melebihi kapasitas'],
-    'Forklift': ['Rem berfungsi normal', 'Lampu peringatan hidup', 'Klakson berfungsi', 'Fork tidak bengkok', 'Sabuk pengaman ada'],
-    'Panel Listrik': ['Tutup panel tertutup', 'Label bahaya terpasang', 'Grounding terhubung', 'Tidak ada kabel terkelupas'],
-    'Custom': [],
-};
-
 const AuditPage = () => {
-    const [audits, setAudits] = useState([]);
+    const queryClient = useQueryClient();
     const [showForm, setShowForm] = useState(false);
-    const [loading, setLoading] = useState(false);
     const [qrValue, setQrValue] = useState('');
     const [showQrModal, setShowQrModal] = useState(false);
     const [selectedTemplate, setSelectedTemplate] = useState('APAR');
@@ -24,9 +16,23 @@ const AuditPage = () => {
     const [formData, setFormData] = useState({ area: '', tanggal: '', hasil: '', qr_code_asset: '' });
     const [selectedAudit, setSelectedAudit] = useState(null);
 
-    useEffect(() => {
-        fetchAudits();
-    }, []);
+    // Fetch audits using React Query
+    const { data: audits = [], isLoading: auditsLoading, refetch } = useQuery({
+        queryKey: ['audits'],
+        queryFn: async () => {
+            const res = await api.get('/audits');
+            return res.data;
+        }
+    });
+
+    // Fetch checklist templates from API
+    const { data: checklistTemplates = {} } = useQuery({
+        queryKey: ['checklistTemplates'],
+        queryFn: async () => {
+            const res = await api.get('/config/checklist-templates');
+            return res.data;
+        }
+    });
 
     useEffect(() => {
         let html5QrcodeScanner;
@@ -79,11 +85,11 @@ const AuditPage = () => {
 
     useEffect(() => {
         // Reset checklist when template changes
-        const items = CHECKLIST_TEMPLATES[selectedTemplate] || [];
+        const items = checklistTemplates[selectedTemplate] || [];
         const initial = {};
         items.forEach(item => { initial[item] = false; });
         setChecklistState(initial);
-    }, [selectedTemplate]);
+    }, [selectedTemplate, checklistTemplates]);
 
     const fetchAudits = async () => {
         try {
@@ -102,27 +108,33 @@ const AuditPage = () => {
         setShowQrModal(false);
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        const checkedCount = Object.values(checklistState).filter(Boolean).length;
-        const total = Object.values(checklistState).length;
-        const completedChecklist = { template: selectedTemplate, items: checklistState, score: `${checkedCount}/${total}` };
-
-        try {
-            await api.post('/audits', {
-                ...formData,
+    // Create audit mutation
+    const createAuditMutation = useMutation({
+        mutationFn: async (data) => {
+            const checkedCount = Object.values(checklistState).filter(Boolean).length;
+            const total = Object.values(checklistState).length;
+            const completedChecklist = { template: selectedTemplate, items: checklistState, score: `${checkedCount}/${total}` };
+            
+            const res = await api.post('/audits', {
+                ...data,
                 checklist_items: JSON.stringify(completedChecklist),
             });
+            return res.data;
+        },
+        onSuccess: () => {
             setShowForm(false);
             setFormData({ area: '', tanggal: '', hasil: '', qr_code_asset: '' });
             setQrValue('');
-            fetchAudits();
-        } catch (err) {
+            queryClient.invalidateQueries({ queryKey: ['audits'] });
+        },
+        onError: (err) => {
             console.error(err);
-        } finally {
-            setLoading(false);
         }
+    });
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        createAuditMutation.mutate(formData);
     };
 
     return (
@@ -238,7 +250,7 @@ const AuditPage = () => {
                             <div className="flex flex-col gap-3">
                                 <label className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest px-1">Template Inspeksi</label>
                                 <div className="flex flex-wrap gap-2">
-                                    {Object.keys(CHECKLIST_TEMPLATES).map(t => (
+                                    {Object.keys(checklistTemplates).map(t => (
                                         <button
                                             key={t}
                                             type="button"
@@ -250,9 +262,9 @@ const AuditPage = () => {
                                     ))}
                                 </div>
 
-                                {CHECKLIST_TEMPLATES[selectedTemplate]?.length > 0 && (
+                                {checklistTemplates[selectedTemplate]?.length > 0 && (
                                     <div className="space-y-3 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl">
-                                        {CHECKLIST_TEMPLATES[selectedTemplate].map(item => (
+                                        {checklistTemplates[selectedTemplate].map(item => (
                                             <label key={item} className="flex items-center gap-4 px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-all cursor-pointer select-none min-h-[48px] active:scale-[0.99]">
                                                 <input
                                                     type="checkbox"
@@ -282,8 +294,8 @@ const AuditPage = () => {
 
                             <div className="flex gap-4 pt-2">
                                 <Button type="button" variant="ghost" onClick={() => setShowForm(false)} className="flex-1 rounded-2xl py-3.5 min-h-[48px]">Batal</Button>
-                                <Button type="submit" className="flex-1 rounded-2xl py-3.5 min-h-[48px] shadow-xl shadow-blue-500/20" loading={loading}>
-                                    {loading ? 'Menyimpan...' : 'Simpan Audit'}
+                                <Button type="submit" className="flex-1 rounded-2xl py-3.5 min-h-[48px] shadow-xl shadow-blue-500/20" loading={createAuditMutation.isPending}>
+                                    {createAuditMutation.isPending ? 'Menyimpan...' : 'Simpan Audit'}
                                 </Button>
                             </div>
                         </form>
@@ -329,7 +341,12 @@ const AuditPage = () => {
                         ))}
                     </tbody>
                 </table>
-                {audits.length === 0 && (
+                {auditsLoading ? (
+                    <div className="p-16 text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p className="text-slate-400 font-medium">Memuat data audit...</p>
+                    </div>
+                ) : audits.length === 0 && (
                     <div className="p-16 text-center">
                         <ClipboardCheck size={48} className="mx-auto mb-4 text-slate-200 dark:text-slate-700" />
                         <p className="text-slate-400 font-medium">Belum ada audit yang direkam.</p>

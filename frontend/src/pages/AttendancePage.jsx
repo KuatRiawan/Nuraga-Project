@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { ShieldCheck, AlertTriangle, Heart, Camera, Clock, UserX, FileText, Check, Download, CheckCircle, XCircle, X } from 'lucide-react';
 import { useAuth } from '../store/AuthContext';
@@ -9,15 +10,13 @@ const API_URL = '/api';
 const AttendancePage = () => {
   const { user } = useAuth();
   const { socket } = useSocket();
+  const queryClient = useQueryClient();
   const isAdmin = user?.role === 'Admin';
   const [activeTab, setActiveTab] = useState('absensi'); // absensi, izin, laporan
-  const [todayStatus, setTodayStatus] = useState({ clockedIn: false, clockedOut: false, fatigue_status: null });
-  const [historyData, setHistoryData] = useState({ attendance: [], leaves: [] });
 
   // Clock In States
   const [sleepHours, setSleepHours] = useState(7);
   const [stressLevel, setStressLevel] = useState(3);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [fotoBukti, setFotoBukti] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
 
@@ -29,7 +28,52 @@ const AttendancePage = () => {
   const [selectedUserId, setSelectedUserId] = useState('all');
   const [startDateFilter, setStartDateFilter] = useState('');
   const [endDateFilter, setEndDateFilter] = useState('');
-  const [userOptions, setUserOptions] = useState([]);
+
+  // Fetch today's status using React Query
+  const { data: todayStatus = { clockedIn: false, clockedOut: false, fatigue_status: null } } = useQuery({
+    queryKey: ['attendance', 'today'],
+    queryFn: async () => {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API_URL}/attendance/today`, { headers: { Authorization: `Bearer ${token}` } });
+      return res.data;
+    },
+    enabled: !!user
+  });
+
+  // Fetch my history using React Query
+  const { data: myHistoryData = { attendance: [], leaves: [] } } = useQuery({
+    queryKey: ['attendance', 'my-history'],
+    queryFn: async () => {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API_URL}/attendance/my-history`, { headers: { Authorization: `Bearer ${token}` } });
+      return res.data;
+    },
+    enabled: !!user && !isAdmin
+  });
+
+  // Fetch all history and users using React Query (Admin only)
+  const { data: allHistoryData = { attendance: [], leaves: [] } } = useQuery({
+    queryKey: ['attendance', 'all-history'],
+    queryFn: async () => {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API_URL}/attendance/all`, { headers: { Authorization: `Bearer ${token}` } });
+      return res.data;
+    },
+    enabled: !!user && isAdmin
+  });
+
+  const { data: userOptions = [] } = useQuery({
+    queryKey: ['users'],
+    queryFn: async () => {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API_URL}/users`, { headers: { Authorization: `Bearer ${token}` } });
+      return res.data;
+    },
+    enabled: !!user && isAdmin
+  });
+
+  // Use appropriate history data based on role
+  const historyData = isAdmin ? allHistoryData : myHistoryData;
 
   // Extract unique users from historyData when no user list is available
   const uniqueUsers = Array.from(
@@ -142,12 +186,10 @@ const AttendancePage = () => {
           : `❌ ${data.userName}: Pengajuan ${data.type} ditolak.`;
         showPopup(popupType, message);
 
-        // Refresh history
-        if (isAdmin) {
-          setTimeout(() => fetchAllHistory(), 1000);
-        } else {
-          setTimeout(() => fetchMyHistory(), 1000);
-        }
+        // Refresh history using queryClient
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: isAdmin ? ['attendance', 'all-history'] : ['attendance', 'my-history'] });
+        }, 1000);
       }
     };
 
@@ -157,7 +199,9 @@ const AttendancePage = () => {
         showPopup('success', `Pengajuan ${data.type} baru dari ${data.userName}\n${data.start_date} s/d ${data.end_date}`);
 
         // Refresh history untuk admin
-        setTimeout(() => fetchAllHistory(), 1000);
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ['attendance', 'all-history'] });
+        }, 1000);
       }
     };
 
@@ -169,75 +213,7 @@ const AttendancePage = () => {
       socket.off('NEW_LEAVE_REQUEST', handleNewLeaveRequest);
       // Don't disconnect - socket is managed by useSocket singleton
     };
-  }, [socket, user, isAdmin]);
-
-  useEffect(() => {
-    fetchTodayStatus();
-    if (isAdmin) {
-        fetchAllHistory();
-    } else {
-        fetchMyHistory();
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (!user) return;
-
-    const refreshHistory = async () => {
-      if (isAdmin) {
-        await fetchAllHistory();
-      } else {
-        await fetchMyHistory();
-      }
-    };
-
-    if (activeTab === 'laporan') {
-      refreshHistory();
-
-      const interval = setInterval(() => {
-        refreshHistory();
-      }, 60000); // Slow down from 30s to 60s (WebSocket handles real-time updates)
-
-      return () => clearInterval(interval);
-    }
-  }, [user, activeTab]);
-
-  const fetchTodayStatus = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API_URL}/attendance/today`, { headers: { Authorization: `Bearer ${token}` } });
-      setTodayStatus(res.data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const fetchMyHistory = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API_URL}/attendance/my-history`, { headers: { Authorization: `Bearer ${token}` } });
-      setHistoryData(res.data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const fetchAllHistory = async () => {
-    if (!isAdmin) {
-      return fetchMyHistory();
-    }
-    try {
-      const token = localStorage.getItem('token');
-      const [historyRes, usersRes] = await Promise.all([
-        axios.get(`${API_URL}/attendance/all`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${API_URL}/users`, { headers: { Authorization: `Bearer ${token}` } }),
-      ]);
-      setHistoryData(historyRes.data);
-      setUserOptions(usersRes.data || []);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  }, [socket, user, isAdmin, queryClient]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -247,89 +223,116 @@ const AttendancePage = () => {
     }
   };
 
+  // Clock In mutation
+  const clockInMutation = useMutation({
+    mutationFn: async (data) => {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('sleep_hours', data.sleepHours);
+      formData.append('stress_level', data.stressLevel);
+      formData.append('foto_bukti', data.fotoBukti);
+
+      const res = await axios.post(`${API_URL}/attendance/clock-in`, formData, {
+        headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+        }
+      });
+      return res.data;
+    },
+    onSuccess: () => {
+      showPopup('success', 'Absen Datang (Clock-In) berhasil! Selamat bekerja 🎉');
+      setFotoBukti(null);
+      setPreviewUrl(null);
+      queryClient.invalidateQueries({ queryKey: ['attendance', 'today'] });
+      queryClient.invalidateQueries({ queryKey: isAdmin ? ['attendance', 'all-history'] : ['attendance', 'my-history'] });
+    },
+    onError: (error) => {
+      showPopup('error', error.response?.data?.message || 'Gagal Clock-In. Coba lagi.');
+    }
+  });
+
   const handleClockIn = async (e) => {
     e.preventDefault();
     if (!fotoBukti) {
         showPopup('error', 'Wajib melampirkan foto selfie kehadiran!');
         return;
     }
-    setIsSubmitting(true);
-    try {
+    clockInMutation.mutate({ sleepHours, stressLevel, fotoBukti });
+  };
+
+  // Clock Out mutation
+  const clockOutMutation = useMutation({
+    mutationFn: async () => {
+      const token = localStorage.getItem('token');
+      const res = await axios.post(`${API_URL}/attendance/clock-out`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      return res.data;
+    },
+    onSuccess: () => {
+      showPopup('success', 'Absen Pulang (Clock-Out) berhasil! Selamat istirahat 👋');
+      queryClient.invalidateQueries({ queryKey: ['attendance', 'today'] });
+      queryClient.invalidateQueries({ queryKey: isAdmin ? ['attendance', 'all-history'] : ['attendance', 'my-history'] });
+    },
+    onError: (error) => {
+      showPopup('error', error.response?.data?.message || 'Gagal Clock-Out. Coba lagi.');
+    }
+  });
+
+  const handleClockOut = async () => {
+    clockOutMutation.mutate();
+  };
+
+  // Leave Submit mutation
+  const leaveSubmitMutation = useMutation({
+    mutationFn: async (data) => {
       const token = localStorage.getItem('token');
       const formData = new FormData();
-      formData.append('sleep_hours', sleepHours);
-      formData.append('stress_level', stressLevel);
-      formData.append('foto_bukti', fotoBukti);
+      Object.keys(data.leaveForm).forEach(key => formData.append(key, data.leaveForm[key]));
+      if (data.leaveDoc) formData.append('document_proof', data.leaveDoc);
 
-      await axios.post(`${API_URL}/attendance/clock-in`, formData, {
+      const res = await axios.post(`${API_URL}/attendance/leave`, formData, {
         headers: { 
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
         }
       });
-      showPopup('success', 'Absen Datang (Clock-In) berhasil! Selamat bekerja 🎉');
-      fetchTodayStatus();
-      if (isAdmin) fetchAllHistory(); else fetchMyHistory();
-      setFotoBukti(null);
-      setPreviewUrl(null);
-    } catch (error) {
-      showPopup('error', error.response?.data?.message || 'Gagal Clock-In. Coba lagi.');
-    } finally {
-      setIsSubmitting(false);
+      return res.data;
+    },
+    onSuccess: () => {
+      showPopup('success', 'Pengajuan berhasil dikirim! Menunggu persetujuan.');
+      setLeaveForm({ type: 'Izin', start_date: '', end_date: '', reason: '' });
+      setLeaveDoc(null);
+      queryClient.invalidateQueries({ queryKey: isAdmin ? ['attendance', 'all-history'] : ['attendance', 'my-history'] });
+    },
+    onError: (error) => {
+      showPopup('error', 'Gagal mengirim pengajuan. Coba lagi.');
     }
-  };
-
-  const handleClockOut = async () => {
-    setIsSubmitting(true);
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API_URL}/attendance/clock-out`, {}, { headers: { Authorization: `Bearer ${token}` } });
-      showPopup('success', 'Absen Pulang (Clock-Out) berhasil! Selamat istirahat 👋');
-      fetchTodayStatus();
-      if (isAdmin) fetchAllHistory(); else fetchMyHistory();
-    } catch (error) {
-      showPopup('error', error.response?.data?.message || 'Gagal Clock-Out. Coba lagi.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  });
 
   const handleLeaveSubmit = async (e) => {
       e.preventDefault();
-      setIsSubmitting(true);
-      try {
-        const token = localStorage.getItem('token');
-        const formData = new FormData();
-        Object.keys(leaveForm).forEach(key => formData.append(key, leaveForm[key]));
-        if (leaveDoc) formData.append('document_proof', leaveDoc);
-  
-        await axios.post(`${API_URL}/attendance/leave`, formData, {
-          headers: { 
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'multipart/form-data'
-          }
-        });
-        showPopup('success', 'Pengajuan berhasil dikirim! Menunggu persetujuan.');
-        setLeaveForm({ type: 'Izin', start_date: '', end_date: '', reason: '' });
-        setLeaveDoc(null);
-        if (isAdmin) fetchAllHistory(); else fetchMyHistory();
-      } catch (error) {
-        showPopup('error', 'Gagal mengirim pengajuan. Coba lagi.');
-      } finally {
-        setIsSubmitting(false);
-      }
+      leaveSubmitMutation.mutate({ leaveForm, leaveDoc });
   };
 
+  // Approve Leave mutation
+  const approveLeaveMutation = useMutation({
+    mutationFn: async ({ id, status }) => {
+      if (!isAdmin) throw new Error('Unauthorized');
+      const token = localStorage.getItem('token');
+      const res = await axios.put(`${API_URL}/attendance/leave/${id}`, { status }, { headers: { Authorization: `Bearer ${token}` } });
+      return res.data;
+    },
+    onSuccess: (_, variables) => {
+      showPopup('success', `Pengajuan berhasil di-${variables.status}`);
+      queryClient.invalidateQueries({ queryKey: ['attendance', 'all-history'] });
+    },
+    onError: (error) => {
+      showPopup('error', 'Gagal merubah status pengajuan.');
+    }
+  });
+
   const handleApproveLeave = async (id, status) => {
-      if (!isAdmin) return;
-      try {
-        const token = localStorage.getItem('token');
-        await axios.put(`${API_URL}/attendance/leave/${id}`, { status }, { headers: { Authorization: `Bearer ${token}` } });
-        showPopup('success', `Pengajuan berhasil di-${status}`);
-        fetchAllHistory();
-      } catch (error) {
-          showPopup('error', 'Gagal merubah status pengajuan.');
-      }
+      approveLeaveMutation.mutate({ id, status });
   };
 
   const getStatusColor = (status) => {
@@ -453,9 +456,9 @@ const AttendancePage = () => {
                   <p className="text-slate-500 dark:text-slate-400 font-medium mt-2 mb-6">Status Fatigue Anda: <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(todayStatus.fatigue_status)}`}>{todayStatus.fatigue_status}</span></p>
                   
                   {!todayStatus.clockedOut ? (
-                    <button 
+                    <button
                         onClick={handleClockOut}
-                        disabled={isSubmitting}
+                        disabled={clockOutMutation.isPending}
                         className="w-full bg-slate-800 dark:bg-slate-800 text-white font-bold py-4 rounded-xl hover:bg-slate-900 dark:hover:bg-slate-700 transition-all active:scale-[0.98] flex justify-center items-center gap-2"
                     >
                         <Clock className="w-5 h-5" /> Pulang Kerja (Clock-Out)
@@ -551,10 +554,10 @@ const AttendancePage = () => {
 
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={clockInMutation.isPending}
               className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              {isSubmitting ? 'Menganalisis...' : <><Clock className="w-5 h-5"/> Absen & Analisis Fatigue</>}
+              {clockInMutation.isPending ? 'Menganalisis...' : <><Clock className="w-5 h-5"/> Absen & Analisis Fatigue</>}
             </button>
           </form>
         </div>
@@ -617,8 +620,8 @@ const AttendancePage = () => {
                     <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Dokumen Pendukung (Surat Dokter, dll) - Opsional</label>
                     <input type="file" onChange={e => setLeaveDoc(e.target.files[0])} className="w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 dark:file:bg-slate-800 file:text-blue-700 dark:file:text-blue-400 hover:file:bg-blue-100 dark:hover:file:bg-slate-700"/>
                 </div>
-                <button type="submit" disabled={isSubmitting} className="w-full bg-orange-500 text-white font-bold py-4 rounded-xl hover:bg-orange-600 transition-all">
-                    Kirim Pengajuan
+                <button type="submit" disabled={leaveSubmitMutation.isPending} className="w-full bg-orange-500 text-white font-bold py-4 rounded-xl hover:bg-orange-600 transition-all">
+                    {leaveSubmitMutation.isPending ? 'Mengirim...' : 'Kirim Pengajuan'}
                 </button>
             </form>
         </div>

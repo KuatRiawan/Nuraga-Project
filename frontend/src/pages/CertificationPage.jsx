@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import Button from '../components/Button';
 import Input from '../components/Input';
@@ -108,13 +109,11 @@ const K3_CERTIFICATE_LIST = [
 const CertificationPage = () => {
     const { user } = useAuth();
     const isAdmin = user?.role === 'Admin';
+    const queryClient = useQueryClient();
 
-    const [certs, setCerts] = useState([]);
-    const [users, setUsers] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [editingCert, setEditingCert] = useState(null);
-    const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         id_user: '',
         nama_personil: '',
@@ -131,53 +130,71 @@ const CertificationPage = () => {
             item.toLowerCase().includes(query.toLowerCase())
           );
 
-    useEffect(() => {
-        fetchCerts();
-        if (isAdmin) {
-            fetchUsers();
-        }
-    }, [isAdmin]);
-
-    const fetchCerts = async () => {
-        try {
+    // Fetch certifications using React Query
+    const { data: rawCerts = [], isLoading: certsLoading, refetch: refetchCerts } = useQuery({
+        queryKey: ['certifications', isAdmin],
+        queryFn: async () => {
             const url = isAdmin ? '/certifications/all' : '/certifications/my';
             const res = await api.get(url);
-            // Sort: expiring soon first
-            const sorted = [...res.data].sort((a, b) => getDaysUntilExpiry(a.tanggal_expired) - getDaysUntilExpiry(b.tanggal_expired));
-            setCerts(sorted);
-        } catch (err) {
-            console.error(err);
-        }
-    };
+            return res.data;
+        },
+        enabled: !!user
+    });
 
-    const fetchUsers = async () => {
-        try {
+    // Sort: expiring soon first
+    const certs = [...rawCerts].sort((a, b) => getDaysUntilExpiry(a.tanggal_expired) - getDaysUntilExpiry(b.tanggal_expired));
+
+    // Fetch users using React Query (Admin only)
+    const { data: users = [], isLoading: usersLoading } = useQuery({
+        queryKey: ['users'],
+        queryFn: async () => {
             const res = await api.get('/users');
-            setUsers(res.data);
-        } catch (err) {
-            console.error('Failed to fetch users:', err);
-        }
-    };
+            return res.data;
+        },
+        enabled: isAdmin
+    });
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        try {
+    // Create/Update certification mutation
+    const saveCertMutation = useMutation({
+        mutationFn: async (data) => {
             if (editingCert) {
-                await api.put(`/certifications/${editingCert.id_certification}`, formData);
+                const res = await api.put(`/certifications/${editingCert.id_certification}`, data);
+                return res.data;
             } else {
-                await api.post('/certifications', formData);
+                const res = await api.post('/certifications', data);
+                return res.data;
             }
+        },
+        onSuccess: () => {
             setShowForm(false);
             setFormData({ id_user: '', nama_personil: '', jenis_sertifikasi: '', nomor_sertifikat: '', tanggal_terbit: '', tanggal_expired: '' });
             setEditingCert(null);
-            fetchCerts();
-        } catch (err) {
+            queryClient.invalidateQueries({ queryKey: ['certifications'] });
+        },
+        onError: (err) => {
             console.error(err);
             alert('Gagal menyimpan sertifikat');
-        } finally {
-            setLoading(false);
         }
+    });
+
+    // Delete certification mutation
+    const deleteCertMutation = useMutation({
+        mutationFn: async (certId) => {
+            const res = await api.delete(`/certifications/${certId}`);
+            return res.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['certifications'] });
+        },
+        onError: (err) => {
+            console.error(err);
+            alert('Gagal menghapus sertifikat');
+        }
+    });
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        saveCertMutation.mutate(formData);
     };
 
     const handleEdit = (cert) => {
@@ -195,13 +212,7 @@ const CertificationPage = () => {
 
     const handleDelete = async (certId) => {
         if (!window.confirm('Apakah Anda yakin ingin menghapus sertifikat ini?')) return;
-        try {
-            await api.delete(`/certifications/${certId}`);
-            fetchCerts();
-        } catch (err) {
-            console.error(err);
-            alert('Gagal menghapus sertifikat');
-        }
+        deleteCertMutation.mutate(certId);
     };
 
     const handleCloseForm = () => {
@@ -354,8 +365,8 @@ const CertificationPage = () => {
                             </div>
                             <div className="flex gap-4 pt-4">
                                 <Button type="button" variant="ghost" onClick={handleCloseForm} className="flex-1 rounded-2xl py-4">Batal</Button>
-                                <Button type="submit" className="flex-1 rounded-2xl py-4 shadow-xl shadow-blue-500/20" loading={loading}>
-                                    {loading ? 'Menyimpan...' : 'Simpan Sertifikat'}
+                                <Button type="submit" className="flex-1 rounded-2xl py-4 shadow-xl shadow-blue-500/20" loading={saveCertMutation.isPending}>
+                                    {saveCertMutation.isPending ? 'Menyimpan...' : 'Simpan Sertifikat'}
                                 </Button>
                             </div>
                         </form>
@@ -365,7 +376,12 @@ const CertificationPage = () => {
 
             {/* Certification Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {certs.length === 0 && (
+                {certsLoading ? (
+                    <div className="md:col-span-3 p-16 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p className="text-slate-400 font-medium">Memuat data sertifikasi...</p>
+                    </div>
+                ) : certs.length === 0 && (
                     <div className="md:col-span-3 p-16 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl">
                         <Award size={48} className="mx-auto mb-4 text-slate-200 dark:text-slate-700" />
                         <p className="text-slate-400 font-medium">Belum ada sertifikasi yang terdaftar.</p>

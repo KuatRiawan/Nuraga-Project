@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../store/AuthContext';
 import { useTheme } from '../store/ThemeContext';
 import api from '../api/axios';
@@ -31,6 +32,7 @@ const ReadOnlyField = ({ icon: Icon, label, value, hint }) => (
 const SettingsPage = () => {
     const { user, updateUser } = useAuth();
     const { theme, toggleTheme } = useTheme();
+    const queryClient = useQueryClient();
 
     const [activeTab, setActiveTab] = useState('account'); // 'account' or 'integration'
 
@@ -41,7 +43,6 @@ const SettingsPage = () => {
     const [jenisKelamin, setJenisKelamin] = useState(user?.jenis_kelamin || 'Laki-laki');
     const [file, setFile] = useState(null);
     const [preview, setPreview] = useState(null);
-    const [profileLoading, setProfileLoading] = useState(false);
     const [profileError, setProfileError] = useState('');
     const [profileSuccess, setProfileSuccess] = useState('');
     const fileInputRef = useRef(null);
@@ -51,7 +52,6 @@ const SettingsPage = () => {
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [passwordLoading, setPasswordLoading] = useState(false);
     const [passwordError, setPasswordError] = useState('');
     const [passwordSuccess, setPasswordSuccess] = useState('');
 
@@ -62,7 +62,6 @@ const SettingsPage = () => {
         ai_fastapi_endpoint: '',
         open_meteo_endpoint: ''
     });
-    const [configLoading, setConfigLoading] = useState(false);
     const [configSuccess, setConfigSuccess] = useState('');
     const [configError, setConfigError] = useState('');
 
@@ -71,14 +70,29 @@ const SettingsPage = () => {
     const [waQR, setWaQR] = useState(null);
     const [waNumber, setWaNumber] = useState('');
     const [waTestPhone, setWaTestPhone] = useState('');
-    const [waTestLoading, setWaTestLoading] = useState(false);
     const [waTestMsg, setWaTestMsg] = useState('');
-    const [waLogoutLoading, setWaLogoutLoading] = useState(false);
     const eventSourceRef = useRef(null);
+
+    // Fetch configs using React Query (Admin only)
+    const { data: configData, isLoading: configLoading } = useQuery({
+        queryKey: ['config'],
+        queryFn: async () => {
+            const res = await api.get('/config');
+            return res.data;
+        },
+        enabled: user?.role === 'Admin',
+        onSuccess: (data) => {
+            setConfigs({
+                whatsapp_gateway_number: data.whatsapp_gateway_number || '',
+                whatsapp_api_key: data.whatsapp_api_key || '',
+                ai_fastapi_endpoint: data.ai_fastapi_endpoint || '',
+                open_meteo_endpoint: data.open_meteo_endpoint || ''
+            });
+        }
+    });
 
     useEffect(() => {
         if (user?.role === 'Admin') {
-            fetchConfigs();
             initWaStream();
         }
         return () => {
@@ -115,69 +129,66 @@ const SettingsPage = () => {
         };
     };
 
-    const handleWaLogout = async () => {
-        setWaLogoutLoading(true);
-        try {
-            await api.post('/wa/logout');
+    // WhatsApp Logout mutation
+    const waLogoutMutation = useMutation({
+        mutationFn: async () => {
+            const res = await api.post('/wa/logout');
+            return res.data;
+        },
+        onSuccess: () => {
             setWaStatus('disconnected');
             setWaQR(null);
             setWaNumber('');
-        } catch (err) {
+        },
+        onError: (err) => {
             console.error('[WA] Logout error:', err);
-        } finally {
-            setWaLogoutLoading(false);
         }
+    });
+
+    const handleWaLogout = () => {
+        waLogoutMutation.mutate();
     };
 
-    const handleWaTest = async () => {
-        if (!waTestPhone) return;
-        setWaTestLoading(true);
-        setWaTestMsg('');
-        try {
-            await api.post('/wa/test', { phone: waTestPhone });
+    // WhatsApp Test mutation
+    const waTestMutation = useMutation({
+        mutationFn: async (phone) => {
+            const res = await api.post('/wa/test', { phone });
+            return res.data;
+        },
+        onSuccess: () => {
             setWaTestMsg('✅ Test message berhasil dikirim!');
-        } catch (err) {
-            setWaTestMsg('❌ ' + (err.response?.data?.message || 'Gagal mengirim pesan.'));
-        } finally {
-            setWaTestLoading(false);
             setTimeout(() => setWaTestMsg(''), 4000);
+        },
+        onError: (err) => {
+            setWaTestMsg('❌ ' + (err.response?.data?.message || 'Gagal mengirim pesan.'));
         }
+    });
+
+    const handleWaTest = () => {
+        if (!waTestPhone) return;
+        waTestMutation.mutate(waTestPhone);
     };
 
-    const fetchConfigs = async () => {
-        setConfigLoading(true);
-        setConfigError('');
-        try {
-            const res = await api.get('/config');
-            setConfigs({
-                whatsapp_gateway_number: res.data.whatsapp_gateway_number || '',
-                whatsapp_api_key: res.data.whatsapp_api_key || '',
-                ai_fastapi_endpoint: res.data.ai_fastapi_endpoint || '',
-                open_meteo_endpoint: res.data.open_meteo_endpoint || ''
-            });
-        } catch (err) {
-            console.error('[Settings] Error fetching config:', err);
-            setConfigError(err.response?.data?.message || 'Gagal memuat konfigurasi integrasi.');
-        } finally {
-            setConfigLoading(false);
-        }
-    };
-
-    const handleConfigSubmit = async (e) => {
-        e.preventDefault();
-        setConfigLoading(true);
-        setConfigSuccess('');
-        setConfigError('');
-        try {
-            await api.post('/config', configs);
+    // Config Submit mutation
+    const configSubmitMutation = useMutation({
+        mutationFn: async (data) => {
+            const res = await api.post('/config', data);
+            return res.data;
+        },
+        onSuccess: () => {
             setConfigSuccess('Konfigurasi integrasi sistem berhasil disimpan!');
             setTimeout(() => setConfigSuccess(''), 3000);
-        } catch (err) {
+            queryClient.invalidateQueries({ queryKey: ['config'] });
+        },
+        onError: (err) => {
             console.error('[Settings] Error saving config:', err);
             setConfigError(err.response?.data?.message || 'Gagal menyimpan konfigurasi.');
-        } finally {
-            setConfigLoading(false);
         }
+    });
+
+    const handleConfigSubmit = (e) => {
+        e.preventDefault();
+        configSubmitMutation.mutate(configs);
     };
 
     const handleFileChange = (e) => {
@@ -188,71 +199,77 @@ const SettingsPage = () => {
         }
     };
 
-    const handleProfileSubmit = async (e) => {
-        e.preventDefault();
-        setProfileLoading(true);
-        setProfileError('');
-        setProfileSuccess('');
+    // Profile Submit mutation
+    const profileSubmitMutation = useMutation({
+        mutationFn: async (data) => {
+            const formData = new FormData();
+            formData.append('email', data.email);
+            formData.append('no_whatsapp', data.noWhatsapp);
+            formData.append('jenis_kelamin', data.jenisKelamin);
+            if (data.file) {
+                formData.append('foto', data.file);
+            }
 
-        // Validate WhatsApp format
-        if (noWhatsapp && !noWhatsapp.startsWith('+62')) {
-            setProfileError('Nomor WhatsApp harus dimulai dengan +62 (contoh: +6281234567890)');
-            setProfileLoading(false);
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('email', email);
-        formData.append('no_whatsapp', noWhatsapp);
-        formData.append('jenis_kelamin', jenisKelamin);
-        if (file) {
-            formData.append('foto', file);
-        }
-
-        try {
             const res = await api.put('/auth/profile', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
-            updateUser(res.data.user);
+            return res.data;
+        },
+        onSuccess: (data) => {
+            updateUser(data.user);
             setProfileSuccess('Profil berhasil diperbarui!');
             setTimeout(() => {
                 setShowProfileModal(false);
                 setPreview(null);
                 setFile(null);
             }, 1000);
-        } catch (err) {
+        },
+        onError: (err) => {
             console.error(err);
             setProfileError(err.response?.data?.message || 'Gagal memperbarui profil');
-        } finally {
-            setProfileLoading(false);
         }
-    };
+    });
 
-    const handlePasswordSubmit = async (e) => {
+    const handleProfileSubmit = (e) => {
         e.preventDefault();
-        setPasswordLoading(true);
-        setPasswordError('');
-        setPasswordSuccess('');
 
-        if (newPassword !== confirmPassword) {
-            setPasswordError('Password baru dan konfirmasi password tidak cocok');
-            setPasswordLoading(false);
+        // Validate WhatsApp format
+        if (noWhatsapp && !noWhatsapp.startsWith('+62')) {
+            setProfileError('Nomor WhatsApp harus dimulai dengan +62 (contoh: +6281234567890)');
             return;
         }
 
-        try {
-            await api.put('/auth/change-password', { oldPassword: currentPassword, newPassword });
+        profileSubmitMutation.mutate({ email, noWhatsapp, jenisKelamin, file });
+    };
+
+    // Password Submit mutation
+    const passwordSubmitMutation = useMutation({
+        mutationFn: async (data) => {
+            const res = await api.put('/auth/change-password', { oldPassword: data.currentPassword, newPassword: data.newPassword });
+            return res.data;
+        },
+        onSuccess: () => {
             setPasswordSuccess('Password berhasil diubah!');
             setCurrentPassword('');
             setNewPassword('');
             setConfirmPassword('');
             setTimeout(() => setShowPasswordModal(false), 1000);
-        } catch (err) {
+        },
+        onError: (err) => {
             console.error(err);
             setPasswordError(err.response?.data?.message || 'Gagal mengubah password');
-        } finally {
-            setPasswordLoading(false);
         }
+    });
+
+    const handlePasswordSubmit = (e) => {
+        e.preventDefault();
+
+        if (newPassword !== confirmPassword) {
+            setPasswordError('Password baru dan konfirmasi password tidak cocok');
+            return;
+        }
+
+        passwordSubmitMutation.mutate({ currentPassword, newPassword, confirmPassword });
     };
 
     const openProfileModal = () => {
@@ -621,13 +638,13 @@ const SettingsPage = () => {
                                 </div>
                                 <div className="flex gap-3">
                                     <input type="tel" placeholder="Nomor test: +62812..." value={waTestPhone} onChange={(e) => setWaTestPhone(e.target.value)} className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-                                    <button onClick={handleWaTest} disabled={waTestLoading || !waTestPhone} className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-colors">
-                                        {waTestLoading ? <RefreshCw size={14} className="animate-spin" /> : <Send size={14} />} Test Kirim
+                                    <button onClick={handleWaTest} disabled={waTestMutation.isPending || !waTestPhone} className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-colors">
+                                        {waTestMutation.isPending ? <RefreshCw size={14} className="animate-spin" /> : <Send size={14} />} Test Kirim
                                     </button>
                                 </div>
                                 {waTestMsg && <p className="text-xs font-bold text-center py-2">{waTestMsg}</p>}
                                 <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-                                    <Button variant="ghost" className="w-full text-red-600 dark:text-red-400 hover:bg-red-500/10 rounded-2xl py-3 text-xs" onClick={handleWaLogout} loading={waLogoutLoading}>Putuskan Sesi & Reset QR</Button>
+                                    <Button variant="ghost" className="w-full text-red-600 dark:text-red-400 hover:bg-red-500/10 rounded-2xl py-3 text-xs" onClick={handleWaLogout} loading={waLogoutMutation.isPending}>Putuskan Sesi & Reset QR</Button>
                                 </div>
                             </div>
                         )}
@@ -788,8 +805,8 @@ const SettingsPage = () => {
 
                             <div className="flex gap-4 pt-2">
                                 <Button type="button" variant="ghost" onClick={() => setShowProfileModal(false)} className="flex-1 rounded-2xl py-4">Batal</Button>
-                                <Button type="submit" className="flex-1 rounded-2xl py-4 shadow-xl shadow-blue-500/20" loading={profileLoading}>
-                                    {profileLoading ? 'Menyimpan...' : 'Simpan'}
+                                <Button type="submit" className="flex-1 rounded-2xl py-4 shadow-xl shadow-blue-500/20" loading={profileSubmitMutation.isPending}>
+                                    {profileSubmitMutation.isPending ? 'Menyimpan...' : 'Simpan'}
                                 </Button>
                             </div>
                         </form>
@@ -855,8 +872,8 @@ const SettingsPage = () => {
 
                             <div className="flex gap-4 pt-2">
                                 <Button type="button" variant="ghost" onClick={() => setShowPasswordModal(false)} className="flex-1 rounded-2xl py-4">Batal</Button>
-                                <Button type="submit" className="flex-1 rounded-2xl py-4 shadow-xl shadow-blue-500/20" loading={passwordLoading}>
-                                    {passwordLoading ? 'Memproses...' : 'Ubah Password'}
+                                <Button type="submit" className="flex-1 rounded-2xl py-4 shadow-xl shadow-blue-500/20" loading={passwordSubmitMutation.isPending}>
+                                    {passwordSubmitMutation.isPending ? 'Memproses...' : 'Ubah Password'}
                                 </Button>
                             </div>
                         </form>

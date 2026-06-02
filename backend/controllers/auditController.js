@@ -14,6 +14,22 @@ const createAudit = async (req, res) => {
             checklist_items,
         });
         clearStatsCache();
+
+        // Emit WebSocket event
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('AUDIT_CREATED', {
+                id: audit.id_audit,
+                area: audit.area,
+                tanggal: audit.tanggal,
+                hasil: audit.hasil,
+                auditorId: audit.auditor_id,
+                auditorName: req.user.nama,
+                auditorRole: req.user.role,
+                createdAt: audit.createdAt
+            });
+        }
+
         res.status(201).json(audit);
     } catch (error) {
         console.error('[Internal] Error:', error);

@@ -184,8 +184,8 @@ function startServer(port, retries = 5) {
     return server;
 }
 
-sequelize.sync({ force: false }).then(async () => {
-    console.log('Database synced');
+sequelize.sync({ alter: true }).then(async () => {
+    console.log('Database synced with alter: true');
 
     try {
         await applyUserCascadeConstraints(sequelize);
@@ -290,7 +290,20 @@ sequelize.sync({ force: false }).then(async () => {
                 { key: 'whatsapp_gateway_number', value: '+6281234567890' },
                 { key: 'whatsapp_api_key', value: 'dummy-wa-api-key' },
                 { key: 'ai_fastapi_endpoint', value: 'http://localhost:8000' },
-                { key: 'open_meteo_endpoint', value: 'https://api.open-meteo.com' }
+                { key: 'open_meteo_endpoint', value: 'https://api.open-meteo.com' },
+                { key: 'rewards_config', value: JSON.stringify([
+                    { id: 1, title: 'Voucer Makan Siang', points: 200, icon: '🍱', quota: 50 },
+                    { id: 2, title: 'Voucer Belanja Rp50K', points: 500, icon: '🛒', quota: 30 },
+                    { id: 3, title: 'Hari Libur Tambahan', points: 1000, icon: '🏖️', quota: 5 },
+                    { id: 4, title: 'Merchandise K3 Premium', points: 750, icon: '🎁', quota: 15 }
+                ])},
+                { key: 'checklist_templates', value: JSON.stringify({
+                    'APAR': ['Tabung tidak berkarat', 'Segel dalam kondisi baik', 'Penunjuk tekanan pada posisi hijau', 'Label inspeksi terbaru', 'Akses tidak terhalang'],
+                    'Perancah': ['Kaki perancah terkunci', 'Papan lantai tidak patah', 'Pagar pengaman terpasang', 'Beban tidak melebihi kapasitas'],
+                    'Forklift': ['Rem berfungsi normal', 'Lampu peringatan hidup', 'Klakson berfungsi', 'Fork tidak bengkok', 'Sabuk pengaman ada'],
+                    'APD': ['Helm dalam kondisi baik', 'Sepatu safety utuh', 'Rompi safety tersedia', 'Kacamata pelindung bersih', 'Sarung tangan tidak sobek'],
+                    'Listrik': ['Kabel tidak terkelupas', 'Stopkontak terpasang benar', 'Label tegangan jelas', 'Grounding terpasang', 'Panel terkunci']
+                })}
             ]);
             console.log('Default configurations seeded successfully');
         }

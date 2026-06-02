@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Voucher = require('../models/Voucher');
 const HazardReport = require('../models/HazardReport');
+const SystemConfig = require('../models/SystemConfig');
 const { recordLog } = require('./logController');
 const sequelize = require('../config/db');
 
@@ -52,21 +53,37 @@ const login = async (req, res) => {
         if (!isMatch) {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
+
+        // Generate access token (short-lived: 1 hour)
         const token = jwt.sign(
             { id: user.id_user, role: user.role, nama: user.nama },
             process.env.JWT_SECRET,
-            { expiresIn: '1d' }
+            { expiresIn: '1h' }
         );
+
+        // Generate refresh token (long-lived: 7 days)
+        const refreshToken = jwt.sign(
+            { id: user.id_user, role: user.role, nama: user.nama },
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
+        // Store refresh token in database
+        const refreshTokenExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+        user.refresh_token = refreshToken;
+        user.refresh_token_expires = refreshTokenExpires;
+        await user.save();
 
         // Record Audit Trail Log
         await recordLog(
-            { user: { id: user.id_user, nama: user.nama, role: user.role }, headers: req.headers, ip: req.ip, socket: req.socket }, 
-            'LOGIN', 
+            { user: { id: user.id_user, nama: user.nama, role: user.role }, headers: req.headers, ip: req.ip, socket: req.socket },
+            'LOGIN',
             `User ${user.nama} (${user.role}) berhasil masuk ke dalam sistem.`
         );
 
         res.json({
             token,
+            refreshToken,
             user: {
                 id: user.id_user,
                 nama: user.nama,
@@ -317,12 +334,22 @@ const getLeaderboard = async (req, res) => {
 
 const getRewards = async (req, res) => {
     try {
-        const REWARDS_CONFIG = [
+        // Fetch REWARDS_CONFIG from SystemConfig database
+        const rewardsConfig = await SystemConfig.findOne({ where: { key: 'rewards_config' } });
+        let REWARDS_CONFIG = [
             { id: 1, title: 'Voucer Makan Siang', points: 200, icon: '🍱', quota: 50 },
             { id: 2, title: 'Voucer Belanja Rp50K', points: 500, icon: '🛒', quota: 30 },
             { id: 3, title: 'Hari Libur Tambahan', points: 1000, icon: '🏖️', quota: 5 },
             { id: 4, title: 'Merchandise K3 Premium', points: 750, icon: '🎁', quota: 15 },
         ];
+
+        if (rewardsConfig) {
+            try {
+                REWARDS_CONFIG = JSON.parse(rewardsConfig.value);
+            } catch (parseError) {
+                console.warn('Failed to parse rewards_config from database, using fallback');
+            }
+        }
 
         const rewardsWithRemaining = [];
         for (const reward of REWARDS_CONFIG) {
@@ -367,6 +394,91 @@ const getUserStats = async (req, res) => {
     }
 };
 
+const refreshToken = async (req, res) => {
+    try {
+        const { refreshToken } = req.body;
+
+        if (!refreshToken) {
+            return res.status(400).json({ message: 'Refresh token is required' });
+        }
+
+        // Verify refresh token
+        const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+
+        // Find user with this refresh token
+        const user = await User.findOne({ where: { id_user: decoded.id } });
+
+        if (!user || user.refresh_token !== refreshToken) {
+            return res.status(401).json({ message: 'Invalid refresh token' });
+        }
+
+        // Check if refresh token is expired
+        if (user.refresh_token_expires && new Date() > new Date(user.refresh_token_expires)) {
+            return res.status(401).json({ message: 'Refresh token expired' });
+        }
+
+        // Generate new access token
+        const newAccessToken = jwt.sign(
+            { id: user.id_user, role: user.role, nama: user.nama },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+
+        // Generate new refresh token (rotate refresh token for security)
+        const newRefreshToken = jwt.sign(
+            { id: user.id_user, role: user.role, nama: user.nama },
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
+        // Update refresh token in database
+        const newRefreshTokenExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+        user.refresh_token = newRefreshToken;
+        user.refresh_token_expires = newRefreshTokenExpires;
+        await user.save();
+
+        res.json({
+            token: newAccessToken,
+            refreshToken: newRefreshToken,
+        });
+    } catch (error) {
+        console.error('[Internal] Error:', error);
+        if (error.name === 'JsonWebTokenError') {
+            return res.status(401).json({ message: 'Invalid refresh token' });
+        }
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ message: 'Refresh token expired' });
+        }
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+const logout = async (req, res) => {
+    try {
+        const userId = req.user.id_user || req.user.id;
+
+        // Clear refresh token from database
+        const user = await User.findByPk(userId);
+        if (user) {
+            user.refresh_token = null;
+            user.refresh_token_expires = null;
+            await user.save();
+        }
+
+        // Record Audit Trail Log
+        await recordLog(
+            req,
+            'LOGOUT',
+            `User ${user?.nama} (${user?.role}) berhasil keluar dari sistem.`
+        );
+
+        res.json({ message: 'Logout successful' });
+    } catch (error) {
+        console.error('[Internal] Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
 module.exports = {
     register,
     login,
@@ -378,6 +490,8 @@ module.exports = {
     getLeaderboard,
     getRewards,
     getUserStats,
+    refreshToken,
+    logout,
 };
 
 

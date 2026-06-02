@@ -77,12 +77,125 @@ const EmergencyListener = () => {
             }, 5000);
         };
 
+        const handlePTWRequestCreated = (data) => {
+            // Show toast notification for new PTW request
+            console.log('PTW Request Created:', data);
+            // Simple browser notification
+            if (Notification.permission === 'granted') {
+                new Notification('Permit-to-Work Baru', {
+                    body: `${data.requester_name} mengajukan permit ${data.permit_type}`,
+                    icon: '/favicon.ico'
+                });
+            } else if (Notification.permission !== 'denied') {
+                Notification.requestPermission();
+            }
+        };
+
+        const handlePTWStatusUpdate = (data) => {
+            // Show toast notification for PTW status update
+            console.log('PTW Status Updated:', data);
+            if (Notification.permission === 'granted') {
+                new Notification('Status Permit Diperbarui', {
+                    body: `Permit ${data.permit_type} status: ${data.status}`,
+                    icon: '/favicon.ico'
+                });
+            }
+        };
+
+        const handleHazardCreated = (data) => {
+            console.log('Hazard Created:', data);
+            if (Notification.permission === 'granted') {
+                new Notification('Laporan Bahaya Baru', {
+                    body: `${data.userName} melaporkan bahaya di ${data.lokasi} (Risiko: ${data.risiko})`,
+                    icon: '/favicon.ico'
+                });
+            }
+        };
+
+        const handleHazardUpdated = (data) => {
+            console.log('Hazard Updated:', data);
+            if (Notification.permission === 'granted') {
+                new Notification('Status Laporan Bahaya Diperbarui', {
+                    body: `Laporan bahaya #${data.id} diperbarui oleh ${data.updatedBy}`,
+                    icon: '/favicon.ico'
+                });
+            }
+        };
+
+        const handleIncidentCreated = (data) => {
+            console.log('Incident Created:', data);
+            if (Notification.permission === 'granted') {
+                new Notification('Laporan Insiden Baru', {
+                    body: `${data.userName} melaporkan insiden: ${data.kategori}`,
+                    icon: '/favicon.ico'
+                });
+            }
+        };
+
+        const handleIncidentUpdated = (data) => {
+            console.log('Incident Updated:', data);
+            if (Notification.permission === 'granted') {
+                new Notification('Status Laporan Insiden Diperbarui', {
+                    body: `Laporan insiden #${data.id} diperbarui oleh ${data.updatedBy}`,
+                    icon: '/favicon.ico'
+                });
+            }
+        };
+
+        const handleAuditCreated = (data) => {
+            console.log('Audit Created:', data);
+            if (Notification.permission === 'granted') {
+                new Notification('Audit Baru Dibuat', {
+                    body: `${data.auditorName} melakukan audit di ${data.area}`,
+                    icon: '/favicon.ico'
+                });
+            }
+        };
+
+        const handleActionCreated = (data) => {
+            console.log('Action Created:', data);
+            if (Notification.permission === 'granted') {
+                new Notification('Tindakan Korektif Baru', {
+                    body: `Tindakan korektif dibuat oleh ${data.createdBy}`,
+                    icon: '/favicon.ico'
+                });
+            }
+        };
+
+        const handleActionUpdated = (data) => {
+            console.log('Action Updated:', data);
+            if (Notification.permission === 'granted') {
+                new Notification('Status Tindakan Korektif Diperbarui', {
+                    body: `Tindakan #${data.id} diperbarui menjadi ${data.status}`,
+                    icon: '/favicon.ico'
+                });
+            }
+        };
+
         socket.on('EMERGENCY_SOS', handleEmergency);
         socket.on('EMERGENCY_RESOLVED', handleResolved);
+        socket.on('PTW_REQUEST_CREATED', handlePTWRequestCreated);
+        socket.on('PTW_STATUS_UPDATE', handlePTWStatusUpdate);
+        socket.on('HAZARD_CREATED', handleHazardCreated);
+        socket.on('HAZARD_UPDATED', handleHazardUpdated);
+        socket.on('INCIDENT_CREATED', handleIncidentCreated);
+        socket.on('INCIDENT_UPDATED', handleIncidentUpdated);
+        socket.on('AUDIT_CREATED', handleAuditCreated);
+        socket.on('ACTION_CREATED', handleActionCreated);
+        socket.on('ACTION_UPDATED', handleActionUpdated);
 
         return () => {
             socket.off('EMERGENCY_SOS', handleEmergency);
             socket.off('EMERGENCY_RESOLVED', handleResolved);
+            socket.off('PTW_REQUEST_CREATED', handlePTWRequestCreated);
+            socket.off('PTW_STATUS_UPDATE', handlePTWStatusUpdate);
+            socket.off('HAZARD_CREATED', handleHazardCreated);
+            socket.off('HAZARD_UPDATED', handleHazardUpdated);
+            socket.off('INCIDENT_CREATED', handleIncidentCreated);
+            socket.off('INCIDENT_UPDATED', handleIncidentUpdated);
+            socket.off('AUDIT_CREATED', handleAuditCreated);
+            socket.off('ACTION_CREATED', handleActionCreated);
+            socket.off('ACTION_UPDATED', handleActionUpdated);
         };
     }, [user, socket]);
 

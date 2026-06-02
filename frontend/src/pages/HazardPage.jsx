@@ -178,7 +178,14 @@ const HazardPage = () => {
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Laporan Bahaya</h1>
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Laporan Bahaya</h1>
+                        {user?.role === 'Vendor' && (
+                            <span className="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-xs font-black rounded-full border border-purple-300 dark:border-purple-700">
+                                VENDOR VIEW
+                            </span>
+                        )}
+                    </div>
                     <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Laporkan Unsafe Action & Condition dalam waktu &lt;1 menit.</p>
                 </div>
                 <Button onClick={() => setShowForm(true)} className="flex items-center gap-2 w-full sm:w-auto justify-center rounded-2xl py-5 px-8 shadow-xl shadow-blue-500/20">

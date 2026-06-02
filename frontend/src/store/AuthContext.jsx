@@ -16,6 +16,7 @@ export const AuthProvider = ({ children }) => {
                     setUser(res.data);
                 } catch (error) {
                     localStorage.removeItem('token');
+                    localStorage.removeItem('refreshToken');
                     setUser(null);
                 }
             }
@@ -27,21 +28,30 @@ export const AuthProvider = ({ children }) => {
     const login = async (email, password) => {
         // Clear any existing auth state before new login
         localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
         setUser(null);
         delete api.defaults.headers.common['Authorization'];
-        
+
         const res = await api.post('/auth/login', { email, password });
         localStorage.setItem('token', res.data.token);
+        localStorage.setItem('refreshToken', res.data.refreshToken);
         setUser(res.data.user);
         return res.data;
     };
 
-    const logout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        setUser(null);
-        delete api.defaults.headers.common['Authorization'];
+    const logout = async () => {
+        try {
+            await api.post('/auth/logout');
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            localStorage.removeItem('token');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('user');
+            setUser(null);
+            delete api.defaults.headers.common['Authorization'];
+        }
     };
 
     const updateUser = (userData) => {

@@ -25,7 +25,7 @@ const createIncident = async (req, res) => {
                 return res.status(400).json({ message: 'Format JSON five_whys tidak valid' });
             }
         }
-        
+
         const incident = await IncidentReport.create({
             id_user: req.user.id,
             kategori,
@@ -35,7 +35,7 @@ const createIncident = async (req, res) => {
             five_whys: parsedFiveWhys,
             foto: req.file ? req.file.filename : null,
         }, { transaction: t });
-        
+
         await t.commit();
         clearStatsCache();
 
@@ -54,6 +54,20 @@ const createIncident = async (req, res) => {
             }
         } catch (waErr) {
             console.error('[WhatsApp] Incident notification failed:', waErr.message);
+        }
+
+        // Emit WebSocket event
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('INCIDENT_CREATED', {
+                id: incident.id_incident,
+                kategori: incident.kategori,
+                korban: incident.korban,
+                userId: incident.id_user,
+                userName: req.user.nama,
+                userRole: req.user.role,
+                createdAt: incident.createdAt
+            });
         }
 
         res.status(201).json(incident);
@@ -137,6 +151,22 @@ const updateIncident = async (req, res) => {
 
         await t.commit();
         clearStatsCache();
+
+        // Emit WebSocket event
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('INCIDENT_UPDATED', {
+                id: incident.id_incident,
+                kategori: incident.kategori,
+                korban: incident.korban,
+                loss_cost: incident.loss_cost,
+                userId: incident.id_user,
+                updatedBy: req.user.nama,
+                updatedByRole: req.user.role,
+                updatedAt: incident.updatedAt
+            });
+        }
+
         res.json(updated);
     } catch (error) {
         await t.rollback();

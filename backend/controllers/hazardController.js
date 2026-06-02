@@ -61,6 +61,21 @@ const createHazard = async (req, res) => {
         await t.commit();
         clearStatsCache();
         await recordLog(req, 'CREATE_HAZARD', `User ${req.user.nama} (${req.user.role}) melaporkan temuan bahaya baru di ${lokasi} (Tingkat Risiko: ${risiko}).`);
+
+        // Emit WebSocket event
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('HAZARD_CREATED', {
+                id: hazard.id_hazard,
+                lokasi: hazard.lokasi,
+                risiko: hazard.risiko,
+                userId: hazard.id_user,
+                userName: req.user.nama,
+                userRole: req.user.role,
+                createdAt: hazard.createdAt
+            });
+        }
+
         res.status(201).json(hazard);
     } catch (error) {
         await t.rollback();
@@ -111,6 +126,22 @@ const updateStatus = async (req, res) => {
         await hazard.save();
         clearStatsCache();
         await recordLog(req, 'UPDATE_HAZARD_STATUS', `${req.user.nama} (${req.user.role}) memperbarui status Laporan Bahaya #${hazard.id_hazard} menjadi: ${status}.`);
+
+        // Emit WebSocket event
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('HAZARD_UPDATED', {
+                id: hazard.id_hazard,
+                status: hazard.status,
+                lokasi: hazard.lokasi,
+                risiko: hazard.risiko,
+                userId: hazard.id_user,
+                updatedBy: req.user.nama,
+                updatedByRole: req.user.role,
+                updatedAt: hazard.updatedAt
+            });
+        }
+
         res.json(hazard);
     } catch (error) {
         console.error('[Internal] Error:', error);
@@ -121,13 +152,13 @@ const updateStatus = async (req, res) => {
 const overrideRisk = async (req, res) => {
     try {
         const { risiko } = req.body; // 'Low', 'Medium', 'High', 'Critical'
-        
+
         // Manual enum validation for risiko
         const validRisks = ['Low', 'Medium', 'High', 'Critical'];
         if (risiko && !validRisks.includes(risiko)) {
             return res.status(400).json({ message: 'Invalid risk level. Valid values: Low, Medium, High, Critical' });
         }
-        
+
         const hazard = await HazardReport.findByPk(req.params.id);
         if (!hazard) return res.status(404).json({ message: 'Hazard not found' });
 
@@ -161,6 +192,23 @@ const overrideRisk = async (req, res) => {
 
         clearStatsCache();
         await recordLog(req, 'OVERRIDE_HAZARD_RISK', `${req.user.nama} (${req.user.role}) mengubah paksa tingkat risiko Laporan Bahaya #${hazard.id_hazard} menjadi ${risiko}.`);
+
+        // Emit WebSocket event
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('HAZARD_UPDATED', {
+                id: hazard.id_hazard,
+                status: hazard.status,
+                lokasi: hazard.lokasi,
+                risiko: hazard.risiko,
+                is_overridden: hazard.is_overridden,
+                userId: hazard.id_user,
+                updatedBy: req.user.nama,
+                updatedByRole: req.user.role,
+                updatedAt: hazard.updatedAt
+            });
+        }
+
         res.json(hazard);
     } catch (error) {
         console.error('[Internal] Error:', error);
@@ -195,6 +243,23 @@ const verifyHazard = async (req, res) => {
         await t.commit();
         clearStatsCache();
         await recordLog(req, 'VERIFY_HAZARD', `${req.user.nama} (${req.user.role}) memvalidasi Laporan Bahaya #${hazard.id_hazard} (+100 Poin diberikan kepada pelapor).`);
+
+        // Emit WebSocket event
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('HAZARD_UPDATED', {
+                id: hazard.id_hazard,
+                status: hazard.status,
+                lokasi: hazard.lokasi,
+                risiko: hazard.risiko,
+                is_verified: hazard.is_verified,
+                userId: hazard.id_user,
+                updatedBy: req.user.nama,
+                updatedByRole: req.user.role,
+                updatedAt: hazard.updatedAt
+            });
+        }
+
         res.json({ message: 'Laporan bahaya berhasil diverifikasi dan 100 poin dikirim ke pelapor', hazard });
     } catch (error) {
         await t.rollback();

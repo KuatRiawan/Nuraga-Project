@@ -13,6 +13,23 @@ const createAction = async (req, res) => {
             description,
         });
         clearStatsCache();
+
+        // Emit WebSocket event
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('ACTION_CREATED', {
+                id: action.id_action,
+                id_hazard: action.id_hazard,
+                assigned_to: action.assigned_to,
+                deadline: action.deadline,
+                description: action.description,
+                status: action.status,
+                createdBy: req.user.nama,
+                createdByRole: req.user.role,
+                createdAt: action.createdAt
+            });
+        }
+
         res.status(201).json(action);
     } catch (error) {
         console.error('[Internal] Error:', error);
@@ -45,6 +62,23 @@ const updateActionStatus = async (req, res) => {
         action.status = status;
         await action.save();
         clearStatsCache();
+
+        // Emit WebSocket event
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('ACTION_UPDATED', {
+                id: action.id_action,
+                id_hazard: action.id_hazard,
+                assigned_to: action.assigned_to,
+                deadline: action.deadline,
+                description: action.description,
+                status: action.status,
+                updatedBy: req.user.nama,
+                updatedByRole: req.user.role,
+                updatedAt: action.updatedAt
+            });
+        }
+
         res.json(action);
     } catch (error) {
         console.error('[Internal] Error:', error);

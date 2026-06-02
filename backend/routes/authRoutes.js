@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
-const { register, login, getMe, forgotPassword, updateProfile, changePassword, redeemPoints, getLeaderboard, getRewards, getUserStats } = require('../controllers/authController');
+const { register, login, getMe, forgotPassword, updateProfile, changePassword, redeemPoints, getLeaderboard, getRewards, getUserStats, refreshToken, logout } = require('../controllers/authController');
 const { protect } = require('../middlewares/authMiddleware');
 const upload = require('../middlewares/uploadMiddleware');
 
@@ -20,6 +20,8 @@ const registerLimiter = rateLimit({
 
 router.post('/register', registerLimiter, register);
 router.post('/login', loginLimiter, login);
+router.post('/refresh-token', refreshToken);
+router.post('/logout', protect, logout);
 // Mock forgot password endpoint removed for security (H10)
 // router.post('/forgot-password', forgotPassword);
 router.get('/me', protect, getMe);
