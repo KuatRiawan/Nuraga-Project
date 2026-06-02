@@ -153,10 +153,18 @@ const connect = async () => {
             }
         });
 
+        // ── Unhandled errors ─────────────────────────────────────────────────
+        sock.ev.on('error', (err) => {
+            console.error('[WhatsApp] 💥 Socket error:', err.message);
+            connectionStatus = 'disconnected';
+            broadcast({ type: 'status', status: 'disconnected', error: err.message });
+        });
+
     } catch (err) {
         console.error('[WhatsApp] 💥 Error during connect():', err.message);
         connectionStatus = 'disconnected';
-        
+        broadcast({ type: 'status', status: 'disconnected', error: err.message });
+
         if (reconnectAttempts < maxReconnectAttempts) {
             reconnectAttempts++;
             const delay = getReconnectDelay();

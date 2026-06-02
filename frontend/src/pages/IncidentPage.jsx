@@ -213,7 +213,7 @@ const IncidentPage = () => {
                 >
                     <div 
                         onClick={(e) => e.stopPropagation()}
-                        className="bg-white dark:bg-slate-800 border-t-8 border-red-600 w-full max-w-2xl rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
+                        className="bg-white dark:bg-slate-800 border-t-8 border-red-600 w-full max-w-2xl rounded-3xl p-4 md:p-6 lg:p-8 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
                     >
                         <h2 className="text-xl font-black mb-6 text-red-600 dark:text-red-500 uppercase tracking-tighter">Investigasi Insiden Digital</h2>
                         <form onSubmit={handleSubmit} className="space-y-6">
@@ -292,14 +292,14 @@ const IncidentPage = () => {
                                                 <button
                                                     type="button"
                                                     onClick={stopCamera}
-                                                    className="bg-red-500 hover:bg-red-600 text-white font-bold text-xs py-2.5 px-5 rounded-xl shadow-lg transition-all active:scale-95"
+                                                    className="bg-red-500 hover:bg-red-600 text-white font-bold text-xs py-2.5 px-5 rounded-xl shadow-lg transition-all active:scale-95 min-h-[44px]"
                                                 >
                                                     Batal
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={capturePhoto}
-                                                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-6 rounded-xl shadow-lg transition-all flex items-center gap-1.5 active:scale-95"
+                                                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-6 rounded-xl shadow-lg transition-all flex items-center gap-1.5 active:scale-95 min-h-[44px]"
                                                 >
                                                     <Camera size={14} /> Ambil Foto
                                                 </button>
@@ -329,7 +329,7 @@ const IncidentPage = () => {
                                             <button
                                                 type="button"
                                                 onClick={startCamera}
-                                                className="mt-2 w-full bg-red-50 dark:bg-slate-800 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-750 hover:bg-red-100 dark:hover:bg-slate-700 font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                                                className="mt-2 w-full bg-red-50 dark:bg-slate-800 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-750 hover:bg-red-100 dark:hover:bg-slate-700 font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98] min-h-[44px]"
                                             >
                                                 <Camera size={14} /> Buka Kamera (Ambil Foto Langsung)
                                             </button>
@@ -339,8 +339,8 @@ const IncidentPage = () => {
                             </div>
 
                             <div className="flex gap-4 pt-4">
-                                <Button type="button" variant="ghost" onClick={() => { stopCamera(); setShowForm(false); setPreview(null); }} className="flex-1 rounded-2xl py-4">Kembali</Button>
-                                <Button type="submit" variant="danger" className="flex-1 rounded-2xl py-4 shadow-lg shadow-red-500/20" loading={loading}>{loading ? 'Mengirim...' : 'Kirim Investigasi'}</Button>
+                                <Button type="button" variant="ghost" onClick={() => { stopCamera(); setShowForm(false); setPreview(null); }} className="flex-1 rounded-2xl py-4 min-h-[48px]">Kembali</Button>
+                                <Button type="submit" variant="danger" className="flex-1 rounded-2xl py-4 shadow-lg shadow-red-500/20 min-h-[48px]" loading={loading}>{loading ? 'Mengirim...' : 'Kirim Investigasi'}</Button>
                             </div>
                         </form>
                     </div>

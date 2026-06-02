@@ -18,9 +18,15 @@ const registerLimiter = rateLimit({
     message: { message: 'Terlalu banyak percobaan registrasi. Harap tunggu 1 menit.' }
 });
 
+const refreshTokenLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // 5 requests per 15 minutes
+    message: { message: 'Terlalu banyak percobaan refresh token. Harap tunggu 15 menit.' }
+});
+
 router.post('/register', registerLimiter, register);
 router.post('/login', loginLimiter, login);
-router.post('/refresh-token', refreshToken);
+router.post('/refresh-token', refreshTokenLimiter, refreshToken);
 router.post('/logout', protect, logout);
 // Mock forgot password endpoint removed for security (H10)
 // router.post('/forgot-password', forgotPassword);

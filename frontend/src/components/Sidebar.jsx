@@ -18,9 +18,8 @@ const ROLE_COLORS = {
     Kontraktor: 'bg-orange-500/10 text-orange-600 dark:text-orange-400',
 };
 
-const Sidebar = ({ onClose }) => {
-    const { user, logout } = useAuth();
-    const [showLogoutModal, setShowLogoutModal] = useState(false);
+const Sidebar = ({ onClose, onLogoutClick }) => {
+    const { user } = useAuth();
 
     const allMenuItems = [
         {
@@ -140,44 +139,13 @@ const Sidebar = ({ onClose }) => {
                 </div>
 
                 <button
-                    onClick={() => setShowLogoutModal(true)}
+                    onClick={onLogoutClick}
                     className="flex items-center gap-3 w-full px-4 py-2.5 text-slate-500 dark:text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all group"
                 >
                     <LogOut size={18} className="group-hover:translate-x-1 transition-transform" />
                     <span className="font-bold text-sm">Keluar Sistem</span>
                 </button>
             </div>
-
-            {/* Logout Confirmation Modal */}
-            {showLogoutModal && (
-                <div
-                    onClick={() => setShowLogoutModal(false)}
-                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200"
-                >
-                    <div
-                        onClick={(e) => e.stopPropagation()}
-                        className="bg-white dark:bg-slate-800 border-t-8 border-red-500 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 duration-200"
-                    >
-                        <div className="flex justify-center mb-5">
-                            <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
-                                <LogOut size={28} className="text-red-500 ml-1" />
-                            </div>
-                        </div>
-                        <h3 className="text-xl font-black text-slate-900 dark:text-white text-center tracking-tighter mb-2">Keluar Sistem?</h3>
-                        <p className="text-slate-500 dark:text-slate-400 text-sm text-center font-medium mb-6">
-                            Apakah Anda yakin ingin keluar dari sistem Nuraga? Sesi Anda akan diakhiri.
-                        </p>
-                        <div className="flex gap-3">
-                            <Button type="button" variant="ghost" onClick={() => setShowLogoutModal(false)} className="flex-1 rounded-2xl py-3 border border-slate-200 dark:border-slate-700">
-                                Batal
-                            </Button>
-                            <Button type="button" variant="danger" onClick={logout} className="flex-1 rounded-2xl py-3 shadow-xl shadow-red-500/20">
-                                Ya, Keluar
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect, useContext } from 'react';
 import api from '../api/axios';
+import { disconnectSocket } from '../hooks/useSocket';
 
 const AuthContext = createContext();
 
@@ -46,6 +47,8 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             console.error('Logout error:', error);
         } finally {
+            // Disconnect WebSocket to prevent memory leak
+            disconnectSocket();
             localStorage.removeItem('token');
             localStorage.removeItem('refreshToken');
             localStorage.removeItem('user');

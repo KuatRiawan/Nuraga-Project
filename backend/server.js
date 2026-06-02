@@ -184,8 +184,8 @@ function startServer(port, retries = 5) {
     return server;
 }
 
-sequelize.sync({ alter: true }).then(async () => {
-    console.log('Database synced with alter: true');
+sequelize.sync().then(async () => {
+    console.log('Database synced');
 
     try {
         await applyUserCascadeConstraints(sequelize);
@@ -196,7 +196,6 @@ sequelize.sync({ alter: true }).then(async () => {
     // Safety Migrations for Users
     try {
         await sequelize.query('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "points" INTEGER DEFAULT 0;');
-        await sequelize.query('UPDATE "Users" SET "points" = 1200 WHERE "points" = 0;');
         await sequelize.query('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "no_whatsapp" VARCHAR(255) NULL;');
         await sequelize.query('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "nik" VARCHAR(255) NULL;');
         await sequelize.query('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "jabatan" VARCHAR(255) NULL;');
@@ -320,6 +319,15 @@ sequelize.sync({ alter: true }).then(async () => {
     } catch (err) {
         console.error('[WhatsApp] Failed to start Baileys:', err.message);
     }
+
+    // Global unhandled rejection handler for WhatsApp service
+    process.on('unhandledRejection', (reason, promise) => {
+        console.error('[WhatsApp] Unhandled Rejection at:', promise, 'reason:', reason);
+    });
+
+    process.on('uncaughtException', (err) => {
+        console.error('[WhatsApp] Uncaught Exception:', err.message);
+    });
 
 }).catch(err => {
     console.error('Failed to sync database: ' + err.message);

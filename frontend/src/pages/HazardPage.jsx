@@ -201,13 +201,13 @@ const HazardPage = () => {
                 >
                     <div 
                         onClick={(e) => e.stopPropagation()}
-                        className="bg-white dark:bg-slate-800 border-t-8 border-blue-600 w-full max-w-lg rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
+                        className="bg-white dark:bg-slate-800 border-t-8 border-blue-600 w-full max-w-lg rounded-3xl p-4 md:p-6 lg:p-8 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
                     >
-                        <div className="flex justify-between items-center mb-6">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-6">
                             <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Buat Laporan Baru</h2>
-                            <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-full self-start sm:self-auto">
                                 <MapPin size={12} className="text-blue-600" />
-                                <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 font-mono">{formData.koordinat_gps}</span>
+                                <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 font-mono truncate max-w-[150px]">{formData.koordinat_gps}</span>
                             </div>
                         </div>
 
@@ -233,7 +233,7 @@ const HazardPage = () => {
                                     type="button"
                                     onClick={analyzeWithAI}
                                     disabled={analyzing}
-                                    className="absolute bottom-3 right-3 py-2 px-3 bg-blue-600 rounded-xl text-white hover:bg-blue-700 transition-all flex items-center gap-2 text-[10px] font-black shadow-lg disabled:opacity-50 active:scale-95"
+                                    className="absolute bottom-3 right-3 py-2 px-3 bg-blue-600 rounded-xl text-white hover:bg-blue-700 transition-all flex items-center gap-2 text-[10px] font-black shadow-lg disabled:opacity-50 active:scale-95 min-h-[36px]"
                                 >
                                     {analyzing ? 'ANALYZING...' : <><Zap size={12} className="fill-white" /> AI RISK</>}
                                 </button>
@@ -253,7 +253,7 @@ const HazardPage = () => {
                                         </span>
                                     )}
                                 </label>
-                                <div className="grid grid-cols-4 gap-2">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                     {Object.keys(RISK_CONFIG).map(r => (
                                         <button
                                             key={r}
@@ -262,7 +262,7 @@ const HazardPage = () => {
                                                 setFormData({ ...formData, risiko: r });
                                                 setAiPredictedRisk(null);
                                             }}
-                                            className={`py-3 rounded-xl text-xs font-black border-2 transition-all ${formData.risiko === r ? `${RISK_CONFIG[r].color} ${RISK_CONFIG[r].border} shadow-lg` : 'border-slate-100 dark:border-slate-700 text-slate-400 bg-slate-50 dark:bg-slate-900/50'}`}
+                                            className={`py-3 rounded-xl text-xs font-black border-2 transition-all min-h-[44px] ${formData.risiko === r ? `${RISK_CONFIG[r].color} ${RISK_CONFIG[r].border} shadow-lg` : 'border-slate-100 dark:border-slate-700 text-slate-400 bg-slate-50 dark:bg-slate-900/50'}`}
                                         >
                                             {r}
                                         </button>
@@ -284,14 +284,14 @@ const HazardPage = () => {
                                             <button
                                                 type="button"
                                                 onClick={stopCamera}
-                                                className="bg-red-500 hover:bg-red-600 text-white font-bold text-xs py-2.5 px-5 rounded-xl shadow-lg transition-all active:scale-95"
+                                                className="bg-red-500 hover:bg-red-600 text-white font-bold text-xs py-2.5 px-5 rounded-xl shadow-lg transition-all active:scale-95 min-h-[44px]"
                                             >
                                                 Batal
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={capturePhoto}
-                                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-6 rounded-xl shadow-lg transition-all flex items-center gap-1.5 active:scale-95"
+                                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-6 rounded-xl shadow-lg transition-all flex items-center gap-1.5 active:scale-95 min-h-[44px]"
                                             >
                                                 <Camera size={14} /> Ambil Foto
                                             </button>
@@ -316,7 +316,7 @@ const HazardPage = () => {
                                         <button
                                             type="button"
                                             onClick={startCamera}
-                                            className="mt-2 w-full bg-blue-50 dark:bg-slate-800 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-750 hover:bg-blue-100 dark:hover:bg-slate-700 font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                                            className="mt-2 w-full bg-blue-50 dark:bg-slate-800 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-750 hover:bg-blue-100 dark:hover:bg-slate-700 font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98] min-h-[44px]"
                                         >
                                             <Camera size={14} /> Buka Kamera (Ambil Foto Langsung)
                                         </button>
@@ -325,8 +325,8 @@ const HazardPage = () => {
                             </div>
 
                             <div className="flex gap-4 pt-2">
-                                <Button type="button" variant="ghost" onClick={() => { stopCamera(); setShowForm(false); setPreview(null); setAiPredictedRisk(null); }} className="flex-1 rounded-2xl py-4">Batal</Button>
-                                <Button type="submit" className="flex-1 rounded-2xl py-4 shadow-xl shadow-blue-500/20" loading={loading}>
+                                <Button type="button" variant="ghost" onClick={() => { stopCamera(); setShowForm(false); setPreview(null); setAiPredictedRisk(null); }} className="flex-1 rounded-2xl py-4 min-h-[48px]">Batal</Button>
+                                <Button type="submit" className="flex-1 rounded-2xl py-4 shadow-xl shadow-blue-500/20 min-h-[48px]" loading={loading}>
                                     {loading ? 'Mengirim...' : 'Kirim Laporan'}
                                 </Button>
                             </div>
@@ -336,7 +336,7 @@ const HazardPage = () => {
             )}
 
             {/* === HAZARD LIST === */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
                 {hazards.length === 0 && (
                     <div className="md:col-span-2 p-16 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl">
                         <AlertTriangle size={48} className="mx-auto mb-4 text-slate-200 dark:text-slate-700" />

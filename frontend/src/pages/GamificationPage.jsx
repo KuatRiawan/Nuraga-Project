@@ -10,15 +10,6 @@ const RANK_STYLES = {
     3: { border: 'border-orange-400', bg: 'bg-orange-50 dark:bg-orange-900/10', icon: '🥉', nameColor: 'text-orange-600 dark:text-orange-400' },
 };
 
-const REWARDS = [
-    { id: 1, title: 'Voucer Makan Siang', points: 200, icon: '🍱', available: true },
-    { id: 2, title: 'Voucer Belanja Rp50K', points: 500, icon: '🛒', available: true },
-    { id: 3, title: 'Hari Libur Tambahan', points: 1000, icon: '🏖️', available: false },
-    { id: 4, title: 'Merchandise K3 Premium', points: 750, icon: '🎁', available: true },
-];
-
-const baseLeaderboard = [];
-
 const GamificationPage = () => {
     const { user, updateUser } = useAuth();
     const [showRewards, setShowRewards] = useState(false);
@@ -148,18 +139,9 @@ const GamificationPage = () => {
 
     const sortedLeaderboard = leaderboard.length > 0
         ? leaderboard.map((u, index) => ({ ...u, rank: index + 1 }))
-        : [
-            {
-                name: user?.nama || 'Anda',
-                dept: user?.role || 'Safety Team',
-                points: myPoints,
-                reports: 0,
-                badge: myPoints > 1000 ? 'Safety Champion' : myPoints > 500 ? 'Hazard Hunter' : '',
-                rank: 1
-            }
-          ];
+        : [];
 
-    const myRank = sortedLeaderboard.find(u => u.name === user?.nama)?.rank || 1;
+    const myRank = sortedLeaderboard.find(u => u.name === user?.nama)?.rank || 0;
 
     const filteredVouchers = vouchers.filter(v => {
         const search = searchTerm.toLowerCase();
@@ -174,9 +156,9 @@ const GamificationPage = () => {
         <div className="space-y-8 animate-in fade-in duration-500 relative">
             {/* Notification Toast */}
             {notification && (
-                <div className={`fixed top-4 right-4 z-[200] flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-right duration-300 ${
-                    notification.type === 'success' 
-                        ? 'bg-emerald-600 text-white' 
+                <div className={`fixed top-4 right-4 z-[9999] flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-right duration-300 ${
+                    notification.type === 'success'
+                        ? 'bg-emerald-600 text-white'
                         : 'bg-red-600 text-white'
                 }`}>
                     {notification.type === 'success' ? (
@@ -220,23 +202,23 @@ const GamificationPage = () => {
             </div>
 
             {/* My Points Card */}
-            <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-[2rem] p-8 text-white shadow-2xl shadow-blue-500/20">
-                <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+            <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-[2rem] p-4 md:p-6 lg:p-8 text-white shadow-2xl shadow-blue-500/20">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8">
                     <div>
                         <p className="text-blue-200 text-sm font-bold uppercase tracking-widest mb-1">Total Poin Anda</p>
                         <div className="flex items-baseline gap-3">
-                            <span className="text-7xl font-black">{myPoints.toLocaleString()}</span>
-                            <Star size={32} className="text-amber-400 fill-amber-400" />
+                            <span className="text-5xl md:text-6xl lg:text-7xl font-black">{myPoints.toLocaleString()}</span>
+                            <Star size={28} md:size={32} className="text-amber-400 fill-amber-400" />
                         </div>
                         <p className="text-blue-200 text-sm mt-2">Anda berada di <strong className="text-white">Posisi #{myRank}</strong> bulan ini</p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 w-full md:w-auto">
+                    <div className="grid grid-cols-2 gap-3 md:gap-4 w-full md:w-auto">
                         {[
-                            { label: 'Laporan Valid', value: userStats.hazardsReported || '0', icon: <CheckCircle size={20} /> },
-                            { label: 'Poin Bulan Ini', value: `+${myPoints}`, icon: <TrendingUp size={20} /> },
-                            { label: 'Badge Diraih', value: myPoints > 1000 ? '2' : myPoints > 500 ? '1' : '0', icon: <Award size={20} /> },
-                            { label: 'Rewards Ditukar', value: userStats.rewardsClaimed || '0', icon: <Gift size={20} /> },
+                            { label: 'Laporan Valid', value: userStats.hazardsReported || 0, icon: <CheckCircle size={20} /> },
+                            { label: 'Poin Bulan Ini', value: myPoints, icon: <TrendingUp size={20} /> },
+                            { label: 'Badge Diraih', value: 0, icon: <Award size={20} /> },
+                            { label: 'Rewards Ditukar', value: userStats.rewardsClaimed || 0, icon: <Gift size={20} /> },
                         ].map(s => (
                             <div key={s.label} className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
                                 <div className="text-blue-200 mb-1">{s.icon}</div>
@@ -250,7 +232,7 @@ const GamificationPage = () => {
 
             {/* Leaderboard */}
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm">
-                <div className="px-8 py-6 border-b border-slate-100 dark:border-slate-800">
+                <div className="px-4 md:px-6 lg:px-8 py-4 md:py-6 border-b border-slate-100 dark:border-slate-800">
                     <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tighter flex items-center gap-3">
                         <Trophy size={22} className="text-amber-500" /> Leaderboard Bulanan
                     </h2>
@@ -262,23 +244,23 @@ const GamificationPage = () => {
                         return (
                             <div
                                 key={person.rank}
-                                className={`flex items-center gap-5 px-8 py-5 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/30 ${isMe ? 'bg-blue-50 dark:bg-blue-900/10' : ''} ${style.border ? `border-l-4 ${style.border}` : ''}`}
+                                className={`flex items-center gap-3 md:gap-5 px-4 md:px-6 lg:px-8 py-4 md:py-5 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/30 ${isMe ? 'bg-blue-50 dark:bg-blue-900/10' : ''} ${style.border ? `border-l-4 ${style.border}` : ''}`}
                             >
-                                <div className="text-2xl w-8 text-center">{style.icon || `#${person.rank}`}</div>
-                                <div className="flex-1">
+                                <div className="text-xl md:text-2xl w-8 text-center shrink-0">{style.icon || `#${person.rank}`}</div>
+                                <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 flex-wrap">
-                                        <p className={`font-black text-sm ${style.nameColor || 'text-slate-900 dark:text-white'}`}>{person.name}</p>
-                                        {isMe && <span className="text-[9px] font-black text-blue-600 bg-blue-500/10 px-2 py-0.5 rounded-full">ANDA</span>}
+                                        <p className={`font-black text-sm truncate ${style.nameColor || 'text-slate-900 dark:text-white'}`}>{person.name}</p>
+                                        {isMe && <span className="text-[9px] font-black text-blue-600 bg-blue-500/10 px-2 py-0.5 rounded-full shrink-0">ANDA</span>}
                                         {person.badge && (
-                                            <span className="text-[9px] font-black text-purple-600 bg-purple-500/10 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                            <span className="text-[9px] font-black text-purple-600 bg-purple-500/10 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
                                                 <Award size={8} /> {person.badge}
                                             </span>
                                         )}
                                     </div>
-                                    <p className="text-xs text-slate-400 mt-0.5">{person.dept} · {person.reports} laporan valid</p>
+                                    <p className="text-xs text-slate-400 mt-0.5 truncate">{person.dept} · {person.reports} laporan valid</p>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-lg font-black text-slate-900 dark:text-white">{person.points.toLocaleString()}</p>
+                                <div className="text-right shrink-0">
+                                    <p className="text-base md:text-lg font-black text-slate-900 dark:text-white">{person.points.toLocaleString()}</p>
                                     <p className="text-[10px] text-amber-500 font-black uppercase">Poin</p>
                                 </div>
                             </div>
@@ -289,13 +271,13 @@ const GamificationPage = () => {
 
             {/* Rewards Modal */}
             {showRewards && (
-                <div 
+                <div
                     onClick={() => setShowRewards(false)}
                     className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
                 >
-                    <div 
+                    <div
                         onClick={(e) => e.stopPropagation()}
-                        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-md rounded-3xl p-8 shadow-2xl animate-in zoom-in-95 duration-200"
+                        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-md rounded-3xl p-4 md:p-6 lg:p-8 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
                     >
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-xl font-black uppercase tracking-tighter text-slate-900 dark:text-white flex items-center gap-2">
@@ -307,14 +289,14 @@ const GamificationPage = () => {
                             </div>
                         </div>
                         <div className="space-y-3 mb-6">
-                            {(rewards.length > 0 ? rewards : REWARDS).map(r => {
+                            {rewards.map(r => {
                                 const hasQuotaInfo = r.remaining !== undefined;
                                 return (
-                                    <div key={r.id} className={`flex items-center gap-4 p-4 rounded-2xl border transition-all ${r.available && myPoints >= r.points ? 'border-slate-200 dark:border-slate-700 hover:border-amber-400 cursor-pointer' : 'border-slate-100 dark:border-slate-800 opacity-50 cursor-not-allowed'}`}>
-                                        <div className="text-3xl">{r.icon}</div>
-                                        <div className="flex-1">
-                                            <p className="font-bold text-slate-900 dark:text-white text-sm">{r.title}</p>
-                                            <div className="flex items-center gap-2 mt-0.5">
+                                    <div key={r.id} className={`flex items-center gap-3 md:gap-4 p-3 md:p-4 rounded-2xl border transition-all ${r.available && myPoints >= r.points ? 'border-slate-200 dark:border-slate-700 hover:border-amber-400 cursor-pointer' : 'border-slate-100 dark:border-slate-800 opacity-50 cursor-not-allowed'}`}>
+                                        <div className="text-2xl md:text-3xl shrink-0">{r.icon}</div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-bold text-slate-900 dark:text-white text-sm truncate">{r.title}</p>
+                                            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                                                 <span className="text-[10px] text-amber-600 font-black">{r.points} Poin</span>
                                                 {hasQuotaInfo && (
                                                     <span className={`text-[9px] px-2 py-0.5 rounded-lg font-bold ${r.remaining > 0 ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' : 'bg-red-500/10 text-red-500'}`}>
@@ -324,14 +306,14 @@ const GamificationPage = () => {
                                             </div>
                                         </div>
                                         {myPoints >= r.points && r.available
-                                            ? <Button className="text-xs rounded-xl py-2 px-3" onClick={() => handleRedeem(r)} loading={loading}>Tukar</Button>
-                                            : <span className="text-[10px] text-slate-400 font-bold">{myPoints < r.points ? 'Poin kurang' : 'Habis'}</span>
+                                            ? <Button className="text-xs rounded-xl py-2 px-3 min-h-[36px] shrink-0" onClick={() => handleRedeem(r)} loading={loading}>Tukar</Button>
+                                            : <span className="text-[10px] text-slate-400 font-bold shrink-0">{myPoints < r.points ? 'Poin kurang' : 'Habis'}</span>
                                         }
                                     </div>
                                 );
                             })}
                         </div>
-                        <Button variant="ghost" className="w-full rounded-2xl" onClick={() => setShowRewards(false)}>Tutup</Button>
+                        <Button variant="ghost" className="w-full rounded-2xl min-h-[44px]" onClick={() => setShowRewards(false)}>Tutup</Button>
                     </div>
                 </div>
             )}
@@ -340,26 +322,26 @@ const GamificationPage = () => {
             {showVouchersDrawer && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[99] transition-opacity duration-300" onClick={() => setShowVouchersDrawer(false)} />
             )}
-            <div className={`fixed inset-y-0 right-0 w-full sm:w-[480px] bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 z-[100] transform transition-transform duration-300 ease-in-out shadow-2xl flex flex-col ${showVouchersDrawer ? 'translate-x-0' : 'translate-x-full'}`}>
+            <div className={`fixed inset-y-0 right-0 w-full sm:w-[400px] md:w-[480px] bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 z-[100] transform transition-transform duration-300 ease-in-out shadow-2xl flex flex-col ${showVouchersDrawer ? 'translate-x-0' : 'translate-x-full'}`}>
                 {/* Header */}
-                <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                    <div>
-                        <h2 className="text-xl font-black uppercase tracking-tighter text-slate-900 dark:text-white flex items-center gap-2">
+                <div className="p-4 md:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                        <h2 className="text-lg md:text-xl font-black uppercase tracking-tighter text-slate-900 dark:text-white flex items-center gap-2">
                             <Ticket size={22} className="text-blue-500" />
                             {isHseOrAdmin ? 'Klaim Voucher Karyawan' : 'Voucher Saya'}
                         </h2>
-                        <p className="text-xs text-slate-400 mt-1">
+                        <p className="text-xs text-slate-400 mt-1 line-clamp-2">
                             {isHseOrAdmin ? 'Kelola dan lakukan verifikasi penukaran voucher fisik karyawan.' : 'Gunakan kode unik voucher Anda untuk mengklaim hadiah fisik dari HSE Officer.'}
                         </p>
                     </div>
-                    <button onClick={() => setShowVouchersDrawer(false)} className="p-2 text-slate-400 hover:text-slate-650 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">
+                    <button onClick={() => setShowVouchersDrawer(false)} className="p-2 text-slate-400 hover:text-slate-650 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors shrink-0">
                         <X size={20} />
                     </button>
                 </div>
 
                 {/* Search for HSE/Admin */}
                 {isHseOrAdmin && (
-                    <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-900/50">
+                    <div className="px-4 md:px-6 py-4 border-b border-slate-100 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-900/50">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                             <input
@@ -374,44 +356,44 @@ const GamificationPage = () => {
                 )}
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 md:space-y-4">
                     {filteredVouchers.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center text-center p-10 opacity-60">
-                            <Ticket size={48} className="text-slate-350 dark:text-slate-750 mb-3" />
+                        <div className="h-full flex flex-col items-center justify-center text-center p-6 md:p-10 opacity-60">
+                            <Ticket size={40} md:size={48} className="text-slate-350 dark:text-slate-750 mb-3" />
                             <p className="text-slate-500 font-bold text-sm">Belum ada voucher terdaftar</p>
                             <p className="text-xs text-slate-400 mt-1">Silakan lakukan penukaran poin terlebih dahulu.</p>
                         </div>
                     ) : (
                         filteredVouchers.map(v => {
                             const isPending = v.status === 'Pending';
-                            const rewardIcon = REWARDS.find(r => r.id === v.reward_id)?.icon || '🎁';
+                            const rewardIcon = v.reward_title?.includes('Makan') ? '🍱' : v.reward_title?.includes('Belanja') ? '🛒' : v.reward_title?.includes('Libur') ? '🏖️' : '🎁';
 
                             return (
-                                <div key={v.id_voucher} className={`p-5 rounded-3xl border-2 transition-all ${isPending ? 'border-blue-500/20 bg-blue-500/5' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 opacity-75'}`}>
-                                    <div className="flex justify-between items-start mb-3">
+                                <div key={v.id_voucher} className={`p-4 md:p-5 rounded-3xl border-2 transition-all ${isPending ? 'border-blue-500/20 bg-blue-500/5' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 opacity-75'}`}>
+                                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
                                         <div className="flex items-center gap-3">
-                                            <span className="text-3xl">{rewardIcon}</span>
-                                            <div>
-                                                <h4 className="font-bold text-slate-900 dark:text-white text-sm leading-tight">{v.reward_title}</h4>
+                                            <span className="text-2xl md:text-3xl shrink-0">{rewardIcon}</span>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="font-bold text-slate-900 dark:text-white text-sm leading-tight truncate">{v.reward_title}</h4>
                                                 <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">
                                                     {new Date(v.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                                 </p>
                                             </div>
                                         </div>
-                                        <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg ${isPending ? 'bg-amber-500/10 text-amber-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+                                        <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg shrink-0 ${isPending ? 'bg-amber-500/10 text-amber-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
                                             {isPending ? 'Menunggu Klaim' : 'Sudah Diklaim'}
                                         </span>
                                     </div>
 
                                     {isHseOrAdmin && v.User && (
-                                        <p className="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-500/5 dark:bg-blue-500/10 w-fit px-3 py-1 rounded-lg mb-3">
+                                        <p className="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-500/5 dark:bg-blue-500/10 w-fit px-3 py-1 rounded-lg mb-3 truncate">
                                             Karyawan: {v.User.nama} ({v.User.role})
                                         </p>
                                     )}
 
                                     {/* Voucher Code Box */}
                                     <div className="flex items-center gap-2 mt-4">
-                                        <div className="flex-1 font-mono font-black text-center bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 py-3 rounded-xl text-lg tracking-wider text-slate-800 dark:text-slate-200 select-all relative group">
+                                        <div className="flex-1 font-mono font-black text-center bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 py-3 rounded-xl text-base md:text-lg tracking-wider text-slate-800 dark:text-slate-200 select-all relative group">
                                             {v.code}
                                             <button
                                                 onClick={() => { navigator.clipboard.writeText(v.code); showNotification('Kode voucher berhasil disalin!', 'success'); }}
@@ -425,7 +407,7 @@ const GamificationPage = () => {
                                         {isHseOrAdmin && isPending && (
                                             <button
                                                 onClick={() => handleClaimVoucher(v.id_voucher)}
-                                                className="px-4 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-colors shadow-lg shadow-emerald-500/15"
+                                                className="px-4 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-colors shadow-lg shadow-emerald-500/15 min-h-[44px]"
                                             >
                                                 Klaim Fisik
                                             </button>
@@ -446,19 +428,19 @@ const GamificationPage = () => {
 
             {/* Claim Confirmation Modal */}
             {showClaimModal && (
-                <div 
+                <div
                     onClick={() => setShowClaimModal(false)}
-                    className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
                 >
-                    <div 
+                    <div
                         onClick={(e) => e.stopPropagation()}
-                        className="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200"
+                        className="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl p-4 md:p-6 lg:p-8 shadow-2xl animate-in zoom-in-95 duration-200"
                     >
                         <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter flex items-center gap-2">
+                            <h2 className="text-lg md:text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter flex items-center gap-2">
                                 <Ticket className="text-blue-600" size={24} /> Konfirmasi Klaim Voucher
                             </h2>
-                            <button onClick={() => setShowClaimModal(false)} className="text-slate-400 hover:text-red-500 transition-colors">
+                            <button onClick={() => setShowClaimModal(false)} className="text-slate-400 hover:text-red-500 transition-colors p-1">
                                 <X size={20} />
                             </button>
                         </div>
@@ -468,13 +450,13 @@ const GamificationPage = () => {
                         <div className="flex gap-4">
                             <button
                                 onClick={() => setShowClaimModal(false)}
-                                className="flex-1 py-4 rounded-2xl flex items-center justify-center gap-2 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                                className="flex-1 py-4 rounded-2xl flex items-center justify-center gap-2 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors min-h-[48px]"
                             >
                                 Batal
                             </button>
                             <button
                                 onClick={confirmClaimVoucher}
-                                className="flex-1 py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
+                                className="flex-1 py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 min-h-[48px]"
                             >
                                 <CheckCircle2 size={18} /> Ya, Klaim
                             </button>

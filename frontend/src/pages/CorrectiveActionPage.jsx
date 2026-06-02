@@ -127,16 +127,16 @@ const CorrectiveActionPage = () => {
                     return (
                         <div
                             key={action.id_action}
-                            className={`bg-white dark:bg-slate-900 border-l-4 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col md:flex-row gap-6
+                            className={`bg-white dark:bg-slate-900 border-l-4 rounded-2xl p-4 md:p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col md:flex-row gap-4 md:gap-6
                                 ${isOverdue ? 'border-red-500' : action.status === 'Closed' ? 'border-emerald-500' : 'border-blue-500'}`}
                         >
-                            <div className="flex-1 space-y-4">
-                                <div className="flex flex-wrap items-start justify-between gap-3">
-                                    <div className="flex items-center gap-3">
+                            <div className="flex-1 space-y-3 md:space-y-4">
+                                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                                    <div className="flex items-start gap-3">
                                         <div className="p-2 bg-blue-500/10 rounded-xl text-blue-600 shrink-0">
                                             <Target size={20} />
                                         </div>
-                                        <div>
+                                        <div className="flex-1 min-w-0">
                                             <p className="font-black text-slate-900 dark:text-white leading-tight line-clamp-2">{action.description}</p>
                                             {action.id_hazard && (
                                                 <span className="inline-flex items-center gap-1 text-[10px] font-black text-slate-400 mt-1">
@@ -150,14 +150,14 @@ const CorrectiveActionPage = () => {
                                     </span>
                                 </div>
 
-                                <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500">
+                                <div className="flex flex-wrap items-center gap-3 md:gap-4 text-sm text-slate-500">
                                     <div className="flex items-center gap-1.5">
                                         <User size={14} />
-                                        <span>Penanggung Jawab: <strong className="text-slate-700 dark:text-slate-300">{action.assignee?.nama || 'HSE Manager'}</strong></span>
+                                        <span className="text-xs md:text-sm">Penanggung Jawab: <strong className="text-slate-700 dark:text-slate-300">{action.assignee?.nama || 'HSE Manager'}</strong></span>
                                     </div>
                                     <div className="flex items-center gap-1.5">
                                         <Clock size={14} />
-                                        <span>Deadline: <strong className="text-slate-700 dark:text-slate-300">{new Date(action.deadline).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</strong></span>
+                                        <span className="text-xs md:text-sm">Deadline: <strong className="text-slate-700 dark:text-slate-300">{new Date(action.deadline).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</strong></span>
                                     </div>
                                     <DeadlineBadge deadline={action.deadline} />
                                 </div>

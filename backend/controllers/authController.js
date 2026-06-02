@@ -68,9 +68,13 @@ const login = async (req, res) => {
             { expiresIn: '7d' }
         );
 
-        // Store refresh token in database
+        // Hash refresh token before storing in database (security fix)
+        const salt = await bcrypt.genSalt(10);
+        const hashedRefreshToken = await bcrypt.hash(refreshToken, salt);
+
+        // Store hashed refresh token in database
         const refreshTokenExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
-        user.refresh_token = refreshToken;
+        user.refresh_token = hashedRefreshToken;
         user.refresh_token_expires = refreshTokenExpires;
         await user.save();
 
@@ -297,7 +301,7 @@ const redeemPoints = async (req, res) => {
 const getLeaderboard = async (req, res) => {
     try {
         const { Sequelize } = require('sequelize');
-        
+
         // Single query with aggregation to get users and their verified report counts
         const users = await User.findAll({
             attributes: [
@@ -316,15 +320,15 @@ const getLeaderboard = async (req, res) => {
             group: ['User.id_user', 'User.nama', 'User.role', 'User.points'],
             order: [['points', 'DESC']]
         });
-        
+
         const leaderboardData = users.map(u => ({
             name: u.nama,
             dept: u.role,
-            points: u.points,
+            points: u.points || 0,
             reports: parseInt(u.dataValues.reportsCount) || 0,
-            badge: u.points > 1000 ? 'Safety Champion' : u.points > 500 ? 'Hazard Hunter' : ''
+            badge: '' // Removed hardcoded badge logic
         }));
-        
+
         res.json(leaderboardData);
     } catch (error) {
         console.error('[Internal] Error:', error);
@@ -336,19 +340,20 @@ const getRewards = async (req, res) => {
     try {
         // Fetch REWARDS_CONFIG from SystemConfig database
         const rewardsConfig = await SystemConfig.findOne({ where: { key: 'rewards_config' } });
-        let REWARDS_CONFIG = [
-            { id: 1, title: 'Voucer Makan Siang', points: 200, icon: '🍱', quota: 50 },
-            { id: 2, title: 'Voucer Belanja Rp50K', points: 500, icon: '🛒', quota: 30 },
-            { id: 3, title: 'Hari Libur Tambahan', points: 1000, icon: '🏖️', quota: 5 },
-            { id: 4, title: 'Merchandise K3 Premium', points: 750, icon: '🎁', quota: 15 },
-        ];
 
-        if (rewardsConfig) {
-            try {
-                REWARDS_CONFIG = JSON.parse(rewardsConfig.value);
-            } catch (parseError) {
-                console.warn('Failed to parse rewards_config from database, using fallback');
-            }
+        if (!rewardsConfig) {
+            // Return empty array if no rewards config in database
+            res.json([]);
+            return;
+        }
+
+        let REWARDS_CONFIG;
+        try {
+            REWARDS_CONFIG = JSON.parse(rewardsConfig.value);
+        } catch (parseError) {
+            console.error('Failed to parse rewards_config from database:', parseError);
+            res.json([]);
+            return;
         }
 
         const rewardsWithRemaining = [];
@@ -408,7 +413,13 @@ const refreshToken = async (req, res) => {
         // Find user with this refresh token
         const user = await User.findOne({ where: { id_user: decoded.id } });
 
-        if (!user || user.refresh_token !== refreshToken) {
+        if (!user || !user.refresh_token) {
+            return res.status(401).json({ message: 'Invalid refresh token' });
+        }
+
+        // Compare provided refresh token with hashed token in database
+        const isMatch = await bcrypt.compare(refreshToken, user.refresh_token);
+        if (!isMatch) {
             return res.status(401).json({ message: 'Invalid refresh token' });
         }
 
@@ -431,9 +442,13 @@ const refreshToken = async (req, res) => {
             { expiresIn: '7d' }
         );
 
-        // Update refresh token in database
+        // Hash new refresh token before storing in database (security fix)
+        const salt = await bcrypt.genSalt(10);
+        const hashedNewRefreshToken = await bcrypt.hash(newRefreshToken, salt);
+
+        // Update hashed refresh token in database
         const newRefreshTokenExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
-        user.refresh_token = newRefreshToken;
+        user.refresh_token = hashedNewRefreshToken;
         user.refresh_token_expires = newRefreshTokenExpires;
         await user.save();
 

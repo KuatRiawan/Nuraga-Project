@@ -573,9 +573,9 @@ const DashboardPage = () => {
                     </div>
 
                     {/* Status Izin Kerja & Tugas Perbaikan Saya */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                         {/* PTW Card */}
-                        <div className="glass-card p-6 flex flex-col justify-between">
+                        <div className="glass-card p-4 md:p-6 flex flex-col justify-between">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="p-3 bg-blue-500/10 rounded-xl text-blue-500">
                                     <FileText size={24} />
@@ -584,7 +584,7 @@ const DashboardPage = () => {
                             </div>
                             <div>
                                 <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-1">Status Izin Kerja (PTW) Saya</h3>
-                                <div className="grid grid-cols-2 gap-2 mt-4">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
                                     <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-2xl border border-slate-100 dark:border-slate-800/50 text-center">
                                         <p className="text-2xl font-black text-amber-500">{permits.filter(p => p.status === 'Pending').length}</p>
                                         <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-1">Menunggu</p>
@@ -613,14 +613,14 @@ const DashboardPage = () => {
                             </div>
                             <button
                                 onClick={() => navigate('/permits')}
-                                className="mt-4 w-full py-3.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-black uppercase tracking-wider transition-colors active:scale-98"
+                                className="mt-4 w-full py-3.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-black uppercase tracking-wider transition-colors active:scale-98 min-h-[44px]"
                             >
                                 Buka Halaman e-PTW →
                             </button>
                         </div>
 
                         {/* CAPA Card */}
-                        <div className="glass-card p-6 flex flex-col justify-between">
+                        <div className="glass-card p-4 md:p-6 flex flex-col justify-between">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="p-3 bg-purple-500/10 rounded-xl text-purple-500">
                                     <ClipboardCheck size={24} />
@@ -646,7 +646,7 @@ const DashboardPage = () => {
                             </div>
                             <button
                                 onClick={() => navigate('/corrective-actions')}
-                                className="mt-6 w-full py-3.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 rounded-xl text-xs font-black uppercase tracking-wider transition-colors active:scale-98"
+                                className="mt-6 w-full py-3.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 rounded-xl text-xs font-black uppercase tracking-wider transition-colors active:scale-98 min-h-[44px]"
                             >
                                 Lihat Semua Tindakan Perbaikan →
                             </button>
@@ -654,11 +654,11 @@ const DashboardPage = () => {
                     </div>
 
                     {/* Riwayat Pelaporan Saya & Kesiapan/Lingkungan */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
                         {/* Riwayat Pelaporan Saya */}
-                        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] p-6 md:p-8 flex flex-col justify-between shadow-sm">
+                        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] p-4 md:p-6 lg:p-8 flex flex-col justify-between shadow-sm">
                             <div>
-                                <div className="flex justify-between items-center mb-6">
+                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-6">
                                     <div>
                                         <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tighter flex items-center gap-2">
                                             <Activity size={20} className="text-blue-500" /> Riwayat Pelaporan Saya
@@ -667,7 +667,7 @@ const DashboardPage = () => {
                                     </div>
                                     <button
                                         onClick={() => navigate('/hazards')}
-                                        className="text-xs text-blue-600 dark:text-blue-400 font-bold hover:underline"
+                                        className="text-xs text-blue-600 dark:text-blue-400 font-bold hover:underline self-start sm:self-auto"
                                     >
                                         Lihat Semua →
                                     </button>

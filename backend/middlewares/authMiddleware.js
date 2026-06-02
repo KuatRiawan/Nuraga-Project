@@ -2,10 +2,10 @@ const jwt = require('jsonwebtoken');
 
 const protect = async (req, res, next) => {
     let token;
+    // Security fix: Only accept token from Bearer header, not from query params
+    // Query params can be logged in access logs, browser history, and referer headers
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         token = req.headers.authorization.split(' ')[1];
-    } else if (req.query && req.query.token) {
-        token = req.query.token;
     }
 
     if (token) {

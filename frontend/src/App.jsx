@@ -59,7 +59,13 @@ const EmergencyListener = () => {
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
                     osc.start();
-                    setTimeout(() => osc.stop(), 800);
+                    // Memory leak fix: properly close AudioContext and stop oscillator
+                    setTimeout(() => {
+                        osc.stop();
+                        osc.disconnect();
+                        gain.disconnect();
+                        audioCtx.close();
+                    }, 800);
                 } catch (e) {
                     console.warn('Audio play failed:', e);
                 }

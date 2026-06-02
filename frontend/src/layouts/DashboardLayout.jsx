@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import Sidebar from '../components/Sidebar';
-import { Menu, Shield, Bell, AlertTriangle, FileText, CheckCircle, Sun, Moon } from 'lucide-react';
+import Button from '../components/Button';
+import { Menu, Shield, Bell, AlertTriangle, FileText, CheckCircle, Sun, Moon, LogOut } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../store/AuthContext';
 import { useTheme } from '../store/ThemeContext';
@@ -165,10 +166,11 @@ const compileNotifications = (permits, hazards, actions, leaves, activeUser) => 
 };
 
 const DashboardLayout = ({ children }) => {
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const { socket } = useSocket();
     const [isSidebarOpen, setSidebarOpen] = useState(false);
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [isNotifOpen, setNotifOpen] = useState(false);
     const [readNotifIds, setReadNotifIds] = useState(() => {
@@ -284,7 +286,7 @@ const DashboardLayout = ({ children }) => {
         <div className="flex h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-white overflow-hidden transition-colors duration-500">
             {/* Desktop Sidebar */}
             <div className="hidden lg:block w-72 h-full flex-shrink-0">
-                <Sidebar />
+                <Sidebar onLogoutClick={() => setShowLogoutModal(true)} />
             </div>
 
             {/* Mobile Sidebar Overlay */}
@@ -295,7 +297,7 @@ const DashboardLayout = ({ children }) => {
 
             {/* Mobile Sidebar Drawer */}
             <div className={`fixed inset-y-0 left-0 w-72 bg-white dark:bg-slate-900 z-50 transform transition-transform duration-500 ease-in-out lg:hidden ${isSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}>
-                <Sidebar onClose={() => setSidebarOpen(false)} />
+                <Sidebar onClose={() => setSidebarOpen(false)} onLogoutClick={() => setShowLogoutModal(true)} />
             </div>
 
             <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
@@ -424,6 +426,37 @@ const DashboardLayout = ({ children }) => {
                     </div>
                 </div>
             </main>
+
+            {/* Logout Confirmation Modal - Rendered at top level to escape sidebar overflow */}
+            {showLogoutModal && (
+                <div
+                    onClick={() => setShowLogoutModal(false)}
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200"
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white dark:bg-slate-800 border-t-8 border-red-500 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 duration-200"
+                    >
+                        <div className="flex justify-center mb-5">
+                            <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
+                                <LogOut size={28} className="text-red-500 ml-1" />
+                            </div>
+                        </div>
+                        <h3 className="text-xl font-black text-slate-900 dark:text-white text-center tracking-tighter mb-2">Keluar Sistem?</h3>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm text-center font-medium mb-6">
+                            Apakah Anda yakin ingin keluar dari sistem Nuraga? Sesi Anda akan diakhiri.
+                        </p>
+                        <div className="flex gap-3">
+                            <Button type="button" variant="ghost" onClick={() => setShowLogoutModal(false)} className="flex-1 rounded-2xl py-3 border border-slate-200 dark:border-slate-700">
+                                Batal
+                            </Button>
+                            <Button type="button" variant="danger" onClick={logout} className="flex-1 rounded-2xl py-3 shadow-xl shadow-red-500/20">
+                                Ya, Keluar
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
