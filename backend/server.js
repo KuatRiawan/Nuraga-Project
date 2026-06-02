@@ -26,10 +26,13 @@ const { startFileCleanupScheduler } = require('./utils/fileCleanup');
 
 dotenv.config();
 
+// Check if running on Vercel serverless (for API-only mode)
+const isServerless = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+
 // Validate JWT secret on startup - server cannot run without security
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET.trim() === '') {
     console.error('FATAL: JWT_SECRET environment variable is missing or empty. Server cannot start without security.');
-    process.exit(1);
+    if (!isServerless) process.exit(1);
 }
 
 const app = express();
@@ -130,6 +133,11 @@ function startServer(port, retries = 5) {
     const server = app.listen(port, () => {
         console.log(`Server is running on port ${port}`);
     });
+
+    // Skip Socket.io initialization on serverless (Vercel has 25s timeout limit)
+    if (isServerless) {
+        return server;
+    }
 
     const io = new Server(server, {
         cors: {
@@ -266,20 +274,25 @@ sequelize.sync({ force: false }).then(async () => {
         console.warn('Postgres Users jenis_kelamin column alteration warning:', err.message);
     }
 
-    // Run auto-expiration check immediately and start the 60-second periodic interval
-    try {
-        await autoExpirePermits();
-        setInterval(autoExpirePermits, 60000);
-        console.log('Auto-expiration scheduler started');
-    } catch (err) {
-        console.error('Failed to start auto-expiration scheduler:', err.message);
-    }
+    // Only run scheduled jobs and server on non-serverless environment
+    if (!isServerless) {
+        // Run auto-expiration check immediately and start the 60-second periodic interval
+        try {
+            await autoExpirePermits();
+            setInterval(autoExpirePermits, 60000);
+            console.log('Auto-expiration scheduler started');
+        } catch (err) {
+            console.error('Failed to start auto-expiration scheduler:', err.message);
+        }
 
-    // Start file cleanup scheduler (deletes files older than 90 days)
-    try {
-        startFileCleanupScheduler();
-    } catch (err) {
-        console.error('Failed to start file cleanup scheduler:', err.message);
+        // Start file cleanup scheduler (deletes files older than 90 days)
+        try {
+            startFileCleanupScheduler();
+        } catch (err) {
+            console.error('Failed to start file cleanup scheduler:', err.message);
+        }
+    } else {
+        console.log('[VERCEL MODE] Scheduled jobs disabled for serverless environment');
     }
 
     // Seed default configurations if empty
@@ -298,19 +311,24 @@ sequelize.sync({ force: false }).then(async () => {
         console.error('Failed to seed default configurations:', err.message);
     }
 
-    startServer(PORT);
+    // Only start server on non-serverless environment
+    if (!isServerless) {
+        startServer(PORT);
 
-    // Start WhatsApp Baileys connection
-    try {
-        whatsappService.connect();
-        console.log('[WhatsApp] Baileys connection initiated. Check terminal for QR code.');
-    } catch (err) {
-        console.error('[WhatsApp] Failed to start Baileys:', err.message);
+        // Start WhatsApp Baileys connection
+        try {
+            whatsappService.connect();
+            console.log('[WhatsApp] Baileys connection initiated. Check terminal for QR code.');
+        } catch (err) {
+            console.error('[WhatsApp] Failed to start Baileys:', err.message);
+        }
+    } else {
+        console.log('[VERCEL MODE] Server running in stateless API mode');
     }
 
 }).catch(err => {
     console.error('Failed to sync database: ' + err.message);
-    process.exit(1);
+    if (!isServerless) process.exit(1);
 });
 
 module.exports = app;
