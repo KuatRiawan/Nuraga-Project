@@ -7,8 +7,6 @@ import Input from '../components/Input';
 import { Plus, Info, Users, MapPin, Camera, ClipboardList, Download, X, CheckCircle2 } from 'lucide-react';
 import { generateIncidentReport } from '../utils/reportGenerator';
 import { useAuth } from '../store/AuthContext';
-import { assetUrl } from '../utils/url';
-import { asArray } from '../utils/safeData';
 
 const IncidentPage = () => {
     const queryClient = useQueryClient();
@@ -107,7 +105,7 @@ const IncidentPage = () => {
         queryKey: ['incidents'],
         queryFn: async () => {
             const res = await api.get('/incidents');
-            return asArray(res.data?.data || res.data);
+            return res.data.data || res.data;
         }
     });
 
@@ -193,14 +191,7 @@ const IncidentPage = () => {
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <div className="flex items-center gap-3">
-                        <h1 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Laporan Insiden (Incident Report)</h1>
-                        {user?.role === 'Vendor' && (
-                            <span className="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-xs font-black rounded-full border border-purple-300 dark:border-purple-700">
-                                VENDOR VIEW
-                            </span>
-                        )}
-                    </div>
+                    <h1 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Laporan Insiden (Incident Report)</h1>
                     <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Investigasi akar masalah dengan metode 5 Whys & Loss Cost tracking.</p>
                 </div>
                 <Button onClick={() => setShowForm(true)} className="flex items-center gap-2 w-full sm:w-auto justify-center rounded-2xl py-6 px-8 shadow-xl shadow-red-500/20" variant="danger">
@@ -215,7 +206,7 @@ const IncidentPage = () => {
                 >
                     <div 
                         onClick={(e) => e.stopPropagation()}
-                        className="bg-white dark:bg-slate-800 border-t-8 border-red-600 w-full max-w-2xl rounded-3xl p-4 md:p-6 lg:p-8 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
+                        className="bg-white dark:bg-slate-800 border-t-8 border-red-600 w-full max-w-2xl rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
                     >
                         <h2 className="text-xl font-black mb-6 text-red-600 dark:text-red-500 uppercase tracking-tighter">Investigasi Insiden Digital</h2>
                         <form onSubmit={handleSubmit} className="space-y-6">
@@ -237,7 +228,7 @@ const IncidentPage = () => {
                                 </div>
                                 {!isFieldRole && (
                                     <Input
-                                        label="Estimasi Kerugian (Loss Cost USD)"
+                                        label="Estimasi Kerugian (Rp / IDR)"
                                         type="number"
                                         placeholder="0.00"
                                         value={formData.loss_cost}
@@ -294,14 +285,14 @@ const IncidentPage = () => {
                                                 <button
                                                     type="button"
                                                     onClick={stopCamera}
-                                                    className="bg-red-500 hover:bg-red-600 text-white font-bold text-xs py-2.5 px-5 rounded-xl shadow-lg transition-all active:scale-95 min-h-[44px]"
+                                                    className="bg-red-500 hover:bg-red-600 text-white font-bold text-xs py-2.5 px-5 rounded-xl shadow-lg transition-all active:scale-95"
                                                 >
                                                     Batal
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={capturePhoto}
-                                                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-6 rounded-xl shadow-lg transition-all flex items-center gap-1.5 active:scale-95 min-h-[44px]"
+                                                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-6 rounded-xl shadow-lg transition-all flex items-center gap-1.5 active:scale-95"
                                                 >
                                                     <Camera size={14} /> Ambil Foto
                                                 </button>
@@ -331,7 +322,7 @@ const IncidentPage = () => {
                                             <button
                                                 type="button"
                                                 onClick={startCamera}
-                                                className="mt-2 w-full bg-red-50 dark:bg-slate-800 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-750 hover:bg-red-100 dark:hover:bg-slate-700 font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98] min-h-[44px]"
+                                                className="mt-2 w-full bg-red-50 dark:bg-slate-800 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-750 hover:bg-red-100 dark:hover:bg-slate-700 font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
                                             >
                                                 <Camera size={14} /> Buka Kamera (Ambil Foto Langsung)
                                             </button>
@@ -341,8 +332,8 @@ const IncidentPage = () => {
                             </div>
 
                             <div className="flex gap-4 pt-4">
-                                <Button type="button" variant="ghost" onClick={() => { stopCamera(); setShowForm(false); setPreview(null); }} className="flex-1 rounded-2xl py-4 min-h-[48px]">Kembali</Button>
-                                <Button type="submit" variant="danger" className="flex-1 rounded-2xl py-4 shadow-lg shadow-red-500/20 min-h-[48px]" loading={loading}>{loading ? 'Mengirim...' : 'Kirim Investigasi'}</Button>
+                                <Button type="button" variant="ghost" onClick={() => { stopCamera(); setShowForm(false); setPreview(null); }} className="flex-1 rounded-2xl py-4">Kembali</Button>
+                                <Button type="submit" variant="danger" className="flex-1 rounded-2xl py-4 shadow-lg shadow-red-500/20" loading={loading}>{loading ? 'Mengirim...' : 'Kirim Investigasi'}</Button>
                             </div>
                         </form>
                     </div>
@@ -351,13 +342,13 @@ const IncidentPage = () => {
 
             {/* Incident List */}
             <div className="space-y-4">
-                {asArray(incidents).length === 0 && (
+                {incidents.length === 0 && (
                     <div className="p-16 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl">
                         <ClipboardList size={48} className="mx-auto mb-4 text-slate-200 dark:text-slate-700" />
                         <p className="text-slate-400 font-medium">Belum ada laporan insiden kecelakaan kerja. Pertahankan kinerja K3 Anda!</p>
                     </div>
                 )}
-                {asArray(incidents).map((incident) => (
+                {incidents?.map((incident) => (
                     <div
                         key={incident.id_incident}
                         onClick={() => setSelectedIncident(incident)}
@@ -456,7 +447,7 @@ const IncidentPage = () => {
                                 <div className="space-y-1.5">
                                     <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">Foto Dokumentasi</h3>
                                     <div className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 max-h-60 flex items-center justify-center bg-slate-900">
-                                        <img src={assetUrl(selectedIncident.foto)} alt="Dokumentasi Insiden" className="w-full h-full object-contain" onError={(e) => { e.target.src = '/fallback.png'; e.target.onerror = null; }} />
+                                        <img src={`/uploads/${selectedIncident.foto}`} alt="Dokumentasi Insiden" className="w-full h-full object-contain" onError={(e) => { e.target.src = '/fallback.png'; e.target.onerror = null; }} />
                                     </div>
                                 </div>
                             )}
@@ -472,7 +463,7 @@ const IncidentPage = () => {
                                     </div>
 
                                     <Input
-                                        label="Estimasi Kerugian (Loss Cost USD)"
+                                        label="Estimasi Kerugian (Rp / IDR)"
                                         type="number"
                                         placeholder="0.00"
                                         value={investigationData.loss_cost}
@@ -520,8 +511,8 @@ const IncidentPage = () => {
                                     ) : (
                                         <div className="space-y-4">
                                             <div className="flex justify-between items-center bg-slate-50 dark:bg-slate-900/30 px-5 py-3 rounded-2xl border border-slate-100 dark:border-slate-800">
-                                                <span className="text-xs font-bold text-slate-500">Estimasi Kerugian (Loss Cost)</span>
-                                                <span className="font-mono text-sm font-black text-red-600 dark:text-red-400">${selectedIncident.loss_cost?.toLocaleString() || 0} USD</span>
+                                                <span className="text-xs font-bold text-slate-500">Estimasi Kerugian (Rp)</span>
+                                                <span className="font-mono text-sm font-black text-red-600 dark:text-red-400">Rp {selectedIncident.loss_cost?.toLocaleString() || 0}</span>
                                             </div>
 
                                             <div className="p-6 bg-slate-50 dark:bg-slate-900/30 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-3">

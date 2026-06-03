@@ -3,8 +3,7 @@ import api from '../api/axios';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import { useAuth } from '../store/AuthContext';
-import { Users, Plus, Search, Edit2, Trash2, Shield, Mail, AlertCircle, X, ShieldAlert, Check, BadgeCheck, Briefcase, MapPin, Upload, Download, ChevronDown } from 'lucide-react';
-import { asArray } from '../utils/safeData';
+import { Users, Plus, Search, Edit2, Trash2, Shield, Mail, AlertCircle, X, ShieldAlert, Check, BadgeCheck, Briefcase, MapPin, Upload, Download, ChevronDown, ArrowUp, ArrowDown } from 'lucide-react';
 
 const ROLE_BADGES = {
     Admin: 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20',
@@ -24,6 +23,7 @@ const UsersPage = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
+    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
     const fileInputRef = useRef(null);
 
     const parseCSV = (text) => {
@@ -119,7 +119,7 @@ const UsersPage = () => {
                     }
 
                     // Check if user already exists (by email) in local state
-                    const existingUser = asArray(users).find(u => u.email?.toLowerCase() === email.toLowerCase());
+                    const existingUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
 
                     try {
                         if (existingUser) {
@@ -175,7 +175,7 @@ const UsersPage = () => {
     };
 
     const handleExportCSV = () => {
-        if (asArray(users).length === 0) {
+        if (users.length === 0) {
             setError('Tidak ada data user untuk diexport.');
             return;
         }
@@ -183,7 +183,7 @@ const UsersPage = () => {
         const headers = ['nama', 'email', 'role', 'nik', 'jabatan', 'area_kerja', 'no_whatsapp', 'jenis_kelamin'];
         const csvRows = [
             headers.join(','),
-            ...asArray(users).map(u =>
+            ...users.map(u =>
                 headers.map(header => {
                     const val = u[header] || '';
                     const escaped = String(val).replace(/"/g, '""');
@@ -252,7 +252,7 @@ const UsersPage = () => {
         setError('');
         try {
             const res = await api.get('/users');
-            setUsers(asArray(res.data?.data || res.data));
+            setUsers(res.data);
         } catch (err) {
             setError(err.response?.data?.message || 'Gagal memuat daftar user.');
         } finally {
@@ -359,13 +359,35 @@ const UsersPage = () => {
         }
     };
 
-    const filteredUsers = asArray(users).filter(u =>
-        u.nama?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        u.role?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const filteredUsers = users.filter(u =>
+        u.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (u.nik && u.nik.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (u.area_kerja && u.area_kerja.toLowerCase().includes(searchQuery.toLowerCase()))
     );
+
+    const handleSort = (key) => {
+        let direction = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const sortedUsers = [...filteredUsers].sort((a, b) => {
+        if (!sortConfig.key) return 0;
+        const valA = (a[sortConfig.key] || '').toString().toLowerCase();
+        const valB = (b[sortConfig.key] || '').toString().toLowerCase();
+        if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    const SortIcon = ({ columnKey }) => {
+        if (sortConfig.key !== columnKey) return null;
+        return sortConfig.direction === 'asc' ? <ArrowUp size={14} className="inline ml-1" /> : <ArrowDown size={14} className="inline ml-1" />;
+    };
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
@@ -427,7 +449,7 @@ const UsersPage = () => {
                     />
                 </div>
                 <div className="text-xs text-slate-400 font-medium self-end md:self-auto">
-                    Total: {filteredUsers.length} user
+                    Total: {sortedUsers.length} user
                 </div>
             </div>
 
@@ -437,11 +459,11 @@ const UsersPage = () => {
                     <table className="w-full border-collapse text-left">
                         <thead>
                             <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850/50 text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
-                                <th className="px-6 py-4">User</th>
-                                <th className="px-6 py-4">Email</th>
-                                <th className="px-6 py-4">NIK / ID Pekerja</th>
-                                <th className="px-6 py-4">Area Kerja</th>
-                                <th className="px-6 py-4">Role</th>
+                                <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" onClick={() => handleSort('nama')}>User <SortIcon columnKey="nama" /></th>
+                                <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" onClick={() => handleSort('email')}>Email <SortIcon columnKey="email" /></th>
+                                <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" onClick={() => handleSort('nik')}>NIK / ID Pekerja <SortIcon columnKey="nik" /></th>
+                                <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" onClick={() => handleSort('area_kerja')}>Area Kerja <SortIcon columnKey="area_kerja" /></th>
+                                <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" onClick={() => handleSort('role')}>Role <SortIcon columnKey="role" /></th>
                                 <th className="px-6 py-4 text-right">Aksi</th>
                             </tr>
                         </thead>
@@ -453,7 +475,7 @@ const UsersPage = () => {
                                         <p className="text-slate-400 text-sm mt-3 font-medium">Memuat data user...</p>
                                     </td>
                                 </tr>
-                            ) : filteredUsers.length === 0 ? (
+                            ) : sortedUsers.length === 0 ? (
                                 <tr>
                                     <td colSpan="5" className="px-6 py-16 text-center">
                                         <Users size={40} className="mx-auto mb-3 text-slate-300 dark:text-slate-700" />
@@ -461,14 +483,14 @@ const UsersPage = () => {
                                     </td>
                                 </tr>
                             ) : (
-                                filteredUsers.map((u) => {
+                                sortedUsers?.map((u) => {
                                     const isSelf = u.id_user === currentUser?.id;
                                     return (
                                         <tr key={u.id_user} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 rounded-2xl bg-blue-600/10 text-blue-600 dark:text-blue-400 font-bold flex items-center justify-center text-base uppercase border border-blue-500/20">
-                                                        {u.nama?.charAt(0) || '?'}
+                                                        {u.nama.charAt(0)}
                                                     </div>
                                                     <div>
                                                         <div className="font-bold text-slate-900 dark:text-white flex items-center gap-2">

@@ -6,8 +6,6 @@ import Button from '../components/Button';
 import Input from '../components/Input';
 import { AlertTriangle, MapPin, Camera, Zap, CheckCircle, Clock, X } from 'lucide-react';
 import { useAuth } from '../store/AuthContext';
-import { assetUrl } from '../utils/url';
-import { asArray } from '../utils/safeData';
 
 const RISK_CONFIG = {
     Low: { color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400', border: 'border-emerald-500/30', dot: 'bg-emerald-500' },
@@ -22,11 +20,9 @@ const HazardPage = () => {
     const location = useLocation();
     const [showForm, setShowForm] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [analyzing, setAnalyzing] = useState(false);
     const [formData, setFormData] = useState({ lokasi: '', deskripsi: '', risiko: 'Low', koordinat_gps: '' });
     const [file, setFile] = useState(null);
     const [preview, setPreview] = useState(null);
-    const [aiPredictedRisk, setAiPredictedRisk] = useState(null);
     const [selectedHazard, setSelectedHazard] = useState(null);
 
     const videoRef = useRef(null);
@@ -93,7 +89,7 @@ const HazardPage = () => {
         queryKey: ['hazards'],
         queryFn: async () => {
             const res = await api.get('/hazards');
-            return asArray(res.data?.data || res.data);
+            return res.data.data || res.data;
         }
     });
 
@@ -119,21 +115,7 @@ const HazardPage = () => {
         }
     });
 
-    const analyzeWithAI = async () => {
-        if (!formData.deskripsi) return alert('Masukkan deskripsi bahaya terlebih dahulu.');
-        setAnalyzing(true);
-        setAiPredictedRisk(null);
-        try {
-            const res = await api.post('/ai/analyze', { deskripsi: formData.deskripsi, lokasi: formData.lokasi });
-            const risk = res.data.predicted_risk || formData.risiko;
-            setFormData(prev => ({ ...prev, risiko: risk }));
-            setAiPredictedRisk(risk);
-        } catch (err) {
-            console.error('AI analyze failed:', err);
-        } finally {
-            setAnalyzing(false);
-        }
-    };
+
 
     const handleFileChange = (e) => {
         const f = e.target.files[0];
@@ -151,7 +133,6 @@ const HazardPage = () => {
             setFormData({ lokasi: '', deskripsi: '', risiko: 'Low', koordinat_gps: '' });
             setFile(null);
             setPreview(null);
-            setAiPredictedRisk(null);
             queryClient.invalidateQueries(['hazards']);
         },
         onError: (err) => {
@@ -166,10 +147,21 @@ const HazardPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+
+        let finalRisk = formData.risiko;
+        try {
+            const aiRes = await api.post('/ai/analyze', { deskripsi: formData.deskripsi, lokasi: formData.lokasi });
+            if (aiRes.data && aiRes.data.predicted_risk) {
+                finalRisk = aiRes.data.predicted_risk;
+            }
+        } catch (err) {
+            console.error('AI fallback', err);
+        }
+
         const data = new FormData();
         data.append('lokasi', formData.lokasi);
         data.append('deskripsi', formData.deskripsi);
-        data.append('risiko', formData.risiko);
+        data.append('risiko', finalRisk);
         data.append('koordinat_gps', formData.koordinat_gps);
         if (file) data.append('foto', file);
 
@@ -180,14 +172,7 @@ const HazardPage = () => {
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <div className="flex items-center gap-3">
-                        <h1 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Laporan Bahaya</h1>
-                        {user?.role === 'Vendor' && (
-                            <span className="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-xs font-black rounded-full border border-purple-300 dark:border-purple-700">
-                                VENDOR VIEW
-                            </span>
-                        )}
-                    </div>
+                    <h1 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Laporan Bahaya</h1>
                     <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Laporkan Unsafe Action & Condition dalam waktu &lt;1 menit.</p>
                 </div>
                 <Button onClick={() => setShowForm(true)} className="flex items-center gap-2 w-full sm:w-auto justify-center rounded-2xl py-5 px-8 shadow-xl shadow-blue-500/20">
@@ -198,18 +183,18 @@ const HazardPage = () => {
             {/* === FORM MODAL === */}
             {showForm && (
                 <div 
-                    onClick={() => { stopCamera(); setShowForm(false); setPreview(null); setAiPredictedRisk(null); }}
+                    onClick={() => { stopCamera(); setShowForm(false); setPreview(null); }}
                     className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
                 >
                     <div 
                         onClick={(e) => e.stopPropagation()}
-                        className="bg-white dark:bg-slate-800 border-t-8 border-blue-600 w-full max-w-lg rounded-3xl p-4 md:p-6 lg:p-8 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
+                        className="bg-white dark:bg-slate-800 border-t-8 border-blue-600 w-full max-w-lg rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
                     >
-                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-6">
+                        <div className="flex justify-between items-center mb-6">
                             <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Buat Laporan Baru</h2>
-                            <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-full self-start sm:self-auto">
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-full">
                                 <MapPin size={12} className="text-blue-600" />
-                                <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 font-mono truncate max-w-[150px]">{formData.koordinat_gps}</span>
+                                <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 font-mono">{formData.koordinat_gps}</span>
                             </div>
                         </div>
 
@@ -231,51 +216,9 @@ const HazardPage = () => {
                                     onChange={(e) => setFormData({ ...formData, deskripsi: e.target.value })}
                                     required
                                 />
-                                <button
-                                    type="button"
-                                    onClick={analyzeWithAI}
-                                    disabled={analyzing}
-                                    className="absolute bottom-3 right-3 py-2 px-3 bg-blue-600 rounded-xl text-white hover:bg-blue-700 transition-all flex items-center gap-2 text-[10px] font-black shadow-lg disabled:opacity-50 active:scale-95 min-h-[36px]"
-                                >
-                                    {analyzing ? 'ANALYZING...' : <><Zap size={12} className="fill-white" /> AI RISK</>}
-                                </button>
                             </div>
 
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest px-1 flex items-center justify-between transition-all duration-300">
-                                    <span>Tingkat Risiko</span>
-                                    {analyzing && (
-                                        <span className="text-[10px] text-blue-600 dark:text-blue-400 animate-pulse flex items-center gap-1 normal-case font-bold">
-                                            <Zap size={10} className="fill-blue-600 animate-bounce" /> Menilai dengan AI...
-                                        </span>
-                                    )}
-                                    {aiPredictedRisk && !analyzing && (
-                                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 animate-in fade-in slide-in-from-right-2 duration-300 flex items-center gap-1 normal-case font-extrabold">
-                                            ✨ AI Predicted: {aiPredictedRisk}
-                                        </span>
-                                    )}
-                                </label>
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                    {Object.keys(RISK_CONFIG).map(r => (
-                                        <button
-                                            key={r}
-                                            type="button"
-                                            onClick={() => {
-                                                setFormData({ ...formData, risiko: r });
-                                                setAiPredictedRisk(null);
-                                            }}
-                                            className={`py-3 rounded-xl text-xs font-black border-2 transition-all min-h-[44px] ${formData.risiko === r ? `${RISK_CONFIG[r].color} ${RISK_CONFIG[r].border} shadow-lg` : 'border-slate-100 dark:border-slate-700 text-slate-400 bg-slate-50 dark:bg-slate-900/50'}`}
-                                        >
-                                            {r}
-                                        </button>
-                                    ))}
-                                </div>
-                                {(formData.risiko === 'High' || formData.risiko === 'Critical') && (
-                                    <p className="text-[10px] font-black text-red-500 flex items-center gap-1 mt-1">
-                                        <AlertTriangle size={12} /> Tiket CAPA otomatis akan dibuat untuk risiko ini.
-                                    </p>
-                                )}
-                            </div>
+
 
                             <div className="flex flex-col gap-1.5">
                                 <label className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest px-1">Foto Bukti (Wajib untuk High/Critical)</label>
@@ -286,14 +229,14 @@ const HazardPage = () => {
                                             <button
                                                 type="button"
                                                 onClick={stopCamera}
-                                                className="bg-red-500 hover:bg-red-600 text-white font-bold text-xs py-2.5 px-5 rounded-xl shadow-lg transition-all active:scale-95 min-h-[44px]"
+                                                className="bg-red-500 hover:bg-red-600 text-white font-bold text-xs py-2.5 px-5 rounded-xl shadow-lg transition-all active:scale-95"
                                             >
                                                 Batal
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={capturePhoto}
-                                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-6 rounded-xl shadow-lg transition-all flex items-center gap-1.5 active:scale-95 min-h-[44px]"
+                                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-6 rounded-xl shadow-lg transition-all flex items-center gap-1.5 active:scale-95"
                                             >
                                                 <Camera size={14} /> Ambil Foto
                                             </button>
@@ -318,7 +261,7 @@ const HazardPage = () => {
                                         <button
                                             type="button"
                                             onClick={startCamera}
-                                            className="mt-2 w-full bg-blue-50 dark:bg-slate-800 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-750 hover:bg-blue-100 dark:hover:bg-slate-700 font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98] min-h-[44px]"
+                                            className="mt-2 w-full bg-blue-50 dark:bg-slate-800 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-750 hover:bg-blue-100 dark:hover:bg-slate-700 font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
                                         >
                                             <Camera size={14} /> Buka Kamera (Ambil Foto Langsung)
                                         </button>
@@ -327,8 +270,8 @@ const HazardPage = () => {
                             </div>
 
                             <div className="flex gap-4 pt-2">
-                                <Button type="button" variant="ghost" onClick={() => { stopCamera(); setShowForm(false); setPreview(null); setAiPredictedRisk(null); }} className="flex-1 rounded-2xl py-4 min-h-[48px]">Batal</Button>
-                                <Button type="submit" className="flex-1 rounded-2xl py-4 shadow-xl shadow-blue-500/20 min-h-[48px]" loading={loading}>
+                                <Button type="button" variant="ghost" onClick={() => { stopCamera(); setShowForm(false); setPreview(null); setAiPredictedRisk(null); }} className="flex-1 rounded-2xl py-4">Batal</Button>
+                                <Button type="submit" className="flex-1 rounded-2xl py-4 shadow-xl shadow-blue-500/20" loading={loading}>
                                     {loading ? 'Mengirim...' : 'Kirim Laporan'}
                                 </Button>
                             </div>
@@ -338,14 +281,15 @@ const HazardPage = () => {
             )}
 
             {/* === HAZARD LIST === */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-                {asArray(hazards).length === 0 && (
-                    <div className="md:col-span-2 p-16 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl">
+            <div className="space-y-4">
+                {hazards.length === 0 ? (
+                    <div className="p-16 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl">
                         <AlertTriangle size={48} className="mx-auto mb-4 text-slate-200 dark:text-slate-700" />
                         <p className="text-slate-400 font-medium">Belum ada laporan bahaya. Bagus!</p>
                     </div>
-                )}
-                {asArray(hazards).map((hazard) => {
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        {hazards.map((hazard) => {
                     const risk = RISK_CONFIG[hazard.risiko] || RISK_CONFIG.Low;
                     return (
                         <div key={hazard.id_hazard} className={`bg-white dark:bg-slate-900 border ${risk.border} border-l-4 p-6 rounded-2xl flex flex-col gap-4 shadow-sm hover:shadow-md transition-all duration-300`}>
@@ -406,12 +350,14 @@ const HazardPage = () => {
                         </div>
                     );
                 })}
+                    </div>
+                )}
             </div>
 
             {/* Hazard Detail Modal */}
             {selectedHazard && (() => {
                 const risk = RISK_CONFIG[selectedHazard.risiko] || RISK_CONFIG.Low;
-                const imageUrl = assetUrl(selectedHazard.foto);
+                const imageUrl = selectedHazard.foto ? `/uploads/${selectedHazard.foto}` : null;
                 const mapsUrl = selectedHazard.koordinat_gps ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedHazard.koordinat_gps)}` : null;
 
                 return (
