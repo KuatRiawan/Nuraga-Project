@@ -3,6 +3,7 @@ import { Trophy, Star, Zap, Award, Gift, TrendingUp, CheckCircle, Ticket, X, Sea
 import Button from '../components/Button';
 import { useAuth } from '../store/AuthContext';
 import api from '../api/axios';
+import { asArray, asObject } from '../utils/safeData';
 
 const RANK_STYLES = {
     1: { border: 'border-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/10', icon: '🥇', nameColor: 'text-amber-600 dark:text-amber-400' },
@@ -52,7 +53,7 @@ const GamificationPage = () => {
         setLeaderboardLoading(true);
         try {
             const res = await api.get('/auth/leaderboard');
-            setLeaderboard(res.data);
+            setLeaderboard(asArray(res.data?.data || res.data));
         } catch (err) {
             console.error('Failed to fetch leaderboard:', err);
         } finally {
@@ -64,7 +65,7 @@ const GamificationPage = () => {
         setRewardsLoading(true);
         try {
             const res = await api.get('/auth/rewards');
-            setRewards(res.data);
+            setRewards(asArray(res.data?.data || res.data));
         } catch (err) {
             console.error('Failed to fetch rewards:', err);
         } finally {
@@ -76,7 +77,7 @@ const GamificationPage = () => {
         try {
             const url = isHseOrAdmin ? '/vouchers/all' : '/vouchers/my';
             const res = await api.get(url);
-            setVouchers(res.data);
+            setVouchers(asArray(res.data?.data || res.data));
         } catch (err) {
             console.error('Failed to fetch vouchers:', err);
         }
@@ -85,13 +86,13 @@ const GamificationPage = () => {
     const fetchUserStats = async () => {
         try {
             const res = await api.get('/auth/user-stats');
-            setUserStats(res.data);
+            setUserStats(asObject(res.data?.data || res.data));
         } catch (err) {
             console.error('Failed to fetch user stats:', err);
             // Fallback to counting from vouchers if endpoint doesn't exist
             try {
                 const voucherRes = await api.get('/vouchers/my');
-                setUserStats({ rewardsClaimed: voucherRes.data.length, hazardsReported: 0 });
+                setUserStats({ rewardsClaimed: asArray(voucherRes.data?.data || voucherRes.data).length, hazardsReported: 0 });
             } catch (voucherErr) {
                 console.error('Failed to fetch vouchers for stats:', voucherErr);
             }
@@ -137,18 +138,18 @@ const GamificationPage = () => {
         }
     };
 
-    const sortedLeaderboard = leaderboard.length > 0
-        ? leaderboard.map((u, index) => ({ ...u, rank: index + 1 }))
+    const sortedLeaderboard = asArray(leaderboard).length > 0
+        ? asArray(leaderboard).map((u, index) => ({ ...u, rank: index + 1 }))
         : [];
 
     const myRank = sortedLeaderboard.find(u => u.name === user?.nama)?.rank || 0;
 
-    const filteredVouchers = vouchers.filter(v => {
+    const filteredVouchers = asArray(vouchers).filter(v => {
         const search = searchTerm.toLowerCase();
         return (
-            v.code.toLowerCase().includes(search) ||
-            v.reward_title.toLowerCase().includes(search) ||
-            (v.User && v.User.nama.toLowerCase().includes(search))
+            v.code?.toLowerCase().includes(search) ||
+            v.reward_title?.toLowerCase().includes(search) ||
+            (v.User && v.User.nama?.toLowerCase().includes(search))
         );
     });
 
@@ -260,7 +261,7 @@ const GamificationPage = () => {
                                     <p className="text-xs text-slate-400 mt-0.5 truncate">{person.dept} · {person.reports} laporan valid</p>
                                 </div>
                                 <div className="text-right shrink-0">
-                                    <p className="text-base md:text-lg font-black text-slate-900 dark:text-white">{person.points.toLocaleString()}</p>
+                                    <p className="text-base md:text-lg font-black text-slate-900 dark:text-white">{Number(person.points || 0).toLocaleString()}</p>
                                     <p className="text-[10px] text-amber-500 font-black uppercase">Poin</p>
                                 </div>
                             </div>
@@ -289,7 +290,7 @@ const GamificationPage = () => {
                             </div>
                         </div>
                         <div className="space-y-3 mb-6">
-                            {rewards.map(r => {
+                            {asArray(rewards).map(r => {
                                 const hasQuotaInfo = r.remaining !== undefined;
                                 return (
                                     <div key={r.id} className={`flex items-center gap-3 md:gap-4 p-3 md:p-4 rounded-2xl border transition-all ${r.available && myPoints >= r.points ? 'border-slate-200 dark:border-slate-700 hover:border-amber-400 cursor-pointer' : 'border-slate-100 dark:border-slate-800 opacity-50 cursor-not-allowed'}`}>

@@ -10,6 +10,7 @@ import {
     Thermometer, ShieldCheck, AlertCircle, X,
     Check, Ban, ShieldAlert
 } from 'lucide-react';
+import { asArray, parseArray } from '../utils/safeData';
 
 const WorkPermitPage = () => {
     const queryClient = useQueryClient();
@@ -33,7 +34,7 @@ const WorkPermitPage = () => {
         queryKey: ['permits'],
         queryFn: async () => {
             const res = await api.get('/permits');
-            return res.data.data || res.data;
+            return asArray(res.data?.data || res.data);
         }
     });
 
@@ -152,14 +153,14 @@ const WorkPermitPage = () => {
                 </div>
             )}
 
-            {permits.length === 0 ? (
+            {asArray(permits).length === 0 ? (
                 <div className="p-16 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl">
                     <AlertCircle size={48} className="mx-auto mb-4 text-slate-200 dark:text-slate-700" />
                     <p className="text-slate-400 font-medium">Belum ada riwayat izin kerja (PTW). Silakan ajukan izin baru.</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                    {permits.map((permit) => (
+                    {asArray(permits).map((permit) => (
                         <div
                             key={permit.id_permit}
                             onClick={() => setSelectedPermit(permit)}
@@ -197,13 +198,11 @@ const WorkPermitPage = () => {
 
                                 <div className="pt-4 flex items-center gap-4 text-xs font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">
                                     <span>{(() => {
-                                        const workers = typeof permit.daftar_pekerja === 'string' ? JSON.parse(permit.daftar_pekerja) : permit.daftar_pekerja;
-                                        return Array.isArray(workers) ? workers.length : 0;
+                                        return parseArray(permit.daftar_pekerja).length;
                                     })()} Personel</span>
                                     <span className="w-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800" />
                                     <span>{(() => {
-                                        const hazards = typeof permit.bahaya === 'string' ? JSON.parse(permit.bahaya) : permit.bahaya;
-                                        return Array.isArray(hazards) ? hazards.length : 0;
+                                        return parseArray(permit.bahaya).length;
                                     })()} Bahaya</span>
                                 </div>                                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/50 flex items-center justify-between gap-1 text-[9px] font-black uppercase tracking-wider">
                                     <div className="flex items-center gap-1.5">
@@ -455,10 +454,8 @@ const WorkPermitPage = () => {
                                 </h3>
                                 <div className="flex flex-wrap gap-2">
                                     {(() => {
-                                        const workers = typeof selectedPermit?.daftar_pekerja === 'string' 
-                                            ? JSON.parse(selectedPermit.daftar_pekerja) 
-                                            : selectedPermit?.daftar_pekerja;
-                                        return Array.isArray(workers) && workers.length > 0 ? (
+                                        const workers = parseArray(selectedPermit?.daftar_pekerja);
+                                        return workers.length > 0 ? (
                                             workers.map((worker, i) => (
                                                 <span key={i} className="px-3 py-1.5 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-350">
                                                     👤 {worker}
@@ -479,10 +476,8 @@ const WorkPermitPage = () => {
                                     </h3>
                                     <div className="flex flex-wrap gap-1.5">
                                         {(() => {
-                                            const hazards = typeof selectedPermit?.bahaya === 'string' 
-                                                ? JSON.parse(selectedPermit.bahaya) 
-                                                : selectedPermit?.bahaya;
-                                            return Array.isArray(hazards) && hazards.length > 0 ? (
+                                            const hazards = parseArray(selectedPermit?.bahaya);
+                                            return hazards.length > 0 ? (
                                                 hazards.map((b, i) => (
                                                     <span key={i} className="px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg text-xs font-bold text-amber-700 dark:text-amber-400">
                                                         {b}
@@ -500,10 +495,8 @@ const WorkPermitPage = () => {
                                     </h3>
                                     <div className="flex flex-wrap gap-1.5">
                                         {(() => {
-                                            const apd = typeof selectedPermit?.apd === 'string' 
-                                                ? JSON.parse(selectedPermit.apd) 
-                                                : selectedPermit?.apd;
-                                            return Array.isArray(apd) && apd.length > 0 ? (
+                                            const apd = parseArray(selectedPermit?.apd);
+                                            return apd.length > 0 ? (
                                                 apd.map((a, i) => (
                                                     <span key={i} className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-xs font-bold text-emerald-700 dark:text-emerald-400">
                                                         {a}

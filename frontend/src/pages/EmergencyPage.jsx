@@ -4,6 +4,7 @@ import EmergencyControls from '../components/EmergencyControls';
 import { Zap, AlertTriangle, Shield, MapPin, Clock, Users, Bell, Layers, CheckCircle } from 'lucide-react';
 import Button from '../components/Button';
 import { useAuth } from '../store/AuthContext';
+import { asArray } from '../utils/safeData';
 
 const ZONE_COORDINATES = {
     'Main Production Zone': { x: 150, y: 105 },
@@ -72,7 +73,7 @@ const EmergencyPage = () => {
     const fetchEmergencies = async () => {
         try {
             const res = await api.get('/emergency');
-            setEmergencies(res.data.data || res.data);
+            setEmergencies(asArray(res.data?.data || res.data));
         } catch (err) {
             console.error('[Emergency] Error fetching emergencies:', err);
         }
@@ -81,15 +82,15 @@ const EmergencyPage = () => {
     const fetchHazards = async () => {
         try {
             const res = await api.get('/hazards');
-            setHazards(res.data.data || res.data);
+            setHazards(asArray(res.data?.data || res.data));
         } catch (err) {
             console.error('[Emergency] Error fetching hazards:', err);
         }
     };
 
     // Filter active emergencies and unverified hazards for display on the GIS Map
-    const activeEmergencies = (emergencies || []).filter(e => e.status === 'Triggered' || e.status === 'Active');
-    const unverifiedHazards = (hazards || []).filter(h => !h.is_verified);
+    const activeEmergencies = asArray(emergencies).filter(e => e.status === 'Triggered' || e.status === 'Active');
+    const unverifiedHazards = asArray(hazards).filter(h => !h.is_verified);
 
     // Build pin arrays
     const pins = [];
@@ -176,7 +177,7 @@ const EmergencyPage = () => {
                         </div>
                     </div>
                     <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                        {emergencies.map((e) => (
+                        {asArray(emergencies).map((e) => (
                             <div key={e.id_emergency} className="p-8 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                                 <div className="flex items-center gap-5">
                                     <div className={`p-4 rounded-2xl ${e.status === 'Triggered' ? 'bg-red-500/10 text-red-600' : 'bg-blue-500/10 text-blue-600'}`}>
@@ -207,7 +208,7 @@ const EmergencyPage = () => {
                                 </div>
                             </div>
                         ))}
-                        {emergencies.length === 0 && (
+                        {asArray(emergencies).length === 0 && (
                             <div className="p-24 text-center">
                                 <Shield size={64} className="mx-auto mb-4 text-slate-100 dark:text-slate-800" />
                                 <p className="text-slate-400 dark:text-slate-500 font-medium italic">Status: Aman terkendali. Tidak ada panggilan darurat aktif.</p>

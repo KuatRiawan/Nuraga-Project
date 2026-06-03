@@ -4,6 +4,7 @@ import axios from 'axios';
 import { ShieldCheck, AlertTriangle, Heart, Camera, Clock, UserX, FileText, Check, Download, CheckCircle, XCircle, X } from 'lucide-react';
 import { useAuth } from '../store/AuthContext';
 import { useSocket } from '../hooks/useSocket';
+import { asArray, asObject } from '../utils/safeData';
 
 const API_URL = '/api';
 
@@ -35,7 +36,7 @@ const AttendancePage = () => {
     queryFn: async () => {
       const token = localStorage.getItem('token');
       const res = await axios.get(`${API_URL}/attendance/today`, { headers: { Authorization: `Bearer ${token}` } });
-      return res.data;
+      return asObject(res.data);
     },
     enabled: !!user
   });
@@ -46,7 +47,7 @@ const AttendancePage = () => {
     queryFn: async () => {
       const token = localStorage.getItem('token');
       const res = await axios.get(`${API_URL}/attendance/my-history`, { headers: { Authorization: `Bearer ${token}` } });
-      return res.data;
+      return asObject(res.data);
     },
     enabled: !!user && !isAdmin
   });
@@ -57,7 +58,7 @@ const AttendancePage = () => {
     queryFn: async () => {
       const token = localStorage.getItem('token');
       const res = await axios.get(`${API_URL}/attendance/all`, { headers: { Authorization: `Bearer ${token}` } });
-      return res.data;
+      return asObject(res.data);
     },
     enabled: !!user && isAdmin
   });
@@ -67,38 +68,40 @@ const AttendancePage = () => {
     queryFn: async () => {
       const token = localStorage.getItem('token');
       const res = await axios.get(`${API_URL}/users`, { headers: { Authorization: `Bearer ${token}` } });
-      return res.data;
+      return asArray(res.data?.data || res.data);
     },
     enabled: !!user && isAdmin
   });
 
-  // Use appropriate history data based on role
-  const historyData = isAdmin ? allHistoryData : myHistoryData;
+  // Use appropriate history data based on role (Fallback aman ke objek kosong)
+  const historyData = asObject(isAdmin ? allHistoryData : myHistoryData);
+  const safeAttendance = asArray(historyData.attendance);
 
   // Extract unique users from historyData when no user list is available
   const uniqueUsers = Array.from(
     new Map(
-      historyData.attendance
-        .map(item => item.User)
+      safeAttendance
+        .map(item => item?.User)
         .filter(Boolean)
-        .map(u => [u.id_user, u])
+        .map(u => [u?.id_user, u])
     ).values()
   );
 
-  const userList = userOptions.length > 0 ? userOptions : uniqueUsers;
+  const userList = asArray(userOptions).length > 0 ? asArray(userOptions) : uniqueUsers;
 
-  const filteredAttendance = historyData.attendance.filter(log => {
+  const filteredAttendance = safeAttendance.filter(log => {
+    if (!log) return false;
     const matchesUser = !isAdmin || selectedUserId === 'all' || log.id_user === Number(selectedUserId);
     
-    const logDate = new Date(log.createdAt).toISOString().slice(0, 10);
+    const logDate = log.createdAt ? new Date(log.createdAt).toISOString().slice(0, 10) : '';
     
     let matchesStart = true;
-    if (startDateFilter) {
+    if (startDateFilter && logDate) {
       matchesStart = logDate >= startDateFilter;
     }
     
     let matchesEnd = true;
-    if (endDateFilter) {
+    if (endDateFilter && logDate) {
       matchesEnd = logDate <= endDateFilter;
     }
     
@@ -361,13 +364,13 @@ const AttendancePage = () => {
       csvContent += "Tipe,Nama Pekerja,Waktu,Tidur (Jam),Stres,Fatigue Status,Rekomendasi\n";
       
       filteredAttendance.forEach(row => {
-          const type = row.type;
-          const nama = row.User?.nama || userList.find(u => u.id_user === row.id_user)?.nama || user.nama;
-          const waktu = new Date(row.createdAt).toLocaleString('id-ID');
-          const tidur = row.sleep_hours || '-';
-          const stres = row.stress_level || '-';
-          const status = row.fatigue_status || '-';
-          const rekomendasi = `"${row.recommendation || '-'}"`;
+          const type = row?.type || '-';
+          const nama = row?.User?.nama || userList.find(u => u.id_user === row?.id_user)?.nama || user?.nama || '-';
+          const waktu = row?.createdAt ? new Date(row.createdAt).toLocaleString('id-ID') : '-';
+          const tidur = row?.sleep_hours || '-';
+          const stres = row?.stress_level || '-';
+          const status = row?.fatigue_status || '-';
+          const rekomendasi = `"${row?.recommendation || '-'}"`;
           csvContent += `${type},${nama},${waktu},${tidur},${stres},${status},${rekomendasi}\n`;
       });
 
@@ -447,15 +450,15 @@ const AttendancePage = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Clock In Form */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm p-8 relative overflow-hidden transition-colors duration-300">
-          {todayStatus.clockedIn ? (
+          {todayStatus?.clockedIn ? (
               <div className="absolute inset-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6 text-center">
                   <div className="w-20 h-20 bg-green-100 dark:bg-green-950/20 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mb-4">
                       <Check className="w-10 h-10" />
                   </div>
                   <h2 className="text-2xl font-black text-slate-800 dark:text-white">Anda Sudah Absen Masuk</h2>
-                  <p className="text-slate-500 dark:text-slate-400 font-medium mt-2 mb-6">Status Fatigue Anda: <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(todayStatus.fatigue_status)}`}>{todayStatus.fatigue_status}</span></p>
+                  <p className="text-slate-500 dark:text-slate-400 font-medium mt-2 mb-6">Status Fatigue Anda: <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(todayStatus?.fatigue_status)}`}>{todayStatus?.fatigue_status || '-'}</span></p>
                   
-                  {!todayStatus.clockedOut ? (
+                  {!todayStatus?.clockedOut ? (
                     <button
                         onClick={handleClockOut}
                         disabled={clockOutMutation.isPending}
@@ -575,7 +578,7 @@ const AttendancePage = () => {
                     <p className="text-sm text-slate-650 dark:text-slate-400"><strong>Integrasi Absensi:</strong> Tidak perlu repot mengisi banyak form. Cukup satu kali _Clock-In_ dengan _selfie_, sistem langsung mencatat kehadiran Anda.</p>
                 </div>
             </div>
-            {todayStatus.fatigue_status === 'Tinggi' && (
+            {todayStatus?.fatigue_status === 'Tinggi' && (
                 <div className="mt-8 p-4 bg-red-100 border border-red-200 text-red-800 rounded-2xl flex gap-3">
                     <AlertTriangle className="w-6 h-6 shrink-0" />
                     <div>
@@ -655,8 +658,8 @@ const AttendancePage = () => {
                                 className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-4 py-3 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
                             >
                                 <option value="all">Semua Pekerja</option>
-                                {userList.map(u => (
-                                    <option key={u.id_user} value={u.id_user}>{u.nama} ({u.role})</option>
+                                {(userList || []).map(u => (
+                                    <option key={u?.id_user} value={u?.id_user}>{u?.nama} ({u?.role})</option>
                                 ))}
                             </select>
                         </div>
@@ -682,7 +685,7 @@ const AttendancePage = () => {
                 </div>
             </div>
             
-            {filteredAttendance.length > 0 ? (
+            {(filteredAttendance || []).length > 0 ? (
             <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                 <thead>
@@ -695,20 +698,20 @@ const AttendancePage = () => {
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 text-sm">
-                    {filteredAttendance.map((log) => (
-                    <tr key={log.id_attendance} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-slate-100 dark:border-slate-800/40">
+                    {(filteredAttendance || []).map((log) => (
+                    <tr key={log?.id_attendance} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-slate-100 dark:border-slate-800/40">
                         <td className="py-4 px-4 text-slate-700 dark:text-slate-300 font-medium">
-                        {new Date(log.createdAt).toLocaleString('id-ID')}
+                        {log?.createdAt ? new Date(log.createdAt).toLocaleString('id-ID') : '-'}
                         </td>
-                        {(isAdmin) && <td className="py-4 px-4 text-slate-700 dark:text-slate-300 font-bold">{log.User?.nama || userList.find(u => u.id_user === log.id_user)?.nama || 'Tidak tersedia'}</td>}
+                        {(isAdmin) && <td className="py-4 px-4 text-slate-700 dark:text-slate-300 font-bold">{log?.User?.nama || (userList || []).find(u => u?.id_user === log?.id_user)?.nama || 'Tidak tersedia'}</td>}
                         <td className="py-4 px-4">
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${log.type === 'Datang' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700'}`}>{log.type}</span>
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${log?.type === 'Datang' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700'}`}>{log?.type || '-'}</span>
                         </td>
                         <td className="py-4 px-4 text-slate-500 dark:text-slate-400">
-                            {log.type === 'Datang' ? `Tidur: ${log.sleep_hours}j | Stres: ${log.stress_level}` : '-'}
+                            {log?.type === 'Datang' ? `Tidur: ${log?.sleep_hours}j | Stres: ${log?.stress_level}` : '-'}
                         </td>
                         <td className="py-4 px-4">
-                        {log.type === 'Datang' && log.fatigue_status ? (
+                        {log?.type === 'Datang' && log?.fatigue_status ? (
                             <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(log.fatigue_status)}`}>
                                 {log.fatigue_status}
                             </span>
@@ -724,7 +727,7 @@ const AttendancePage = () => {
  
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm p-8 transition-colors">
             <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2"><UserX className="w-5 h-5 text-orange-500"/> Riwayat Pengajuan Izin/Cuti</h2>
-            {historyData.leaves.length > 0 ? (
+            {(historyData?.leaves || []).length > 0 ? (
             <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                 <thead>
@@ -738,21 +741,21 @@ const AttendancePage = () => {
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 text-sm">
-                    {historyData.leaves.map((leave) => (
-                    <tr key={leave.id_leave} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-slate-100 dark:border-slate-800/40">
-                        {isAdmin && <td className="py-4 px-4 text-slate-700 dark:text-slate-300 font-bold">{leave.User?.nama}</td>}
-                        <td className="py-4 px-4 font-medium text-slate-700 dark:text-slate-300">{leave.type}</td>
-                        <td className="py-4 px-4 text-slate-500 dark:text-slate-400">{leave.start_date} s/d {leave.end_date}</td>
-                        <td className="py-4 px-4 text-slate-600 dark:text-slate-350">{leave.reason}</td>
+                    {(historyData?.leaves || []).map((leave) => (
+                    <tr key={leave?.id_leave} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-slate-100 dark:border-slate-800/40">
+                        {isAdmin && <td className="py-4 px-4 text-slate-700 dark:text-slate-300 font-bold">{leave?.User?.nama || '-'}</td>}
+                        <td className="py-4 px-4 font-medium text-slate-700 dark:text-slate-300">{leave?.type || '-'}</td>
+                        <td className="py-4 px-4 text-slate-500 dark:text-slate-400">{leave?.start_date} s/d {leave?.end_date}</td>
+                        <td className="py-4 px-4 text-slate-600 dark:text-slate-350">{leave?.reason}</td>
                         <td className="py-4 px-4">
                             <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
-                                leave.status === 'Approved' ? 'bg-green-100 text-green-700' :
-                                leave.status === 'Rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
-                            }`}>{leave.status}</span>
+                                leave?.status === 'Approved' ? 'bg-green-100 text-green-700' :
+                                leave?.status === 'Rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+                            }`}>{leave?.status || 'Pending'}</span>
                         </td>
                         {isAdmin && (
                             <td className="py-4 px-4 text-right">
-                                {leave.status === 'Pending' && (
+                                {leave?.status === 'Pending' && (
                                     <div className="flex gap-2 justify-end">
                                         <button onClick={() => handleApproveLeave(leave.id_leave, 'Approved')} className="text-xs bg-green-500 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-green-600">Setujui</button>
                                         <button onClick={() => handleApproveLeave(leave.id_leave, 'Rejected')} className="text-xs bg-red-500 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-red-600">Tolak</button>

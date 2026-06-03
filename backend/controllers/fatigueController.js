@@ -2,12 +2,16 @@ const axios = require('axios');
 const FatigueLog = require('../models/FatigueLog');
 const User = require('../models/User');
 
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL || '';
 
 exports.logFatigue = async (req, res) => {
     try {
         const { sleep_hours, stress_level } = req.body;
         const id_user = req.user.id; 
+
+        if (!AI_SERVICE_URL) {
+            return res.status(503).json({ message: "AI Service belum dikonfigurasi." });
+        }
 
         // 1. Call AI Service to get prediction
         let aiPrediction;

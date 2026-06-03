@@ -7,11 +7,11 @@ const recordLog = async (req, action, details) => {
         const role_user = req.user ? req.user.role : 'SYSTEM';
         
         // Handle direct IP address extraction
-        let ip_address = '127.0.0.1';
+        let ip_address = 'unknown';
         if (req && req.ip) {
             ip_address = req.ip;
         } else if (req && req.headers) {
-            ip_address = req.headers['x-forwarded-for'] || (req.socket ? req.socket.remoteAddress : '127.0.0.1');
+            ip_address = req.headers['x-forwarded-for'] || (req.socket ? req.socket.remoteAddress : 'unknown');
         }
 
         await AuditLog.create({

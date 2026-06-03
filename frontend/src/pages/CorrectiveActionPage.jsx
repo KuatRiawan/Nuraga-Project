@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import Button from '../components/Button';
 import { Target, Clock, CheckCircle, User, AlertTriangle, ChevronRight, Link2, X } from 'lucide-react';
+import { asArray } from '../utils/safeData';
 
 const getDaysLeft = (dateStr) => {
     const now = new Date();
@@ -47,7 +48,7 @@ const CorrectiveActionPage = () => {
         queryKey: ['actions'],
         queryFn: async () => {
             const res = await api.get('/actions');
-            return res.data;
+            return asArray(res.data?.data || res.data);
         }
     });
 
@@ -67,9 +68,9 @@ const CorrectiveActionPage = () => {
         statusMutation.mutate({ id, status });
     };
 
-    const overdueCount = actions.filter(a => getDaysLeft(a.deadline) < 0 && a.status !== 'Closed').length;
+    const overdueCount = asArray(actions).filter(a => getDaysLeft(a.deadline) < 0 && a.status !== 'Closed').length;
 
-    const filteredActions = actions.filter(action => {
+    const filteredActions = asArray(actions).filter(action => {
         if (filter === 'All') return true;
         if (filter === 'Overdue') {
             return getDaysLeft(action.deadline) < 0 && action.status !== 'Closed';

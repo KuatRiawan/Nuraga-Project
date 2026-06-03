@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
+const { UPLOADS_DIR } = require('./paths');
 
-const UPLOADS_DIR = path.join(__dirname, '..', 'uploads');
 const MAX_FILE_AGE_DAYS = 90;
 const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
 

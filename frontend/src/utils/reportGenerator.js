@@ -1,9 +1,11 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { asArray, asObject } from './safeData';
 
 export const generateMonthlyReport = (data) => {
     const doc = new jsPDF();
-    const { summary, details } = data;
+    const summary = asObject(data?.summary);
+    const details = asObject(data?.details);
     const today = new Date().toLocaleDateString('id-ID');
 
     // Header
@@ -46,7 +48,7 @@ export const generateMonthlyReport = (data) => {
     autoTable(doc, {
         startY: doc.lastAutoTable.finalY + 20,
         head: [['Lokasi', 'Deskripsi', 'Tingkat Risiko', 'Status', 'Tanggal']],
-        body: details.hazards.map(h => [
+        body: asArray(details.hazards).map(h => [
             h.lokasi,
             h.deskripsi,
             h.risiko,
@@ -58,7 +60,7 @@ export const generateMonthlyReport = (data) => {
     });
 
     // Incidents Table
-    if (details.incidents.length > 0) {
+    if (asArray(details.incidents).length > 0) {
         doc.addPage();
         doc.setFontSize(14);
         doc.setTextColor(30, 41, 59);
@@ -66,7 +68,7 @@ export const generateMonthlyReport = (data) => {
         autoTable(doc, {
             startY: 30,
             head: [['Kategori', 'Kronologi', 'Korban', 'Estimasi Kerugian', 'Tanggal']],
-            body: details.incidents.map(i => [
+            body: asArray(details.incidents).map(i => [
                 i.kategori,
                 i.kronologi,
                 i.korban || 'Tidak ada',
@@ -79,7 +81,7 @@ export const generateMonthlyReport = (data) => {
     }
 
     // Audits Table
-    if (details.audits && details.audits.length > 0) {
+    if (asArray(details.audits).length > 0) {
         // Only add page if they are not already on a new page (or if table fits)
         doc.addPage();
         doc.setFontSize(14);
@@ -88,7 +90,7 @@ export const generateMonthlyReport = (data) => {
         autoTable(doc, {
             startY: 30,
             head: [['Area', 'Hasil Pemeriksaan', 'Tanggal']],
-            body: details.audits.map(a => [
+            body: asArray(details.audits).map(a => [
                 a.area,
                 a.hasil,
                 new Date(a.tanggal).toLocaleDateString('id-ID')

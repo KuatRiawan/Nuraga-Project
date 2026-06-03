@@ -5,7 +5,7 @@ const User = require('../models/User');
 const { Op } = require('sequelize');
 const wa = require('../services/whatsappService');
 
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL || '';
 
 exports.clockIn = async (req, res) => {
     try {
@@ -39,7 +39,7 @@ exports.clockIn = async (req, res) => {
 
         // Call AI Service for Fatigue Prediction
         let aiPrediction = { fatigue_status: 'Tidak Diketahui', recommendation: '' };
-        if (sleep_hours && stress_level) {
+        if (AI_SERVICE_URL && sleep_hours && stress_level) {
             try {
                 const aiResponse = await axios.post(`${AI_SERVICE_URL}/predict-fatigue`, {
                     sleep_hours: parseFloat(sleep_hours),

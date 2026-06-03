@@ -5,6 +5,7 @@ import Button from '../components/Button';
 import Input from '../components/Input';
 import { ClipboardCheck, Calendar, QrCode, CheckSquare, AlertTriangle, Camera, X } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
+import { asArray, asObject } from '../utils/safeData';
 
 const AuditPage = () => {
     const queryClient = useQueryClient();
@@ -17,11 +18,11 @@ const AuditPage = () => {
     const [selectedAudit, setSelectedAudit] = useState(null);
 
     // Fetch audits using React Query
-    const { data: audits = [], isLoading: auditsLoading, refetch } = useQuery({
+    const { data: audits = [], isLoading: auditsLoading } = useQuery({
         queryKey: ['audits'],
         queryFn: async () => {
             const res = await api.get('/audits');
-            return res.data;
+            return asArray(res.data?.data || res.data);
         }
     });
 
@@ -30,7 +31,7 @@ const AuditPage = () => {
         queryKey: ['checklistTemplates'],
         queryFn: async () => {
             const res = await api.get('/config/checklist-templates');
-            return res.data;
+            return asObject(res.data?.data || res.data);
         }
     });
 
@@ -85,20 +86,11 @@ const AuditPage = () => {
 
     useEffect(() => {
         // Reset checklist when template changes
-        const items = checklistTemplates[selectedTemplate] || [];
+        const items = asArray(checklistTemplates[selectedTemplate]);
         const initial = {};
         items.forEach(item => { initial[item] = false; });
         setChecklistState(initial);
     }, [selectedTemplate, checklistTemplates]);
-
-    const fetchAudits = async () => {
-        try {
-            const res = await api.get('/audits');
-            setAudits(res.data);
-        } catch (err) {
-            console.error(err);
-        }
-    };
 
     const handleSimulateQR = () => {
         const mockIds = ['APAR-PROD-001', 'PERANCAH-B2-003', 'FORKLIFT-WH-07', 'PANEL-LT-002'];
@@ -250,7 +242,7 @@ const AuditPage = () => {
                             <div className="flex flex-col gap-3">
                                 <label className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest px-1">Template Inspeksi</label>
                                 <div className="flex flex-wrap gap-2">
-                                    {Object.keys(checklistTemplates).map(t => (
+                                    {Object.keys(asObject(checklistTemplates)).map(t => (
                                         <button
                                             key={t}
                                             type="button"
@@ -262,9 +254,9 @@ const AuditPage = () => {
                                     ))}
                                 </div>
 
-                                {checklistTemplates[selectedTemplate]?.length > 0 && (
+                                {asArray(checklistTemplates[selectedTemplate]).length > 0 && (
                                     <div className="space-y-3 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl">
-                                        {checklistTemplates[selectedTemplate].map(item => (
+                                        {asArray(checklistTemplates[selectedTemplate]).map(item => (
                                             <label key={item} className="flex items-center gap-4 px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-all cursor-pointer select-none min-h-[48px] active:scale-[0.99]">
                                                 <input
                                                     type="checkbox"
@@ -314,7 +306,7 @@ const AuditPage = () => {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                        {audits.map((audit) => (
+                        {asArray(audits).map((audit) => (
                             <tr key={audit.id_audit} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                                 <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">{audit.area}</td>
                                 <td className="px-6 py-4 text-slate-500 dark:text-slate-400 text-sm">{new Date(audit.tanggal).toLocaleDateString('id-ID')}</td>

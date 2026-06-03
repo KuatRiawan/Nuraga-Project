@@ -6,6 +6,8 @@ import Button from '../components/Button';
 import Input from '../components/Input';
 import { AlertTriangle, MapPin, Camera, Zap, CheckCircle, Clock, X } from 'lucide-react';
 import { useAuth } from '../store/AuthContext';
+import { assetUrl } from '../utils/url';
+import { asArray } from '../utils/safeData';
 
 const RISK_CONFIG = {
     Low: { color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400', border: 'border-emerald-500/30', dot: 'bg-emerald-500' },
@@ -91,7 +93,7 @@ const HazardPage = () => {
         queryKey: ['hazards'],
         queryFn: async () => {
             const res = await api.get('/hazards');
-            return res.data.data || res.data;
+            return asArray(res.data?.data || res.data);
         }
     });
 
@@ -337,13 +339,13 @@ const HazardPage = () => {
 
             {/* === HAZARD LIST === */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-                {hazards.length === 0 && (
+                {asArray(hazards).length === 0 && (
                     <div className="md:col-span-2 p-16 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl">
                         <AlertTriangle size={48} className="mx-auto mb-4 text-slate-200 dark:text-slate-700" />
                         <p className="text-slate-400 font-medium">Belum ada laporan bahaya. Bagus!</p>
                     </div>
                 )}
-                {hazards.map((hazard) => {
+                {asArray(hazards).map((hazard) => {
                     const risk = RISK_CONFIG[hazard.risiko] || RISK_CONFIG.Low;
                     return (
                         <div key={hazard.id_hazard} className={`bg-white dark:bg-slate-900 border ${risk.border} border-l-4 p-6 rounded-2xl flex flex-col gap-4 shadow-sm hover:shadow-md transition-all duration-300`}>
@@ -409,7 +411,7 @@ const HazardPage = () => {
             {/* Hazard Detail Modal */}
             {selectedHazard && (() => {
                 const risk = RISK_CONFIG[selectedHazard.risiko] || RISK_CONFIG.Low;
-                const imageUrl = selectedHazard.foto ? `/uploads/${selectedHazard.foto}` : null;
+                const imageUrl = assetUrl(selectedHazard.foto);
                 const mapsUrl = selectedHazard.koordinat_gps ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedHazard.koordinat_gps)}` : null;
 
                 return (

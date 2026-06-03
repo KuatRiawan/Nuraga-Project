@@ -23,6 +23,7 @@ const LeaveRequest = require('./models/LeaveRequest');
 const { autoExpirePermits } = require('./controllers/workPermitController');
 const whatsappService = require('./services/whatsappService');
 const { startFileCleanupScheduler } = require('./utils/fileCleanup');
+const { UPLOADS_DIR } = require('./utils/paths');
 
 dotenv.config();
 
@@ -34,17 +35,25 @@ if (!process.env.JWT_SECRET || process.env.JWT_SECRET.trim() === '') {
 
 const app = express();
 
-const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+const corsOrigins = (process.env.CORS_ORIGIN || process.env.CLIENT_URL || '')
+    .split(',')
+    .map(origin => origin.trim())
+    .filter(Boolean);
 
 app.use(cors({
-    origin: clientUrl,
+    origin: (origin, callback) => {
+        if (!origin || corsOrigins.length === 0 || corsOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        return callback(new Error(`CORS origin not allowed: ${origin}`));
+    },
     credentials: true
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve uploads
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(UPLOADS_DIR));
 
 const { applyUserCascadeConstraints } = require('./migrations/applyUserCascadeConstraints');
 
@@ -133,7 +142,7 @@ function startServer(port, retries = 5) {
 
     const io = new Server(server, {
         cors: {
-            origin: clientUrl,
+            origin: corsOrigins.length > 0 ? corsOrigins : true,
             methods: ["GET", "POST"],
             credentials: true
         },
@@ -288,7 +297,7 @@ sequelize.sync().then(async () => {
             await SystemConfig.bulkCreate([
                 { key: 'whatsapp_gateway_number', value: '+6281234567890' },
                 { key: 'whatsapp_api_key', value: 'dummy-wa-api-key' },
-                { key: 'ai_fastapi_endpoint', value: 'http://localhost:8000' },
+                { key: 'ai_fastapi_endpoint', value: process.env.AI_SERVICE_URL || '' },
                 { key: 'open_meteo_endpoint', value: 'https://api.open-meteo.com' },
                 { key: 'rewards_config', value: JSON.stringify([
                     { id: 1, title: 'Voucer Makan Siang', points: 200, icon: '🍱', quota: 50 },

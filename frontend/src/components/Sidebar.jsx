@@ -6,6 +6,7 @@ import {
     Shield, Award, Zap, FileCheck, X, Users, ClipboardList, Trophy, History, HeartPulse, Clock
 } from 'lucide-react';
 import { useAuth } from '../store/AuthContext';
+import { assetUrl } from '../utils/url';
 
 const ROLE_COLORS = {
     Admin: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
@@ -121,7 +122,7 @@ const Sidebar = ({ onClose, onLogoutClick }) => {
                 <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700/50">
                     {user?.foto ? (
                         <img
-                            src={`/uploads/${user.foto}`}
+                            src={assetUrl(user.foto)}
                             alt={user.nama}
                             className="w-10 h-10 rounded-full object-cover border border-blue-200 dark:border-blue-500/20 shrink-0"
                         />

@@ -24,6 +24,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import GamificationPage from './pages/GamificationPage';
 import AuditLogPage from './pages/AuditLogPage';
 import AttendancePage from './pages/AttendancePage';
+import { asArray } from './utils/safeData';
 
 const queryClient = new QueryClient();
 
@@ -236,7 +237,7 @@ const EmergencyListener = () => {
         );
     }
 
-    const { emergency, responders } = alertData;
+    const { emergency = {}, responders = [] } = alertData || {};
 
     return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-red-950/80 backdrop-blur-md animate-in fade-in duration-300">
@@ -274,8 +275,8 @@ const EmergencyListener = () => {
                     <div className="w-full text-left space-y-3">
                         <span className="text-[10px] font-black text-slate-450 uppercase tracking-widest block">Responders Zona Ditugaskan</span>
                         <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
-                            {responders && responders.length > 0 ? (
-                                responders.map((r, idx) => (
+                            {asArray(responders).length > 0 ? (
+                                asArray(responders).map((r, idx) => (
                                     <div key={idx} className="flex items-center justify-between p-3 bg-emerald-500/10 dark:bg-emerald-500/5 border border-emerald-500/20 rounded-xl text-emerald-800 dark:text-emerald-400 text-xs font-bold">
                                         <span>✓ {r.nama}</span>
                                         <span className="text-[10px] uppercase font-black tracking-wider bg-emerald-500/20 px-2 py-0.5 rounded">{r.role}</span>

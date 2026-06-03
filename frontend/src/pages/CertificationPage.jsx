@@ -5,6 +5,7 @@ import Button from '../components/Button';
 import Input from '../components/Input';
 import { useAuth } from '../store/AuthContext';
 import { Award, Plus, Calendar, ShieldCheck, AlertTriangle, CheckCircle2, Clock, Edit, Trash2, X, MessageSquare } from 'lucide-react';
+import { asArray } from '../utils/safeData';
 
 const getDaysUntilExpiry = (dateStr) => {
     const now = new Date();
@@ -136,20 +137,20 @@ const CertificationPage = () => {
         queryFn: async () => {
             const url = isAdmin ? '/certifications/all' : '/certifications/my';
             const res = await api.get(url);
-            return res.data;
+            return asArray(res.data?.data || res.data);
         },
         enabled: !!user
     });
 
     // Sort: expiring soon first
-    const certs = [...rawCerts].sort((a, b) => getDaysUntilExpiry(a.tanggal_expired) - getDaysUntilExpiry(b.tanggal_expired));
+    const certs = asArray(rawCerts).sort((a, b) => getDaysUntilExpiry(a.tanggal_expired) - getDaysUntilExpiry(b.tanggal_expired));
 
     // Fetch users using React Query (Admin only)
     const { data: users = [], isLoading: usersLoading } = useQuery({
         queryKey: ['users'],
         queryFn: async () => {
             const res = await api.get('/users');
-            return res.data;
+            return asArray(res.data?.data || res.data);
         },
         enabled: isAdmin
     });
@@ -278,7 +279,7 @@ const CertificationPage = () => {
                                     <select
                                         value={formData.id_user}
                                         onChange={(e) => {
-                                            const selectedUser = users.find(u => String(u.id_user) === e.target.value);
+                                            const selectedUser = asArray(users).find(u => String(u.id_user) === e.target.value);
                                             setFormData({
                                                 ...formData,
                                                 id_user: e.target.value,
@@ -289,7 +290,7 @@ const CertificationPage = () => {
                                         required
                                     >
                                         <option value="">-- Pilih User --</option>
-                                        {users.map(u => (
+                                        {asArray(users).map(u => (
                                             <option key={u.id_user} value={u.id_user}>{u.nama} ({u.role})</option>
                                         ))}
                                     </select>
@@ -387,7 +388,7 @@ const CertificationPage = () => {
                         <p className="text-slate-400 font-medium">Belum ada sertifikasi yang terdaftar.</p>
                     </div>
                 )}
-                {certs.map((cert) => {
+                {asArray(certs).map((cert) => {
                     const daysLeft = getDaysUntilExpiry(cert.tanggal_expired);
                     const isExpired = daysLeft <= 0;
                     const isExpiring = daysLeft > 0 && daysLeft <= 30;

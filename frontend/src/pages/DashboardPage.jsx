@@ -8,6 +8,7 @@ import SafetyCharts from '../components/SafetyCharts';
 import { generateMonthlyReport } from '../utils/reportGenerator';
 import Button from '../components/Button';
 import { useAuth } from '../store/AuthContext';
+import { asArray, asObject } from '../utils/safeData';
 
 
 
@@ -182,14 +183,14 @@ const DashboardPage = () => {
         ]);
 
         return {
-            stats: statsRes.data,
-            permits: permitsRes.data.data || permitsRes.data,
-            report: reportRes.data,
-            incidents: incidentsRes.data.data || incidentsRes.data,
-            certs: certsRes.data,
-            hazards: hazardsRes.data.data || hazardsRes.data,
-            actions: actionsRes.data,
-            users: usersRes.data
+            stats: asObject(statsRes.data),
+            permits: asArray(permitsRes.data?.data || permitsRes.data),
+            report: asObject(reportRes.data),
+            incidents: asArray(incidentsRes.data?.data || incidentsRes.data),
+            certs: asArray(certsRes.data?.data || certsRes.data),
+            hazards: asArray(hazardsRes.data?.data || hazardsRes.data),
+            actions: asArray(actionsRes.data?.data || actionsRes.data),
+            users: asArray(usersRes.data?.data || usersRes.data)
         };
     };
 
@@ -218,10 +219,10 @@ const DashboardPage = () => {
             clearTimeout(timer);
             setLoading(false);
 
-            setStats(dashboardData.stats);
-            setPermits(dashboardData.permits);
+            setStats(asObject(dashboardData.stats));
+            setPermits(asArray(dashboardData.permits));
 
-            const activeCount = dashboardData.permits.filter(p =>
+            const activeCount = asArray(dashboardData.permits).filter(p =>
                 p.status === 'Approved' || p.status === 'Active'
             ).length;
             setActivePermitsCount(activeCount);
@@ -230,13 +231,13 @@ const DashboardPage = () => {
 
             const thirtyDaysAgo = new Date();
             thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-            const nearMisses = dashboardData.incidents.filter(i =>
+            const nearMisses = asArray(dashboardData.incidents).filter(i =>
                 i.kategori === 'Near Miss' && new Date(i.createdAt) >= thirtyDaysAgo
             );
             setNearMissCount(nearMisses.length);
 
             const now = new Date();
-            const expiring = dashboardData.certs.filter(cert => {
+            const expiring = asArray(dashboardData.certs).filter(cert => {
                 const expDate = new Date(cert.tanggal_expired);
                 const diffTime = expDate - now;
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -244,7 +245,7 @@ const DashboardPage = () => {
             });
             setExpiringCertifications(expiring);
 
-            const expired = dashboardData.certs.filter(cert => {
+            const expired = asArray(dashboardData.certs).filter(cert => {
                 const expDate = new Date(cert.tanggal_expired);
                 return expDate < now;
             });
@@ -252,13 +253,13 @@ const DashboardPage = () => {
 
             if (user) {
                 const userId = user.id_user || user.id;
-                const userHazards = dashboardData.hazards.filter(h => h.id_user === userId);
+                const userHazards = asArray(dashboardData.hazards).filter(h => h.id_user === userId);
                 setMyHazards(userHazards);
 
-                setTotalActions(dashboardData.actions);
+                setTotalActions(asArray(dashboardData.actions));
 
                 if (user.role === 'Admin') {
-                    setTotalUsersCount(dashboardData.users.length);
+                    setTotalUsersCount(asArray(dashboardData.users).length);
                 }
 
                 // Fetch attendance status & trigger popup/banner

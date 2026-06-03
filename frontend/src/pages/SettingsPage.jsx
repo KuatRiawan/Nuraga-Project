@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import Button from '../components/Button';
 import Input from '../components/Input';
+import { apiStreamUrl, assetUrl } from '../utils/url';
 
 const ReadOnlyField = ({ icon: Icon, label, value, hint }) => (
     <div className="flex items-start gap-3 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-700/50 group">
@@ -106,7 +107,7 @@ const SettingsPage = () => {
 
         const token = localStorage.getItem('token');
         const es = new EventSource(
-            `/api/wa/stream?token=${encodeURIComponent(token)}`
+            apiStreamUrl(`/api/wa/stream?token=${encodeURIComponent(token || '')}`)
         );
         eventSourceRef.current = es;
 
@@ -292,7 +293,7 @@ const SettingsPage = () => {
         setShowPasswordModal(true);
     };
 
-    const avatarUrl = user?.foto ? `/uploads/${user.foto}` : null;
+    const avatarUrl = assetUrl(user?.foto);
 
     return (
         <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
@@ -582,7 +583,7 @@ const SettingsPage = () => {
                                     <Brain size={12} className="text-slate-450" /> AI FastAPI Service Endpoint
                                 </label>
                                 <Input
-                                    placeholder="Contoh: http://localhost:8000/api/v1"
+                                    placeholder="Contoh: https://ai-api.nuraga.example/api/v1"
                                     value={configs.ai_fastapi_endpoint}
                                     onChange={(e) => setConfigs({ ...configs, ai_fastapi_endpoint: e.target.value })}
                                     required

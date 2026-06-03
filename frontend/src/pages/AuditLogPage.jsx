@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../api/axios';
 import { History, Search, Shield, User, Clock, Info, RefreshCw, FileText, Check, AlertCircle } from 'lucide-react';
 import Button from '../components/Button';
+import { asArray } from '../utils/safeData';
 
 const ACTION_COLORS = {
     LOGIN: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20',
@@ -49,7 +50,7 @@ const AuditLogPage = () => {
         setError('');
         try {
             const res = await api.get('/logs');
-            setLogs(res.data);
+            setLogs(asArray(res.data?.data || res.data));
         } catch (err) {
             setError(err.response?.data?.message || 'Gagal memuat log audit.');
         } finally {
@@ -85,7 +86,7 @@ const AuditLogPage = () => {
         { value: 'SYSTEM', label: 'System' }
     ];
 
-    const filteredLogs = logs.filter(log => {
+    const filteredLogs = asArray(logs).filter(log => {
         const matchesSearch =
             (log.nama_user && log.nama_user.toLowerCase().includes(searchQuery.toLowerCase())) ||
             (log.details && log.details.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -95,7 +96,7 @@ const AuditLogPage = () => {
         const matchesAction = selectedAction === 'ALL'
             ? true
             : selectedAction === 'APPROVE_PTW'
-                ? log.action.startsWith('APPROVE_PTW')
+                ? log.action?.startsWith('APPROVE_PTW')
                 : log.action === selectedAction;
 
         const matchesRole = selectedRole === 'ALL' ? true : log.role_user === selectedRole;
@@ -223,7 +224,7 @@ const AuditLogPage = () => {
                                                 {log.details}
                                             </td>
                                             <td className="px-6 py-4 text-xs font-mono font-bold text-slate-500 dark:text-slate-400">
-                                                {log.ip_address || '127.0.0.1'}
+                                                {log.ip_address || 'unknown'}
                                             </td>
                                         </tr>
                                     );

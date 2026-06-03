@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import api from '../api/axios';
 import { Zap, AlertTriangle, Users, Bell, MapPin, Loader2 } from 'lucide-react';
+import { asArray } from '../utils/safeData';
 
 const EmergencyControls = ({ compact = false, onTriggered }) => {
     const [loading, setLoading] = useState(false);
@@ -111,8 +112,9 @@ const EmergencyControls = ({ compact = false, onTriggered }) => {
             });
             if (onTriggered) onTriggered();
 
-            const respondersList = res.data.responders && res.data.responders.length > 0
-                ? res.data.responders.map(r => `• ${r.nama} (${r.role})`).join('\n')
+            const responders = asArray(res.data?.responders);
+            const respondersList = responders.length > 0
+                ? responders.map(r => `• ${r.nama} (${r.role})`).join('\n')
                 : 'Tidak ada personil bersertifikat khusus yang terdeteksi. Sistem menyiarkan alarm ke seluruh tim.';
 
             setAlertModal({ show: true, type, respondersList, isError: false });

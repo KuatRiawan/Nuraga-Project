@@ -7,6 +7,8 @@ import Input from '../components/Input';
 import { Plus, Info, Users, MapPin, Camera, ClipboardList, Download, X, CheckCircle2 } from 'lucide-react';
 import { generateIncidentReport } from '../utils/reportGenerator';
 import { useAuth } from '../store/AuthContext';
+import { assetUrl } from '../utils/url';
+import { asArray } from '../utils/safeData';
 
 const IncidentPage = () => {
     const queryClient = useQueryClient();
@@ -105,7 +107,7 @@ const IncidentPage = () => {
         queryKey: ['incidents'],
         queryFn: async () => {
             const res = await api.get('/incidents');
-            return res.data.data || res.data;
+            return asArray(res.data?.data || res.data);
         }
     });
 
@@ -349,13 +351,13 @@ const IncidentPage = () => {
 
             {/* Incident List */}
             <div className="space-y-4">
-                {incidents.length === 0 && (
+                {asArray(incidents).length === 0 && (
                     <div className="p-16 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl">
                         <ClipboardList size={48} className="mx-auto mb-4 text-slate-200 dark:text-slate-700" />
                         <p className="text-slate-400 font-medium">Belum ada laporan insiden kecelakaan kerja. Pertahankan kinerja K3 Anda!</p>
                     </div>
                 )}
-                {incidents.map((incident) => (
+                {asArray(incidents).map((incident) => (
                     <div
                         key={incident.id_incident}
                         onClick={() => setSelectedIncident(incident)}
@@ -454,7 +456,7 @@ const IncidentPage = () => {
                                 <div className="space-y-1.5">
                                     <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">Foto Dokumentasi</h3>
                                     <div className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 max-h-60 flex items-center justify-center bg-slate-900">
-                                        <img src={`/uploads/${selectedIncident.foto}`} alt="Dokumentasi Insiden" className="w-full h-full object-contain" onError={(e) => { e.target.src = '/fallback.png'; e.target.onerror = null; }} />
+                                        <img src={assetUrl(selectedIncident.foto)} alt="Dokumentasi Insiden" className="w-full h-full object-contain" onError={(e) => { e.target.src = '/fallback.png'; e.target.onerror = null; }} />
                                     </div>
                                 </div>
                             )}

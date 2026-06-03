@@ -1,10 +1,18 @@
 const axios = require('axios');
 
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL || '';
 
 const analyzeRisk = async (req, res) => {
     try {
         const { deskripsi, lokasi } = req.body;
+
+        if (!AI_SERVICE_URL) {
+            return res.json({
+                predicted_risk: 'Unknown',
+                confidence: 0,
+                recommendation: 'AI service belum dikonfigurasi, silakan tinjau secara manual.'
+            });
+        }
 
         const aiResponse = await axios.post(`${AI_SERVICE_URL}/predict-risk`, {
             description: deskripsi,

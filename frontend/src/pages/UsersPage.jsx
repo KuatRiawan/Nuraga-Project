@@ -4,6 +4,7 @@ import Button from '../components/Button';
 import Input from '../components/Input';
 import { useAuth } from '../store/AuthContext';
 import { Users, Plus, Search, Edit2, Trash2, Shield, Mail, AlertCircle, X, ShieldAlert, Check, BadgeCheck, Briefcase, MapPin, Upload, Download, ChevronDown } from 'lucide-react';
+import { asArray } from '../utils/safeData';
 
 const ROLE_BADGES = {
     Admin: 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20',
@@ -118,7 +119,7 @@ const UsersPage = () => {
                     }
 
                     // Check if user already exists (by email) in local state
-                    const existingUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+                    const existingUser = asArray(users).find(u => u.email?.toLowerCase() === email.toLowerCase());
 
                     try {
                         if (existingUser) {
@@ -174,7 +175,7 @@ const UsersPage = () => {
     };
 
     const handleExportCSV = () => {
-        if (users.length === 0) {
+        if (asArray(users).length === 0) {
             setError('Tidak ada data user untuk diexport.');
             return;
         }
@@ -182,7 +183,7 @@ const UsersPage = () => {
         const headers = ['nama', 'email', 'role', 'nik', 'jabatan', 'area_kerja', 'no_whatsapp', 'jenis_kelamin'];
         const csvRows = [
             headers.join(','),
-            ...users.map(u =>
+            ...asArray(users).map(u =>
                 headers.map(header => {
                     const val = u[header] || '';
                     const escaped = String(val).replace(/"/g, '""');
@@ -251,7 +252,7 @@ const UsersPage = () => {
         setError('');
         try {
             const res = await api.get('/users');
-            setUsers(res.data);
+            setUsers(asArray(res.data?.data || res.data));
         } catch (err) {
             setError(err.response?.data?.message || 'Gagal memuat daftar user.');
         } finally {
@@ -358,10 +359,10 @@ const UsersPage = () => {
         }
     };
 
-    const filteredUsers = users.filter(u =>
-        u.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        u.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const filteredUsers = asArray(users).filter(u =>
+        u.nama?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.role?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (u.nik && u.nik.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (u.area_kerja && u.area_kerja.toLowerCase().includes(searchQuery.toLowerCase()))
     );
@@ -467,7 +468,7 @@ const UsersPage = () => {
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 rounded-2xl bg-blue-600/10 text-blue-600 dark:text-blue-400 font-bold flex items-center justify-center text-base uppercase border border-blue-500/20">
-                                                        {u.nama.charAt(0)}
+                                                        {u.nama?.charAt(0) || '?'}
                                                     </div>
                                                     <div>
                                                         <div className="font-bold text-slate-900 dark:text-white flex items-center gap-2">

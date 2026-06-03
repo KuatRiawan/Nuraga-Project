@@ -1,30 +1,35 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from 'tailwindcss'
 import autoprefixer from 'autoprefixer'
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+    const env = loadEnv(mode, process.cwd(), '');
+    const backendUrl = env.VITE_BACKEND_BASE_URL || env.VITE_API_BASE_URL?.replace(/\/api\/?$/, '');
+
+    return {
     plugins: [react()],
     server: {
         host: '0.0.0.0',
-        allowedHosts: ['unfoolishly-horsiest-gudrun.ngrok-free.dev', '.ngrok-free.dev'],
-        proxy: {
+        proxy: backendUrl ? {
             '/api': {
-                target: 'http://localhost:5001',
+                target: backendUrl,
                 changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/api/, '/api'),
+                secure: false,
             },
             '/uploads': {
-                target: 'http://localhost:5001',
+                target: backendUrl,
                 changeOrigin: true,
+                secure: false,
             },
             '/socket.io': {
-                target: 'http://localhost:5001',
+                target: backendUrl,
                 changeOrigin: true,
                 ws: true,
+                secure: false,
             },
-        },
+        } : {},
     },
     css: {
         postcss: {
@@ -34,4 +39,5 @@ export default defineConfig({
             ],
         },
     },
+    };
 })

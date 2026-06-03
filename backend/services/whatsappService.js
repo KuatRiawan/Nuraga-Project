@@ -14,11 +14,13 @@ const {
     jidNormalizedUser
 } = require('@whiskeysockets/baileys');
 
-const path = require('path');
+const fs = require('fs');
 const qrcode = require('qrcode');
+const { WA_SESSION_DIR } = require('../utils/paths');
 
 // ── Session storage path ─────────────────────────────────────────────────────
-const SESSION_DIR = path.join(__dirname, '../wa_session');
+const SESSION_DIR = WA_SESSION_DIR;
+fs.mkdirSync(SESSION_DIR, { recursive: true });
 
 // ── Internal state ────────────────────────────────────────────────────────────
 let sock = null;
@@ -132,7 +134,6 @@ const connect = async () => {
 
                 if (loggedOut) {
                     // Session invalidated — clear saved credentials
-                    const fs = require('fs');
                     if (fs.existsSync(SESSION_DIR)) {
                         fs.rmSync(SESSION_DIR, { recursive: true, force: true });
                         console.log('[WhatsApp] 🔄 Session file cleared.');
@@ -244,7 +245,6 @@ const logout = async () => {
         console.error('[WhatsApp] Error during logout:', err.message);
     }
     
-    const fs = require('fs');
     if (fs.existsSync(SESSION_DIR)) {
         fs.rmSync(SESSION_DIR, { recursive: true, force: true });
         console.log('[WhatsApp] 🗑️ Session folder cleared.');
