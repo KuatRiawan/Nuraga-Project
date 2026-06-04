@@ -10,33 +10,24 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const fetchUser = async () => {
-            const token = localStorage.getItem('token');
-            if (token) {
-                try {
-                    const res = await api.get('/auth/me');
-                    setUser(res.data);
-                } catch (error) {
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('refreshToken');
-                    setUser(null);
-                }
+            try {
+                const res = await api.get('/auth/me');
+                setUser(res.data);
+            } catch (error) {
+                // If 401, they don't have a valid cookie (or it expired and couldn't be refreshed)
+                setUser(null);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         };
         fetchUser();
     }, []);
 
     const login = async (email, password) => {
         // Clear any existing auth state before new login
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
         setUser(null);
-        delete api.defaults.headers.common['Authorization'];
 
         const res = await api.post('/auth/login', { email, password });
-        localStorage.setItem('token', res.data.token);
-        localStorage.setItem('refreshToken', res.data.refreshToken);
         setUser(res.data.user);
         return res.data;
     };
@@ -49,11 +40,7 @@ export const AuthProvider = ({ children }) => {
         } finally {
             // Disconnect WebSocket to prevent memory leak
             disconnectSocket();
-            localStorage.removeItem('token');
-            localStorage.removeItem('refreshToken');
-            localStorage.removeItem('user');
             setUser(null);
-            delete api.defaults.headers.common['Authorization'];
         }
     };
 

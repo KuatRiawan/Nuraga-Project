@@ -85,9 +85,22 @@ const login = async (req, res) => {
             `User ${user.nama} (${user.role}) berhasil masuk ke dalam sistem.`
         );
 
+        const cookieOptions = {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax', // Must be lax or none (with secure) for cross-origin if needed
+            maxAge: 60 * 60 * 1000 // 1 hour
+        };
+
+        const refreshCookieOptions = {
+            ...cookieOptions,
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        };
+
+        res.cookie('token', token, cookieOptions);
+        res.cookie('refreshToken', refreshToken, refreshCookieOptions);
+
         res.json({
-            token,
-            refreshToken,
             user: {
                 id: user.id_user,
                 nama: user.nama,
@@ -401,14 +414,14 @@ const getUserStats = async (req, res) => {
 
 const refreshToken = async (req, res) => {
     try {
-        const { refreshToken } = req.body;
+        const refreshTokenStr = req.cookies?.refreshToken || req.body.refreshToken;
 
-        if (!refreshToken) {
-            return res.status(400).json({ message: 'Refresh token is required' });
+        if (!refreshTokenStr) {
+            return res.status(401).json({ message: 'Refresh token is required' });
         }
 
         // Verify refresh token
-        const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+        const decoded = jwt.verify(refreshTokenStr, process.env.JWT_SECRET);
 
         // Find user with this refresh token
         const user = await User.findOne({ where: { id_user: decoded.id } });
@@ -418,7 +431,7 @@ const refreshToken = async (req, res) => {
         }
 
         // Compare provided refresh token with hashed token in database
-        const isMatch = await bcrypt.compare(refreshToken, user.refresh_token);
+        const isMatch = await bcrypt.compare(refreshTokenStr, user.refresh_token);
         if (!isMatch) {
             return res.status(401).json({ message: 'Invalid refresh token' });
         }
@@ -452,10 +465,22 @@ const refreshToken = async (req, res) => {
         user.refresh_token_expires = newRefreshTokenExpires;
         await user.save();
 
-        res.json({
-            token: newAccessToken,
-            refreshToken: newRefreshToken,
-        });
+        const cookieOptions = {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 60 * 60 * 1000 // 1 hour
+        };
+
+        const refreshCookieOptions = {
+            ...cookieOptions,
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        };
+
+        res.cookie('token', newAccessToken, cookieOptions);
+        res.cookie('refreshToken', newRefreshToken, refreshCookieOptions);
+
+        res.json({ message: 'Token refreshed successfully' });
     } catch (error) {
         console.error('[Internal] Error:', error);
         if (error.name === 'JsonWebTokenError') {
@@ -486,6 +511,9 @@ const logout = async (req, res) => {
             'LOGOUT',
             `User ${user?.nama} (${user?.role}) berhasil keluar dari sistem.`
         );
+
+        res.clearCookie('token');
+        res.clearCookie('refreshToken');
 
         res.json({ message: 'Logout successful' });
     } catch (error) {

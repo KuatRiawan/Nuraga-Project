@@ -177,9 +177,9 @@ const DashboardPage = () => {
             api.get('/stats').catch(() => ({ data: { totalHazards: 0, totalIncidents: 0, totalAudits: 0, pendingActions: 0 } })),
             api.get('/permits').catch(() => ({ data: [] })),
             api.get('/stats/report-data').catch(() => ({ data: { summary: { audits: 0 } } })),
-            api.get('/incidents?limit=1000').catch(() => ({ data: [] })),
+            api.get('/incidents?limit=10').catch(() => ({ data: [] })),
             api.get(certsUrl).catch(() => ({ data: [] })),
-            api.get('/hazards?limit=1000').catch(() => ({ data: [] })),
+            api.get('/hazards?limit=10').catch(() => ({ data: [] })),
             api.get('/actions').catch(() => ({ data: [] })),
             usersPromise
         ]);
@@ -233,7 +233,7 @@ const DashboardPage = () => {
 
             const thirtyDaysAgo = new Date();
             thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-            const nearMisses = asArray(dashboardData.incidents).filter(i =>
+            const nearMisses = (dashboardData.report?.details?.incidents || []).filter(i =>
                 i.kategori === 'Near Miss' && new Date(i.createdAt) >= thirtyDaysAgo
             );
             setNearMissCount(nearMisses.length);
@@ -315,14 +315,14 @@ const DashboardPage = () => {
     const sixtyDaysAgo = new Date();
     sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
 
-    const incidents30Days = asArray(dashboardData?.incidents).filter(i => new Date(i.createdAt) >= thirtyDaysAgoForCards).length;
-    const incidentsPrev30Days = asArray(dashboardData?.incidents).filter(i => {
+    const incidents30Days = (dashboardData?.report?.details?.incidents || []).filter(i => new Date(i.createdAt) >= thirtyDaysAgoForCards).length;
+    const incidentsPrev30Days = (dashboardData?.report?.details?.incidents || []).filter(i => {
         const d = new Date(i.createdAt);
         return d >= sixtyDaysAgo && d < thirtyDaysAgoForCards;
     }).length;
     
-    const hazards30Days = asArray(dashboardData?.hazards).filter(h => new Date(h.createdAt) >= thirtyDaysAgoForCards).length;
-    const hazardsPrev30Days = asArray(dashboardData?.hazards).filter(h => {
+    const hazards30Days = (dashboardData?.report?.details?.hazards || []).filter(h => new Date(h.createdAt) >= thirtyDaysAgoForCards).length;
+    const hazardsPrev30Days = (dashboardData?.report?.details?.hazards || []).filter(h => {
         const d = new Date(h.createdAt);
         return d >= sixtyDaysAgo && d < thirtyDaysAgoForCards;
     }).length;

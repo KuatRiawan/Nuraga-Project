@@ -87,13 +87,19 @@ const HazardPage = () => {
         }
     }, [location]);
 
-    const { data: hazards = [] } = useQuery({
-        queryKey: ['hazards'],
+    const [page, setPage] = useState(1);
+    const limit = 10;
+
+    const { data: hazardsData, isLoading: hazardsLoading } = useQuery({
+        queryKey: ['hazards', page],
         queryFn: async () => {
-            const res = await api.get('/hazards');
-            return res.data.data || res.data;
+            const res = await api.get(`/hazards?page=${page}&limit=${limit}`);
+            return res.data;
         }
     });
+
+    const hazards = hazardsData?.data || [];
+    const totalPages = hazardsData?.totalPages || 1;
 
     const verifyMutation = useMutation({
         mutationFn: async (id) => {
@@ -352,6 +358,29 @@ const HazardPage = () => {
                         </div>
                     );
                 })}
+                    </div>
+                )}
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-4 mt-6">
+                        <Button 
+                            variant="secondary" 
+                            disabled={page === 1} 
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                        >
+                            Sebelumnya
+                        </Button>
+                        <span className="text-sm font-bold text-slate-500">
+                            Halaman {page} dari {totalPages}
+                        </span>
+                        <Button 
+                            variant="secondary" 
+                            disabled={page === totalPages} 
+                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                        >
+                            Selanjutnya
+                        </Button>
                     </div>
                 )}
             </div>

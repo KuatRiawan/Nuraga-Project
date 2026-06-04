@@ -103,13 +103,19 @@ const IncidentPage = () => {
         }
     }, [location]);
 
-    const { data: incidents = [] } = useQuery({
-        queryKey: ['incidents'],
+    const [page, setPage] = useState(1);
+    const limit = 10;
+
+    const { data: incidentsData, isLoading: incidentsLoading } = useQuery({
+        queryKey: ['incidents', page],
         queryFn: async () => {
-            const res = await api.get('/incidents');
-            return res.data.data || res.data;
+            const res = await api.get(`/incidents?page=${page}&limit=${limit}`);
+            return res.data;
         }
     });
+
+    const incidents = incidentsData?.data || [];
+    const totalPages = incidentsData?.totalPages || 1;
 
     useEffect(() => {
         if (selectedIncident) {
@@ -392,6 +398,29 @@ const IncidentPage = () => {
                         </div>
                     </div>
                 ))}
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-4 mt-6">
+                        <Button 
+                            variant="secondary" 
+                            disabled={page === 1} 
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                        >
+                            Sebelumnya
+                        </Button>
+                        <span className="text-sm font-bold text-slate-500">
+                            Halaman {page} dari {totalPages}
+                        </span>
+                        <Button 
+                            variant="secondary" 
+                            disabled={page === totalPages} 
+                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                        >
+                            Selanjutnya
+                        </Button>
+                    </div>
+                )}
             </div>
 
             {/* selectedIncident Detail Modal */}

@@ -5,6 +5,7 @@ const sequelize = require('./config/db');
 const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
 
 // Import models to sync
 const User = require('./models/User');
@@ -61,6 +62,7 @@ app.use(cors({
     credentials: true
 }));
 app.use(express.json());
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve uploads
@@ -164,7 +166,21 @@ function startServer(port, retries = 5) {
 
     // JWT Authentication middleware for Socket.io
     io.use((socket, next) => {
-        const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.replace('Bearer ', '');
+        // Parse cookies from handshake headers
+        let token;
+        const cookieHeader = socket.handshake.headers.cookie;
+        if (cookieHeader) {
+            const cookies = cookieHeader.split(';').reduce((res, item) => {
+                const data = item.trim().split('=');
+                return { ...res, [data[0]]: data[1] };
+            }, {});
+            token = cookies.token;
+        }
+        
+        // Fallback for backwards compatibility if needed during migration
+        if (!token) {
+            token = socket.handshake.auth.token || socket.handshake.headers.authorization?.replace('Bearer ', '');
+        }
 
         if (!token) {
             return next(new Error('Authentication error'));

@@ -86,8 +86,7 @@ const EmergencyListener = () => {
         };
 
         const handlePTWRequestCreated = (data) => {
-            // Show toast notification for new PTW request
-            console.log('PTW Request Created:', data);
+            queryClient.invalidateQueries(['permits']);
             // Simple browser notification
             if (Notification.permission === 'granted') {
                 new Notification('Permit-to-Work Baru', {
@@ -100,8 +99,7 @@ const EmergencyListener = () => {
         };
 
         const handlePTWStatusUpdate = (data) => {
-            // Show toast notification for PTW status update
-            console.log('PTW Status Updated:', data);
+            queryClient.invalidateQueries(['permits']);
             if (Notification.permission === 'granted') {
                 new Notification('Status Permit Diperbarui', {
                     body: `Permit ${data.permit_type} status: ${data.status}`,
@@ -111,7 +109,7 @@ const EmergencyListener = () => {
         };
 
         const handleHazardCreated = (data) => {
-            console.log('Hazard Created:', data);
+            queryClient.invalidateQueries(['hazards']);
             if (Notification.permission === 'granted') {
                 new Notification('Laporan Bahaya Baru', {
                     body: `${data.userName} melaporkan bahaya di ${data.lokasi} (Risiko: ${data.risiko})`,
@@ -121,7 +119,7 @@ const EmergencyListener = () => {
         };
 
         const handleHazardUpdated = (data) => {
-            console.log('Hazard Updated:', data);
+            queryClient.invalidateQueries(['hazards']);
             if (Notification.permission === 'granted') {
                 new Notification('Status Laporan Bahaya Diperbarui', {
                     body: `Laporan bahaya #${data.id} diperbarui oleh ${data.updatedBy}`,
@@ -131,7 +129,7 @@ const EmergencyListener = () => {
         };
 
         const handleIncidentCreated = (data) => {
-            console.log('Incident Created:', data);
+            queryClient.invalidateQueries(['incidents']);
             if (Notification.permission === 'granted') {
                 new Notification('Laporan Insiden Baru', {
                     body: `${data.userName} melaporkan insiden: ${data.kategori}`,
@@ -141,7 +139,7 @@ const EmergencyListener = () => {
         };
 
         const handleIncidentUpdated = (data) => {
-            console.log('Incident Updated:', data);
+            queryClient.invalidateQueries(['incidents']);
             if (Notification.permission === 'granted') {
                 new Notification('Status Laporan Insiden Diperbarui', {
                     body: `Laporan insiden #${data.id} diperbarui oleh ${data.updatedBy}`,
@@ -151,7 +149,7 @@ const EmergencyListener = () => {
         };
 
         const handleAuditCreated = (data) => {
-            console.log('Audit Created:', data);
+            queryClient.invalidateQueries(['audits']);
             if (Notification.permission === 'granted') {
                 new Notification('Audit Baru Dibuat', {
                     body: `${data.auditorName} melakukan audit di ${data.area}`,
@@ -161,7 +159,7 @@ const EmergencyListener = () => {
         };
 
         const handleActionCreated = (data) => {
-            console.log('Action Created:', data);
+            queryClient.invalidateQueries(['actions']);
             if (Notification.permission === 'granted') {
                 new Notification('Tindakan Korektif Baru', {
                     body: `Tindakan korektif dibuat oleh ${data.createdBy}`,
@@ -171,7 +169,7 @@ const EmergencyListener = () => {
         };
 
         const handleActionUpdated = (data) => {
-            console.log('Action Updated:', data);
+            queryClient.invalidateQueries(['actions']);
             if (Notification.permission === 'granted') {
                 new Notification('Status Tindakan Korektif Diperbarui', {
                     body: `Tindakan #${data.id} diperbarui menjadi ${data.status}`,

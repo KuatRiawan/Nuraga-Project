@@ -146,18 +146,32 @@ exports.getTodayStatus = async (req, res) => {
 exports.getMyHistory = async (req, res) => {
     try {
         const id_user = req.user.id;
-        const history = await Attendance.findAll({
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 60;
+        const offset = (page - 1) * limit;
+
+        const history = await Attendance.findAndCountAll({
             where: { id_user },
             order: [['createdAt', 'DESC']],
-            limit: 60
+            limit,
+            offset
         });
         
-        const leaves = await LeaveRequest.findAll({
+        const leaves = await LeaveRequest.findAndCountAll({
             where: { id_user },
-            order: [['createdAt', 'DESC']]
+            order: [['createdAt', 'DESC']],
+            limit,
+            offset
         });
 
-        res.status(200).json({ attendance: history, leaves });
+        res.status(200).json({ 
+            attendance: history.rows,
+            totalAttendance: history.count,
+            leaves: leaves.rows,
+            totalLeaves: leaves.count,
+            currentPage: page,
+            totalPages: Math.ceil(history.count / limit)
+        });
     } catch (error) {
         res.status(500).json({ message: "Internal server error" });
     }
@@ -165,18 +179,32 @@ exports.getMyHistory = async (req, res) => {
 
 exports.getAllHistory = async (req, res) => {
     try {
-        const history = await Attendance.findAll({
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 50;
+        const offset = (page - 1) * limit;
+
+        const history = await Attendance.findAndCountAll({
             include: [{ model: User, attributes: ['nama', 'nik', 'role'] }],
             order: [['createdAt', 'DESC']],
-            limit: 500
+            limit,
+            offset
         });
         
-        const leaves = await LeaveRequest.findAll({
+        const leaves = await LeaveRequest.findAndCountAll({
             include: [{ model: User, attributes: ['nama', 'nik', 'role'] }],
-            order: [['createdAt', 'DESC']]
+            order: [['createdAt', 'DESC']],
+            limit,
+            offset
         });
 
-        res.status(200).json({ attendance: history, leaves });
+        res.status(200).json({ 
+            attendance: history.rows,
+            totalAttendance: history.count,
+            leaves: leaves.rows,
+            totalLeaves: leaves.count,
+            currentPage: page,
+            totalPages: Math.ceil(history.count / limit)
+        });
     } catch (error) {
         res.status(500).json({ message: "Internal server error" });
     }

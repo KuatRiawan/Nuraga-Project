@@ -105,9 +105,9 @@ const SettingsPage = () => {
         // Close any existing stream
         if (eventSourceRef.current) eventSourceRef.current.close();
 
-        const token = localStorage.getItem('token');
         const es = new EventSource(
-            apiStreamUrl(`/api/wa/stream?token=${encodeURIComponent(token || '')}`)
+            apiStreamUrl(`/api/wa/stream`),
+            { withCredentials: true }
         );
         eventSourceRef.current = es;
 

@@ -49,21 +49,24 @@ const AttendancePage = () => {
     enabled: !!user
   });
 
+  const [page, setPage] = useState(1);
+  const limit = 20;
+
   // Fetch my history using React Query
-  const { data: myHistoryData = { attendance: [], leaves: [] } } = useQuery({
-    queryKey: ['attendance', 'my-history'],
+  const { data: myHistoryData = { attendance: [], leaves: [], totalPages: 1 } } = useQuery({
+    queryKey: ['attendance', 'my-history', page],
     queryFn: async () => {
-      const res = await api.get('/attendance/my-history');
+      const res = await api.get(`/attendance/my-history?page=${page}&limit=${limit}`);
       return asObject(res.data);
     },
     enabled: !!user && !isAdmin
   });
 
   // Fetch all history and users using React Query (Admin only)
-  const { data: allHistoryData = { attendance: [], leaves: [] } } = useQuery({
-    queryKey: ['attendance', 'all-history'],
+  const { data: allHistoryData = { attendance: [], leaves: [], totalPages: 1 } } = useQuery({
+    queryKey: ['attendance', 'all-history', page],
     queryFn: async () => {
-      const res = await api.get('/attendance/all');
+      const res = await api.get(`/attendance/all?page=${page}&limit=${limit}`);
       return asObject(res.data);
     },
     enabled: !!user && isAdmin
@@ -255,7 +258,6 @@ const AttendancePage = () => {
   // Clock In mutation
   const clockInMutation = useMutation({
     mutationFn: async (data) => {
-      const token = localStorage.getItem('token');
       const formData = new FormData();
       formData.append('sleep_hours', data.sleepHours);
       formData.append('stress_level', data.stressLevel);
@@ -312,7 +314,6 @@ const AttendancePage = () => {
   // Leave Submit mutation
   const leaveSubmitMutation = useMutation({
     mutationFn: async (data) => {
-      const token = localStorage.getItem('token');
       const formData = new FormData();
       Object.keys(data.leaveForm).forEach(key => formData.append(key, data.leaveForm[key]));
       if (data.leaveDoc) formData.append('document_proof', data.leaveDoc);

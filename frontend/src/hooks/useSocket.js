@@ -14,10 +14,9 @@ export const useSocket = () => {
             const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '';
             const backendUrl = import.meta.env.VITE_SOCKET_URL ||
                 (apiBaseUrl.startsWith('http') ? apiBaseUrl.replace(/\/api\/?$/, '') : window.location.origin);
-            const token = localStorage.getItem('token');
 
             socket = io(backendUrl, {
-                auth: { token },
+                withCredentials: true,
                 reconnection: true,
                 reconnectionAttempts: 5,
                 reconnectionDelay: 1000,
