@@ -845,6 +845,29 @@ const AttendancePage = () => {
             </div>
             ) : <p className="text-slate-500 text-center py-8">Belum ada pengajuan izin/cuti.</p>
             )}
+
+            {/* Pagination Controls */}
+            {historyData.totalPages > 1 && (
+                <div className="flex items-center justify-between mt-6 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/50">
+                    <button
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                        className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${page === 1 ? 'text-slate-400 bg-slate-100 dark:bg-slate-800/30 cursor-not-allowed' : 'text-blue-600 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50'}`}
+                    >
+                        Sebelumnya
+                    </button>
+                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                        Halaman {page} dari {historyData.totalPages}
+                    </span>
+                    <button
+                        onClick={() => setPage(p => Math.min(historyData.totalPages, p + 1))}
+                        disabled={page === historyData.totalPages}
+                        className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${page === historyData.totalPages ? 'text-slate-400 bg-slate-100 dark:bg-slate-800/30 cursor-not-allowed' : 'text-blue-600 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50'}`}
+                    >
+                        Selanjutnya
+                    </button>
+                </div>
+            )}
         </div>
       </div>
       )}
