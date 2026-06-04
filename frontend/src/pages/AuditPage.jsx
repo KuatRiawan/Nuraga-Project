@@ -184,7 +184,7 @@ const AuditPage = () => {
                             <Button variant="secondary" className="flex-1 rounded-2xl text-xs py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700" onClick={handleSimulateQR}>Simulasi Scan</Button>
                         </div>
                     </div>
-                </div>
+                </div>, document.body)
             )}
 
             {/* Scanned Asset Banner */}
@@ -441,7 +441,7 @@ const AuditPage = () => {
                     </div>, document.body)
                 );
             })()}
-        </div>, document.body)
+        </div>
     );
 };
 
