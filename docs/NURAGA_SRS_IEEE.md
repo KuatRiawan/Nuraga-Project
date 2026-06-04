@@ -1,9 +1,9 @@
 # DOKUMEN SPESIFIKASI KEBUTUHAN PERANGKAT LUNAK
 ## NURAGA — Integrated Safety Intelligence
 
-**Versi:** 2.0  
+**Versi:** 1.0  
 **Tanggal:** 4 Juni 2026  
-**Status:** Final (Revisi)  
+**Status:** Final
 **Standar Acuan:** IEEE 830-1998
 
 ---
@@ -2564,17 +2564,17 @@ Dokumen SRS ini menetapkan kebutuhan komprehensif untuk Sistem Nuraga — Integr
 
 **Pengelolaan Perubahan Dokumen:** Setiap perubahan atau penambahan kebutuhan harus melalui proses manajemen perubahan formal dan didokumentasikan dengan riwayat versi yang jelas.
 
-**Status Dokumen:** Final v2.0 — Siap untuk pengembangan dan pengujian.
+**Status Dokumen:** Final v1.0 — Siap untuk pengembangan dan pengujian.
 
-**Persetujuan:**
-- [ ] Manajer Proyek
-- [ ] Pimpinan Teknis
-- [ ] Manajer HSE
-- [ ] Pemangku Kepentingan
+**Persetujuan Dokumen:**
+- [ ] Peserta Capstone
+- [ ] Mentor Pembimbing Proyek
+- [ ] Tim Penguji / Assessor Capstone
+- [ ] Koordinator Program Coding Camp 2026
 
 ---
 
-**Versi Dokumen:** 2.0  
+**Versi Dokumen:** 1.0  
 **Terakhir Diperbarui:** 4 Juni 2026  
 **Disusun oleh:** Tim CC26-PRU428  
 **Kontak:** [CC26-PRU428@student.devacademy.id]
