@@ -63,7 +63,7 @@ const SafetyCharts = () => {
                             formatter={(value) => <span className="text-slate-700 dark:text-slate-300 font-bold text-xs">{value}</span>}
                         />
                         <Line
-                            type="linear"
+                            type="monotone"
                             dataKey="hazards"
                             name="Hazards Reported"
                             stroke="#f59e0b"
@@ -72,7 +72,7 @@ const SafetyCharts = () => {
                             activeDot={{ r: 7 }}
                         />
                         <Line
-                            type="linear"
+                            type="monotone"
                             dataKey="incidents"
                             name="Incidents Logged"
                             stroke="#ef4444"

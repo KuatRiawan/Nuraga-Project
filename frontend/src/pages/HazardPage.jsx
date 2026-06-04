@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import api from '../api/axios';
 import Button from '../components/Button';
 import Input from '../components/Input';
+import AlertModal from '../components/AlertModal';
 import { AlertTriangle, MapPin, Camera, Zap, CheckCircle, Clock, X } from 'lucide-react';
 import { useAuth } from '../store/AuthContext';
 
@@ -24,6 +25,7 @@ const HazardPage = () => {
     const [file, setFile] = useState(null);
     const [preview, setPreview] = useState(null);
     const [selectedHazard, setSelectedHazard] = useState(null);
+    const [alertConfig, setAlertConfig] = useState({ isOpen: false, title: '', message: '', type: 'error' });
 
     const videoRef = useRef(null);
     const [isCameraActive, setIsCameraActive] = useState(false);
@@ -40,7 +42,7 @@ const HazardPage = () => {
                 }
             }, 150);
         } catch (err) {
-            alert('Gagal mengakses kamera: ' + err.message);
+            setAlertConfig({ isOpen: true, title: 'Kesalahan', message: 'Gagal mengakses kamera: ' + err.message, type: 'error' });
         }
     };
 
@@ -137,7 +139,7 @@ const HazardPage = () => {
         },
         onError: (err) => {
             console.error(err);
-            alert('Gagal melapor bahaya');
+            setAlertConfig({ isOpen: true, title: 'Kesalahan', message: 'Gagal melapor bahaya', type: 'error' });
         },
         onSettled: () => {
             setLoading(false);
@@ -501,6 +503,13 @@ const HazardPage = () => {
                     </div>
                 );
             })()}
+            <AlertModal
+                isOpen={alertConfig.isOpen}
+                onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                type={alertConfig.type}
+            />
         </div>
     );
 };

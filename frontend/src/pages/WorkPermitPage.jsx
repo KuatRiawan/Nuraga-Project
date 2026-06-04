@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import Button from '../components/Button';
 import PermitForm from '../components/PermitForm';
+import ConfirmModal from '../components/ConfirmModal';
+import AlertModal from '../components/AlertModal';
 import { useAuth } from '../store/AuthContext';
 import {
     FileCheck, Plus, Clock, MapPin, User,
@@ -29,6 +31,8 @@ const WorkPermitPage = () => {
         close_supervisor_sig: false
     });
     const [closeLoading, setCloseLoading] = useState(false);
+    const [alertConfig, setAlertConfig] = useState({ isOpen: false, title: '', message: '', type: 'error' });
+    const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
 
     const { data: permits = [], isLoading } = useQuery({
         queryKey: ['permits'],
@@ -82,7 +86,7 @@ const WorkPermitPage = () => {
         },
         onError: (err) => {
             console.error(err);
-            alert(err.response?.data?.message || 'Gagal mengubah status permit.');
+            setAlertConfig({ isOpen: true, title: 'Kesalahan', message: err.response?.data?.message || 'Gagal mengubah status permit.', type: 'error' });
         }
     });
 
@@ -660,7 +664,7 @@ const WorkPermitPage = () => {
                                     queryClient.invalidateQueries(['permits']);
                                 } catch (err) {
                                     console.error(err);
-                                    alert(err.response?.data?.message || 'Gagal menutup permit.');
+                                    setAlertConfig({ isOpen: true, title: 'Kesalahan', message: err.response?.data?.message || 'Gagal menutup permit.', type: 'error' });
                                 } finally {
                                     setCloseLoading(false);
                                 }
@@ -737,6 +741,20 @@ const WorkPermitPage = () => {
                     </div>
                 </div>
             )}
+            <AlertModal
+                isOpen={alertConfig.isOpen}
+                onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                type={alertConfig.type}
+            />
+            <ConfirmModal
+                isOpen={confirmConfig.isOpen}
+                onClose={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={confirmConfig.onConfirm}
+                title={confirmConfig.title}
+                message={confirmConfig.message}
+            />
         </div>
     );
 };

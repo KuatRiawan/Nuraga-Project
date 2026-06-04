@@ -3,6 +3,7 @@ import api from '../api/axios';
 import EmergencyControls from '../components/EmergencyControls';
 import { Zap, AlertTriangle, Shield, MapPin, Clock, Users, Bell, Layers, CheckCircle } from 'lucide-react';
 import Button from '../components/Button';
+import AlertModal from '../components/AlertModal';
 import { useAuth } from '../store/AuthContext';
 import { asArray } from '../utils/safeData';
 
@@ -41,6 +42,7 @@ const getZoneCoordinates = (locationName, index = 0) => {
 
 const EmergencyPage = () => {
     const { user } = useAuth();
+    const [alertConfig, setAlertConfig] = useState({ isOpen: false, title: '', message: '', type: 'error' });
     const [emergencies, setEmergencies] = useState([]);
     const [hazards, setHazards] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -53,7 +55,7 @@ const EmergencyPage = () => {
             fetchEmergencies();
         } catch (err) {
             console.error('Failed to resolve emergency:', err);
-            alert(err.response?.data?.message || 'Gagal menandai kondusif');
+            setAlertConfig({ isOpen: true, title: 'Kesalahan', message: err.response?.data?.message || 'Gagal menandai kondusif', type: 'error' });
         }
     };
 
@@ -365,6 +367,13 @@ const EmergencyPage = () => {
                     </div>
                 </div>
             )}
+            <AlertModal
+                isOpen={alertConfig.isOpen}
+                onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                type={alertConfig.type}
+            />
         </div>
     );
 };

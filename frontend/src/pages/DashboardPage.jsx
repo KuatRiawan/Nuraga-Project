@@ -7,6 +7,7 @@ import EmergencyControls from '../components/EmergencyControls';
 import SafetyCharts from '../components/SafetyCharts';
 import { generateMonthlyReport } from '../utils/reportGenerator';
 import Button from '../components/Button';
+import AlertModal from '../components/AlertModal';
 import { useAuth } from '../store/AuthContext';
 import { asArray, asObject } from '../utils/safeData';
 
@@ -32,6 +33,7 @@ const SAFETY_SLOGANS = [
 const DashboardPage = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const [alertConfig, setAlertConfig] = useState({ isOpen: false, title: '', message: '', type: 'error' });
     const [stats, setStats] = useState({
         totalHazards: 0,
         totalIncidents: 0,
@@ -123,7 +125,7 @@ const DashboardPage = () => {
             generateMonthlyReport(res.data);
         } catch (err) {
             console.error(err);
-            alert('Failed to generate report');
+            setAlertConfig({ isOpen: true, title: 'Kesalahan', message: 'Failed to generate report', type: 'error' });
         }
     };
     const handleExportProactiveStats = () => {
@@ -1092,6 +1094,13 @@ const DashboardPage = () => {
                     </div>
                 </>
             )}
+            <AlertModal
+                isOpen={alertConfig.isOpen}
+                onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                type={alertConfig.type}
+            />
         </div>
     );
 };

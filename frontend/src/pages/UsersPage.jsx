@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import api from '../api/axios';
 import Button from '../components/Button';
+import Button from '../components/Button';
 import Input from '../components/Input';
+import AlertModal from '../components/AlertModal';
 import { useAuth } from '../store/AuthContext';
 import { Users, Plus, Search, Edit2, Trash2, Shield, Mail, AlertCircle, X, ShieldAlert, Check, BadgeCheck, Briefcase, MapPin, Upload, Download, ChevronDown, ArrowUp, ArrowDown } from 'lucide-react';
 
@@ -18,6 +20,7 @@ const ROLE_BADGES = {
 
 const UsersPage = () => {
     const { user: currentUser } = useAuth();
+    const [alertConfig, setAlertConfig] = useState({ isOpen: false, title: '', message: '', type: 'error' });
     const [users, setUsers] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(false);
@@ -336,7 +339,7 @@ const UsersPage = () => {
 
     const handleDeleteClick = (id, nama) => {
         if (id === currentUser?.id) {
-            alert('Anda tidak bisa menghapus akun Anda sendiri.');
+            setAlertConfig({ isOpen: true, title: 'Peringatan', message: 'Anda tidak bisa menghapus akun Anda sendiri.', type: 'warning' });
             return;
         }
         setUserToDelete({ id, nama });
@@ -746,6 +749,13 @@ const UsersPage = () => {
                     </div>
                 </div>
             )}
+            <AlertModal
+                isOpen={alertConfig.isOpen}
+                onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                type={alertConfig.type}
+            />
         </div>
     );
 };

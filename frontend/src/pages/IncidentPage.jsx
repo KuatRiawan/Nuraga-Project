@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import api from '../api/axios';
 import Button from '../components/Button';
 import Input from '../components/Input';
+import AlertModal from '../components/AlertModal';
 import { Plus, Info, Users, MapPin, Camera, ClipboardList, Download, X, CheckCircle2 } from 'lucide-react';
 import { generateIncidentReport } from '../utils/reportGenerator';
 import { useAuth } from '../store/AuthContext';
@@ -12,6 +13,7 @@ const IncidentPage = () => {
     const queryClient = useQueryClient();
     const { user } = useAuth();
     const location = useLocation();
+    const [alertConfig, setAlertConfig] = useState({ isOpen: false, title: '', message: '', type: 'error' });
     const [showForm, setShowForm] = useState(false);
     const [loading, setLoading] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -47,7 +49,7 @@ const IncidentPage = () => {
                 }
             }, 150);
         } catch (err) {
-            alert('Gagal mengakses kamera: ' + err.message);
+            setAlertConfig({ isOpen: true, title: 'Kesalahan', message: 'Gagal mengakses kamera: ' + err.message, type: 'error' });
         }
     };
 
@@ -380,7 +382,7 @@ const IncidentPage = () => {
                                             generateIncidentReport(incident);
                                         } catch (err) {
                                             console.error(err);
-                                            alert('Failed to generate incident report');
+                                            setAlertConfig({ isOpen: true, title: 'Kesalahan', message: 'Failed to generate incident report', type: 'error' });
                                         }
                                     }}
                                 >
@@ -570,6 +572,13 @@ const IncidentPage = () => {
                     </div>
                 </div>
             )}
+            <AlertModal
+                isOpen={alertConfig.isOpen}
+                onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                type={alertConfig.type}
+            />
 
         </div>
     );

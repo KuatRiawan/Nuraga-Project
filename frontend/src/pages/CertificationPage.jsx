@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import Button from '../components/Button';
 import Input from '../components/Input';
+import ConfirmModal from '../components/ConfirmModal';
+import AlertModal from '../components/AlertModal';
 import { useAuth } from '../store/AuthContext';
 import { Award, Plus, Calendar, ShieldCheck, AlertTriangle, CheckCircle2, Clock, Edit, Trash2, X, MessageSquare } from 'lucide-react';
 import { asArray } from '../utils/safeData';
@@ -115,6 +117,8 @@ const CertificationPage = () => {
     const [showForm, setShowForm] = useState(false);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [editingCert, setEditingCert] = useState(null);
+    const [alertConfig, setAlertConfig] = useState({ isOpen: false, title: '', message: '', type: 'error' });
+    const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
     const [formData, setFormData] = useState({
         id_user: '',
         nama_personil: '',
@@ -174,7 +178,7 @@ const CertificationPage = () => {
         },
         onError: (err) => {
             console.error(err);
-            alert('Gagal menyimpan sertifikat');
+            setAlertConfig({ isOpen: true, title: 'Kesalahan', message: 'Gagal menyimpan sertifikat', type: 'error' });
         }
     });
 
@@ -189,7 +193,7 @@ const CertificationPage = () => {
         },
         onError: (err) => {
             console.error(err);
-            alert('Gagal menghapus sertifikat');
+            setAlertConfig({ isOpen: true, title: 'Kesalahan', message: 'Gagal menghapus sertifikat', type: 'error' });
         }
     });
 
@@ -212,8 +216,15 @@ const CertificationPage = () => {
     };
 
     const handleDelete = async (certId) => {
-        if (!window.confirm('Apakah Anda yakin ingin menghapus sertifikat ini?')) return;
-        deleteCertMutation.mutate(certId);
+        setConfirmConfig({
+            isOpen: true,
+            title: 'Hapus Sertifikat',
+            message: 'Apakah Anda yakin ingin menghapus sertifikat ini?',
+            onConfirm: () => {
+                deleteCertMutation.mutate(certId);
+                setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+            }
+        });
     };
 
     const handleCloseForm = () => {
@@ -476,6 +487,20 @@ const CertificationPage = () => {
                     );
                 })}
             </div>
+            <AlertModal
+                isOpen={alertConfig.isOpen}
+                onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                type={alertConfig.type}
+            />
+            <ConfirmModal
+                isOpen={confirmConfig.isOpen}
+                onClose={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={confirmConfig.onConfirm}
+                title={confirmConfig.title}
+                message={confirmConfig.message}
+            />
         </div>
     );
 };
