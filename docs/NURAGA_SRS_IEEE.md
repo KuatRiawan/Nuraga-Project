@@ -104,28 +104,28 @@ Nuraga adalah aplikasi web berbasis cloud yang berfungsi sebagai hub terpusat un
 Berdasarkan struktur enumerasi pada basis data, sistem Nuraga mendukung hak akses berbasis *Role-Based Access Control* (RBAC) dengan tingkatan sebagai berikut:
 
 #### 2.2.1 Operator / Vendor / Staff (Worker Level)
-- **Capability Level:** Low to Medium
+- **Tingkat Kemampuan:** Low to Medium
 - **Akses:** Dasbor terbatas, pengiriman laporan bahaya/insiden, pengajuan izin kerja (e-PTW).
 - **Frekuensi Penggunaan:** Harian
-- **Primary Tasks:** Absensi harian, lapor bahaya (*hazard*), manajemen kelelahan (*fatigue*).
+- **Tugas Utama:** Absensi harian, lapor bahaya (*hazard*), manajemen kelelahan (*fatigue*).
 
 #### 2.2.2 Supervisor (SPV)
-- **Capability Level:** Medium
+- **Tingkat Kemampuan:** Medium
 - **Akses:** Memonitor tim, persetujuan level pertama (izin kerja).
 - **Frekuensi Penggunaan:** Harian
-- **Primary Tasks:** Pemantauan kehadiran bawahan, *oversight* laporan, evaluasi awal K3.
+- **Tugas Utama:** Pemantauan kehadiran bawahan, pengawasan laporan, evaluasi awal K3.
 
 #### 2.2.3 HSE (Health, Safety, and Environment Officer)
-- **Capability Level:** High
+- **Tingkat Kemampuan:** High
 - **Akses:** Akses analitik, verifikasi laporan insiden, kontrol gamifikasi.
 - **Frekuensi Penggunaan:** Harian
-- **Primary Tasks:** Audit K3, persetujuan dokumen kritis, pengawasan matriks keselamatan.
+- **Tugas Utama:** Audit K3, persetujuan dokumen kritis, pengawasan metrik keselamatan.
 
 #### 2.2.4 Manager / Admin
-- **Capability Level:** High
+- **Tingkat Kemampuan:** High
 - **Akses:** Akses penuh ke seluruh konfigurasi sistem, dasbor manajerial.
 - **Frekuensi Penggunaan:** Berkala / Harian (untuk Admin)
-- **Primary Tasks:** Manajemen data *user*, kontrol keamanan sistem, pengambilan keputusan strategis.
+- **Tugas Utama:** Manajemen data pengguna, kontrol keamanan sistem, pengambilan keputusan strategis.
 
 ### 2.3 Lingkungan Operasional
 
@@ -2318,31 +2318,31 @@ Business Metrics:
 - Support untuk 500+ attendance records per day
 - Batch processing untuk 10.000+ records dalam time window reasonable
 
-**NFR-1.3 [SHOULD]** Optimization & Scalability:
-- Node.js memori dioptimalkan (menggunakan *flag* `--max-old-space-size` pada *production* EC2) untuk pencegahan *Garbage Collector lock*.
-- **Paginasi Backend (Limit & Offset):** Seluruh data masif seperti `Incidents`, `Hazards`, dan `Attendance` menggunakan skema *pagination* penuh di tingkat basis data.
-- Code splitting & Dynamic Chunking pada kompilasi React Vite.
-- Database query optimization (indexing pada frequently queried columns)
-- Caching strategy (Redis untuk frequently accessed data)
-- CDN untuk static assets (CSS, JavaScript, images)
+**NFR-1.3 [SHOULD]** Optimasi & Skalabilitas:
+- Memori Node.js dioptimalkan (menggunakan *flag* `--max-old-space-size` pada server produksi EC2) untuk pencegahan kebuntuan pembersihan memori (*Garbage Collector lock*).
+- **Paginasi Backend (Limit & Offset):** Seluruh data masif seperti `Incidents`, `Hazards`, dan `Attendance` menggunakan skema paginasi penuh di tingkat basis data.
+- Pemisahan kode (*Code splitting*) & *Dynamic Chunking* pada kompilasi React Vite.
+- Optimasi kueri basis data (penggunaan indeks pada kolom yang sering dicari).
+- Strategi *caching* (Redis untuk data yang sering diakses).
+- CDN untuk aset statis (CSS, JavaScript, gambar).
 
 ### 4.2 Kebutuhan Keamanan (Security)
 
-**NFR-2.1 [MUST]** Authentication, Session, & Network Security:
-- **HttpOnly Cookies**: Penggunaan *cookies* aman (HttpOnly, Secure, SameSite) untuk menyimpan Access Token dan Refresh Token demi perlindungan penuh terhadap serangan XSS (menggantikan `localStorage`).
+**NFR-2.1 [MUST]** Autentikasi, Sesi, & Keamanan Jaringan:
+- **HttpOnly Cookies**: Penggunaan kuki aman (HttpOnly, Secure, SameSite) untuk menyimpan *Access Token* dan *Refresh Token* demi perlindungan penuh terhadap serangan XSS (menggantikan `localStorage`).
 - **Network Protections**: 
   - `helmet`: Konfigurasi *HTTP headers* untuk perlindungan aplikasi *backend*.
-  - `cors`: *Cross-Origin Resource Sharing* difilter ketat hanya untuk *domain* aplikasi yang terdaftar.
-  - `express-rate-limit`: Proteksi terhadap serangan *brute force* (contoh: 15 *request* per 15 menit pada jalur autentikasi).
-- Token expiry: 1 jam untuk *access token*.
-- Refresh token expiry: 7 hari.
-- Token revocation capability (logout invalidate token)
+  - `cors`: *Cross-Origin Resource Sharing* difilter ketat hanya untuk domain aplikasi yang terdaftar.
+  - `express-rate-limit`: Proteksi terhadap serangan *brute force* (contoh: 15 permintaan per 15 menit pada jalur autentikasi).
+- Masa berlaku token: 1 jam untuk *access token*.
+- Masa berlaku *refresh token*: 7 hari.
+- Kemampuan pencabutan token (proses *logout* akan membatalkan token).
 
-- Role-Based Access Control (RBAC):
-  - 4 roles: Staff, Supervisor, HSE Officer, Manager
-  - Fine-grained permissions per module/feature
-  - Deny-by-default approach (allow only explicitly granted permissions)
-  - Regular audit dari role-permission mappings
+- Kontrol Akses Berbasis Peran (RBAC):
+  - 4 peran: Staff, Supervisor, HSE Officer, Manager.
+  - Hak akses spesifik per modul/fitur.
+  - Pendekatan tolak secara *default* (hanya izinkan hak akses yang diberikan secara eksplisit).
+  - Audit berkala dari pemetaan peran ke hak akses.
 
 **NFR-2.2 [MUST]** Password Security:
 - Minimum length: 12 characters
