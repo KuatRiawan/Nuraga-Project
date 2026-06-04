@@ -98,7 +98,7 @@ const PermitForm = ({ onSubmit, onCancel }) => {
     );
 
     return (
-        <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 md:p-10 shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <div className="bg-white dark:bg-slate-800 border-t-8 border-blue-600 rounded-3xl p-6 md:p-10 shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto custom-scrollbar animate-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center mb-6">
                 <div>
                     <h2 className="text-2xl font-black text-slate-900 dark:text-white">Form Izin Kerja (PTW)</h2>
