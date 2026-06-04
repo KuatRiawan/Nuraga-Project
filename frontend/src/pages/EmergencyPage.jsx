@@ -131,7 +131,7 @@ const EmergencyPage = () => {
     });
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-8 ">
             <div className="text-center max-w-2xl mx-auto space-y-3">
                 <h1 className="text-3xl font-black text-slate-905 dark:text-white uppercase tracking-tighter flex items-center justify-center gap-3">
                     <Zap size={32} className="text-amber-500 fill-amber-550 animate-pulse" />

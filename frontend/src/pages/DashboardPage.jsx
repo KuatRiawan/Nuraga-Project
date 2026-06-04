@@ -432,7 +432,7 @@ const DashboardPage = () => {
     const isFieldRole = ['Staff', 'Operator', 'Vendor', 'Kontraktor'].includes(user?.role);
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-8 ">
 
             {/* === POPUP ABSENSI === */}
             {showAttendancePopup && (
@@ -899,7 +899,7 @@ const DashboardPage = () => {
                     <SafetyCharts />
 
                     {/* === ENVIRONMENT & READINESS === */}
-                    <div className="p-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm animate-in fade-in duration-500">
+                    <div className="p-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm ">
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             {/* Left: Kesiapan Personel & Alat */}
                             <div className="space-y-6">

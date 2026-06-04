@@ -156,7 +156,7 @@ const GamificationPage = () => {
     });
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500 relative">
+        <div className="space-y-8  relative">
             {/* AlertModal instead of Toast */}
             <AlertModal
                 isOpen={alertConfig.isOpen}

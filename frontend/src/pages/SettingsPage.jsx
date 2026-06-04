@@ -296,7 +296,7 @@ const SettingsPage = () => {
     const avatarUrl = assetUrl(user?.foto);
 
     return (
-        <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
+        <div className="max-w-4xl mx-auto space-y-8 ">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-black text-slate-905 dark:text-white uppercase tracking-tighter">Pengaturan</h1>
