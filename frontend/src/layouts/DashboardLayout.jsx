@@ -306,7 +306,7 @@ const DashboardLayout = ({ children }) => {
                 <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-blue-500/5 blur-[120px] pointer-events-none -z-10"></div>
                 <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-indigo-500/5 blur-[120px] pointer-events-none -z-10"></div>
 
-                <header className="h-20 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-6 md:px-10 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md transition-colors duration-500">
+                <header className="h-20 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-6 md:px-10 bg-white dark:bg-slate-900 transition-colors duration-500">
                     <div className="flex items-center gap-5">
                         <button
                             onClick={() => setSidebarOpen(true)}
