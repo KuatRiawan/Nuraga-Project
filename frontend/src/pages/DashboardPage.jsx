@@ -406,25 +406,34 @@ const DashboardPage = () => {
 
             {/* === POPUP ABSENSI === */}
             {showAttendancePopup && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full shadow-2xl border border-slate-100 dark:border-slate-800 relative">
-                        <button onClick={() => setShowAttendancePopup(false)} className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 bg-slate-100 dark:bg-slate-800 rounded-full">
-                            <X size={20} />
-                        </button>
-                        <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-6 mx-auto">
-                            <Clock className="w-8 h-8" />
+                <div 
+                    onClick={() => setShowAttendancePopup(false)}
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200"
+                >
+                    <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white dark:bg-slate-800 border-t-8 border-blue-500 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 duration-200"
+                    >
+                        <div className="flex justify-center mb-5">
+                            <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                                <Clock size={28} className="text-blue-500" />
+                            </div>
                         </div>
-                        <h2 className="text-2xl font-black text-slate-800 dark:text-white text-center mb-2">Absensi Harian</h2>
-                        <p className="text-slate-500 dark:text-slate-400 text-center mb-6">Halo, <strong>{user?.nama}</strong>! Anda belum mencatat kehadiran hari ini. Silakan lapor kehadiran dan kondisi fatigue Anda.</p>
-                        <button onClick={() => { navigate('/attendance'); setShowAttendancePopup(false); }} className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all">
-                            Menuju Halaman Absensi
-                        </button>
-                        <button onClick={() => { navigate('/attendance'); setShowAttendancePopup(false); }} className="w-full mt-3 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 py-3 rounded-xl font-bold hover:bg-orange-200 transition-all">
-                            Ajukan Izin / Cuti
-                        </button>
-                        <button onClick={() => setShowAttendancePopup(false)} className="w-full mt-2 text-slate-400 text-sm py-2 hover:text-slate-600 transition-colors">
-                            Nanti saja
-                        </button>
+                        <h3 className="text-xl font-black text-slate-900 dark:text-white text-center tracking-tighter mb-2">Absensi Harian</h3>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm text-center font-medium mb-6">
+                            Halo, <strong>{user?.nama}</strong>! Anda belum mencatat kehadiran hari ini. Silakan lapor kehadiran dan kondisi fatigue Anda.
+                        </p>
+                        <div className="space-y-3">
+                            <Button onClick={() => { navigate('/attendance'); setShowAttendancePopup(false); }} className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-2xl shadow-xl shadow-blue-500/20 transition-all flex justify-center items-center">
+                                Menuju Halaman Absensi
+                            </Button>
+                            <Button onClick={() => { navigate('/attendance'); setShowAttendancePopup(false); }} className="w-full py-3.5 bg-orange-50 dark:bg-orange-500/10 hover:bg-orange-100 text-orange-600 dark:text-orange-400 font-bold text-sm rounded-2xl border border-orange-500/20 transition-all flex justify-center items-center">
+                                Ajukan Izin / Cuti
+                            </Button>
+                            <button onClick={() => setShowAttendancePopup(false)} className="w-full py-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-bold transition-colors">
+                                Nanti saja
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
