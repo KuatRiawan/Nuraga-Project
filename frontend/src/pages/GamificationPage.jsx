@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Trophy, Star, Zap, Award, Gift, TrendingUp, CheckCircle, Ticket, X, Search, Copy, CheckCircle2, XCircle } from 'lucide-react';
 import Button from '../components/Button';
+import AlertModal from '../components/AlertModal';
 import { useAuth } from '../store/AuthContext';
 import api from '../api/axios';
 import { asArray, asObject } from '../utils/safeData';
@@ -18,7 +19,7 @@ const GamificationPage = () => {
     const [vouchers, setVouchers] = useState([]);
     const [showVouchersDrawer, setShowVouchersDrawer] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-    const [notification, setNotification] = useState(null);
+    const [alertConfig, setAlertConfig] = useState({ isOpen: false, title: '', message: '', type: 'success' });
     const [userStats, setUserStats] = useState({ rewardsClaimed: 0, hazardsReported: 0 });
     const [showClaimModal, setShowClaimModal] = useState(false);
     const [selectedVoucherId, setSelectedVoucherId] = useState(null);
@@ -33,8 +34,9 @@ const GamificationPage = () => {
     const isHseOrAdmin = user?.role === 'HSE' || user?.role === 'Admin';
 
     const showNotification = (message, type = 'success') => {
-        setNotification({ message, type });
-        setTimeout(() => setNotification(null), 4000);
+        let title = 'Berhasil';
+        if (type === 'error') title = 'Gagal';
+        setAlertConfig({ isOpen: true, title, message, type });
     };
 
     useEffect(() => {
@@ -155,27 +157,14 @@ const GamificationPage = () => {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500 relative">
-            {/* Notification Toast */}
-            {notification && (
-                <div className={`fixed top-4 right-4 z-[9999] flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-right duration-300 ${
-                    notification.type === 'success'
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-red-600 text-white'
-                }`}>
-                    {notification.type === 'success' ? (
-                        <CheckCircle2 size={20} className="shrink-0" />
-                    ) : (
-                        <XCircle size={20} className="shrink-0" />
-                    )}
-                    <p className="text-sm font-medium whitespace-pre-line">{notification.message}</p>
-                    <button
-                        onClick={() => setNotification(null)}
-                        className="p-1 hover:bg-white/20 rounded-lg transition-colors"
-                    >
-                        <X size={16} />
-                    </button>
-                </div>
-            )}
+            {/* AlertModal instead of Toast */}
+            <AlertModal
+                isOpen={alertConfig.isOpen}
+                onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                type={alertConfig.type}
+            />
 
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

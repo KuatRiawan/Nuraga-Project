@@ -146,7 +146,7 @@ const WorkPermitPage = () => {
             {showForm && (
                 <div 
                     onClick={() => setShowForm(false)}
-                    className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
                 >
                     <div onClick={(e) => e.stopPropagation()} className="w-full max-w-4xl">
                         <PermitForm
@@ -265,7 +265,7 @@ const WorkPermitPage = () => {
             {selectedPermit && (
                 <div 
                     onClick={() => setSelectedPermit(null)}
-                    className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
                 >
                     <div 
                         onClick={(e) => e.stopPropagation()}
@@ -633,7 +633,7 @@ const WorkPermitPage = () => {
             {showCloseModal && selectedPermit && (
                 <div 
                     onClick={() => setShowCloseModal(false)}
-                    className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
                 >
                     <div 
                         onClick={(e) => e.stopPropagation()}
