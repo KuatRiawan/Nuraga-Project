@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from "react-dom";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
 import api from '../api/axios';
@@ -189,10 +190,10 @@ const HazardPage = () => {
             </div>
 
             {/* === FORM MODAL === */}
-            {showForm && (
+            {showForm && createPortal(
                 <div 
                     onClick={() => { stopCamera(); setShowForm(false); setPreview(null); }}
-                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
                 >
                     <div 
                         onClick={(e) => e.stopPropagation()}
@@ -286,7 +287,7 @@ const HazardPage = () => {
                         </form>
                     </div>
                 </div>
-            )}
+            , document.body)}
 
             {/* === HAZARD LIST === */}
             <div className="space-y-4">
@@ -391,10 +392,10 @@ const HazardPage = () => {
                 const imageUrl = selectedHazard.foto ? `/uploads/${selectedHazard.foto}` : null;
                 const mapsUrl = selectedHazard.koordinat_gps ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedHazard.koordinat_gps)}` : null;
 
-                return (
+                return createPortal(
                     <div 
                         onClick={() => setSelectedHazard(null)}
-                        className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                        className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
                     >
                         <div 
                             onClick={(e) => e.stopPropagation()}
@@ -530,7 +531,7 @@ const HazardPage = () => {
                             </div>
                         </div>
                     </div>
-                );
+                , document.body);
             })()}
             <AlertModal
                 isOpen={alertConfig.isOpen}
