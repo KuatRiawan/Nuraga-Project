@@ -312,8 +312,36 @@ const DashboardPage = () => {
     }, []);
     const thirtyDaysAgoForCards = new Date();
     thirtyDaysAgoForCards.setDate(thirtyDaysAgoForCards.getDate() - 30);
+    const sixtyDaysAgo = new Date();
+    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+
     const incidents30Days = asArray(dashboardData?.incidents).filter(i => new Date(i.createdAt) >= thirtyDaysAgoForCards).length;
+    const incidentsPrev30Days = asArray(dashboardData?.incidents).filter(i => {
+        const d = new Date(i.createdAt);
+        return d >= sixtyDaysAgo && d < thirtyDaysAgoForCards;
+    }).length;
+    
     const hazards30Days = asArray(dashboardData?.hazards).filter(h => new Date(h.createdAt) >= thirtyDaysAgoForCards).length;
+    const hazardsPrev30Days = asArray(dashboardData?.hazards).filter(h => {
+        const d = new Date(h.createdAt);
+        return d >= sixtyDaysAgo && d < thirtyDaysAgoForCards;
+    }).length;
+
+    const calculateTrend = (current, previous) => {
+        if (previous === 0) return current > 0 ? '+100%' : '0%';
+        const diff = current - previous;
+        const percent = (diff / previous) * 100;
+        return (percent > 0 ? '+' : '') + Math.round(percent) + '%';
+    };
+
+    const incidentTrendStr = calculateTrend(incidents30Days, incidentsPrev30Days);
+    const incidentTrendIsUp = incidents30Days > incidentsPrev30Days;
+
+    const hazardTrendStr = calculateTrend(hazards30Days, hazardsPrev30Days);
+    const hazardTrendIsUp = hazards30Days > hazardsPrev30Days;
+
+    // For TRIR and LTI Rate, since backend doesn't provide historical data easily, we leave the trend static or hide it.
+    // We'll show standard benchmarks for TRIR instead.
 
     const statCards = [
         {
@@ -321,8 +349,8 @@ const DashboardPage = () => {
             value: dashboardData ? incidents30Days : stats.totalIncidents,
             icon: <FileText className="text-red-400" />,
             trend: '30 Hari Terakhir',
-            trendPercentage: incidents30Days > 0 ? '+12%' : '0%',
-            trendColor: incidents30Days > 0 ? 'text-red-500' : 'text-slate-400 dark:text-slate-500',
+            trendPercentage: dashboardData ? incidentTrendStr : '0%',
+            trendColor: dashboardData && incidentTrendIsUp ? 'text-red-500' : (dashboardData && incidents30Days < incidentsPrev30Days ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-500'),
             color: 'bg-red-500/10'
         },
         {
@@ -330,8 +358,8 @@ const DashboardPage = () => {
             value: dashboardData ? hazards30Days : stats.totalHazards,
             icon: <AlertCircle className="text-amber-400" />,
             trend: '30 Hari Terakhir',
-            trendPercentage: hazards30Days > 0 ? '+8%' : '0%',
-            trendColor: hazards30Days > 0 ? 'text-amber-500' : 'text-slate-400 dark:text-slate-500',
+            trendPercentage: dashboardData ? hazardTrendStr : '0%',
+            trendColor: dashboardData && hazardTrendIsUp ? 'text-amber-500' : (dashboardData && hazards30Days < hazardsPrev30Days ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-500'),
             color: 'bg-amber-500/10'
         },
         {
@@ -339,8 +367,8 @@ const DashboardPage = () => {
             value: stats.trir || '0.00',
             icon: <Zap className="text-emerald-400" />,
             trend: 'Target < 1.5',
-            trendPercentage: stats.trir > 1.5 ? '+5%' : '0%',
-            trendColor: stats.trir > 1.5 ? 'text-red-500' : 'text-slate-400 dark:text-slate-500',
+            trendPercentage: '',
+            trendColor: 'text-slate-400 dark:text-slate-500',
             color: 'bg-emerald-500/10'
         },
         {
@@ -348,8 +376,8 @@ const DashboardPage = () => {
             value: stats.ltiRate || '0.00',
             icon: <CheckCircle className="text-blue-400" />,
             trend: '365 Hari Terakhir',
-            trendPercentage: stats.ltiRate > 0 ? '+3%' : '0%',
-            trendColor: stats.ltiRate > 0 ? 'text-red-500' : 'text-slate-400 dark:text-slate-500',
+            trendPercentage: '',
+            trendColor: 'text-slate-400 dark:text-slate-500',
             color: 'bg-blue-500/10'
         },
     ];
