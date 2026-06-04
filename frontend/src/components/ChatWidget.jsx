@@ -252,9 +252,13 @@ const ChatWidget = () => {
                             <div className="flex-1 min-w-0">
                                 <h3 className="text-white font-bold text-sm truncate">Safety Coordination</h3>
                                 <div className="flex items-center justify-between mt-0.5 pr-2">
-                                    <div className="flex items-center gap-1.5">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
-                                        <span className="text-blue-100 text-[10px] font-medium tracking-wide uppercase">Live Global Chat • {activeUsers.length} Online</span>
+                                    <div className="flex items-center gap-1.5 truncate mr-2">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0"></span>
+                                        <span className="text-blue-100 text-[10px] font-medium tracking-wide uppercase truncate">
+                                            <span className="hidden sm:inline">Live Global Chat • </span>
+                                            <span className="sm:hidden">Live • </span>
+                                            {activeUsers.length} Online
+                                        </span>
                                     </div>
                                     <div className="flex -space-x-1.5 opacity-90 hover:opacity-100 transition-opacity">
                                         {activeUsers.slice(0, 3).map(u => (
