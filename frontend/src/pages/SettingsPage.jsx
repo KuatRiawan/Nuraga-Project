@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../store/AuthContext';
@@ -692,9 +693,9 @@ const SettingsPage = () => {
 
             {/* Edit Profile Modal */}
             {showProfileModal && (
-                <div
+                createPortal(<div
                     onClick={() => setShowProfileModal(false)}
-                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
                 >
                     <div
                         onClick={(e) => e.stopPropagation()}
@@ -812,14 +813,14 @@ const SettingsPage = () => {
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>, document.body)
             )}
 
             {/* Change Password Modal */}
             {showPasswordModal && (
-                <div
+                createPortal(<div
                     onClick={() => setShowPasswordModal(false)}
-                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
                 >
                     <div
                         onClick={(e) => e.stopPropagation()}
@@ -879,7 +880,7 @@ const SettingsPage = () => {
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>, document.body)
             )}
         </div>
     );

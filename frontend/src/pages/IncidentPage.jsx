@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
@@ -208,9 +209,9 @@ const IncidentPage = () => {
             </div>
 
             {showForm && (
-                <div 
+                createPortal(<div 
                     onClick={() => { stopCamera(); setShowForm(false); setPreview(null); }}
-                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
                 >
                     <div 
                         onClick={(e) => e.stopPropagation()}
@@ -345,7 +346,7 @@ const IncidentPage = () => {
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>, document.body)
             )}
 
             {/* Incident List */}
@@ -425,9 +426,9 @@ const IncidentPage = () => {
 
             {/* selectedIncident Detail Modal */}
             {selectedIncident && (
-                <div 
+                createPortal(<div 
                     onClick={() => setSelectedIncident(null)}
-                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
                 >
                     <div 
                         onClick={(e) => e.stopPropagation()}
@@ -568,14 +569,14 @@ const IncidentPage = () => {
                             )}
                         </div>
                     </div>
-                </div>
+                </div>, document.body)
             )}
 
             {/* Success Modal */}
             {showSuccessModal && (
-                <div 
+                createPortal(<div 
                     onClick={() => setShowSuccessModal(false)}
-                    className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
                 >
                     <div 
                         onClick={(e) => e.stopPropagation()}
@@ -599,7 +600,7 @@ const IncidentPage = () => {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>, document.body)
             )}
             <AlertModal
                 isOpen={alertConfig.isOpen}

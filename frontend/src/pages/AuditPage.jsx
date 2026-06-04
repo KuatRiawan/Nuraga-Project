@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
@@ -152,9 +153,9 @@ const AuditPage = () => {
 
             {/* QR Scanner Modal */}
             {showQrModal && (
-                <div 
+                createPortal(<div 
                     onClick={() => setShowQrModal(false)}
-                    className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
                 >
                     <div 
                         onClick={(e) => e.stopPropagation()}
@@ -199,9 +200,9 @@ const AuditPage = () => {
 
             {/* Audit Form Modal */}
             {showForm && (
-                <div 
+                createPortal(<div 
                     onClick={() => setShowForm(false)}
-                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
                 >
                     <div 
                         onClick={(e) => e.stopPropagation()}
@@ -292,7 +293,7 @@ const AuditPage = () => {
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>, document.body)
             )}
 
             {/* Audit List Table */}
@@ -359,9 +360,9 @@ const AuditPage = () => {
                     }
                 }
                 return (
-                    <div 
+                    createPortal(<div 
                         onClick={() => setSelectedAudit(null)}
-                        className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                        className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
                     >
                         <div 
                             onClick={(e) => e.stopPropagation()}
@@ -437,10 +438,10 @@ const AuditPage = () => {
                                 <Button className="w-full rounded-2xl py-4" onClick={() => setSelectedAudit(null)}>Tutup Detail</Button>
                             </div>
                         </div>
-                    </div>
+                    </div>, document.body)
                 );
             })()}
-        </div>
+        </div>, document.body)
     );
 };
 

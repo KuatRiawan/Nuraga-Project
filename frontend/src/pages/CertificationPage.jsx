@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
@@ -269,9 +270,9 @@ const CertificationPage = () => {
 
             {/* Add/Edit Certification Modal */}
             {showForm && (
-                <div 
+                createPortal(<div 
                     onClick={handleCloseForm}
-                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
                 >
                     <div 
                         onClick={(e) => e.stopPropagation()}
@@ -383,7 +384,7 @@ const CertificationPage = () => {
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>, document.body)
             )}
 
             {/* Certification Cards */}

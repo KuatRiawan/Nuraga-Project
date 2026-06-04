@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -436,7 +437,7 @@ const DashboardPage = () => {
 
             {/* === POPUP ABSENSI === */}
             {showAttendancePopup && (
-                <div 
+                createPortal(<div 
                     onClick={() => setShowAttendancePopup(false)}
                     className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200"
                 >
@@ -465,7 +466,7 @@ const DashboardPage = () => {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>, document.body)
             )}
 
             {/* === BANNER PERINGATAN TELAT ABSEN === */}

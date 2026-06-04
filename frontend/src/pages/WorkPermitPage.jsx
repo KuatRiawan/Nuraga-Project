@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
@@ -144,7 +145,7 @@ const WorkPermitPage = () => {
             )}
 
             {showForm && (
-                <div 
+                createPortal(<div 
                     onClick={() => setShowForm(false)}
                     className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
                 >
@@ -154,7 +155,7 @@ const WorkPermitPage = () => {
                             onCancel={() => setShowForm(false)}
                         />
                     </div>
-                </div>
+                </div>, document.body)
             )}
 
             {asArray(permits).length === 0 ? (
@@ -631,7 +632,7 @@ const WorkPermitPage = () => {
 
             {/* Housekeeping Close Out Confirmation Modal */}
             {showCloseModal && selectedPermit && (
-                <div 
+                createPortal(<div 
                     onClick={() => setShowCloseModal(false)}
                     className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
                 >
@@ -739,7 +740,7 @@ const WorkPermitPage = () => {
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>, document.body)
             )}
             <AlertModal
                 isOpen={alertConfig.isOpen}

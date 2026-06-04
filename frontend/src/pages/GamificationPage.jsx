@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { Trophy, Star, Zap, Award, Gift, TrendingUp, CheckCircle, Ticket, X, Search, Copy, CheckCircle2, XCircle } from 'lucide-react';
 import Button from '../components/Button';
@@ -268,9 +269,9 @@ const GamificationPage = () => {
 
             {/* Rewards Modal */}
             {showRewards && (
-                <div
+                createPortal(<div
                     onClick={() => setShowRewards(false)}
-                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
                 >
                     <div
                         onClick={(e) => e.stopPropagation()}
@@ -312,12 +313,12 @@ const GamificationPage = () => {
                         </div>
                         <Button variant="ghost" className="w-full rounded-2xl min-h-[44px]" onClick={() => setShowRewards(false)}>Tutup</Button>
                     </div>
-                </div>
+                </div>, document.body)
             )}
 
             {/* Vouchers Slide-out Drawer */}
             {showVouchersDrawer && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[99] transition-opacity duration-300" onClick={() => setShowVouchersDrawer(false)} />
+                createPortal(<div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] transition-opacity duration-300" onClick={() => setShowVouchersDrawer(false)} />
             )}
             <div className={`fixed inset-y-0 right-0 w-full sm:w-[400px] md:w-[480px] bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 z-[100] transform transition-transform duration-300 ease-in-out shadow-2xl flex flex-col ${showVouchersDrawer ? 'translate-x-0' : 'translate-x-full'}`}>
                 {/* Header */}
@@ -425,7 +426,7 @@ const GamificationPage = () => {
 
             {/* Claim Confirmation Modal */}
             {showClaimModal && (
-                <div
+                createPortal(<div
                     onClick={() => setShowClaimModal(false)}
                     className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
                 >
@@ -459,9 +460,9 @@ const GamificationPage = () => {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>, document.body)
             )}
-        </div>
+        </div>, document.body)
     );
 };
 

@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
@@ -411,9 +412,9 @@ const AttendancePage = () => {
 
       {/* === POPUP NOTIFIKASI === */}
       {popup && (
-        <div
+        createPortal(<div
           onClick={() => setPopup(null)}
-          className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
         >
           <div
             onClick={(e) => e.stopPropagation()}
@@ -449,14 +450,14 @@ const AttendancePage = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div>, document.body)
       )}
 
       {/* === IMAGE MODAL === */}
       {selectedImage && (
-        <div
+        createPortal(<div
           onClick={() => setSelectedImage(null)}
-          className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+          className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200"
         >
           <div
             onClick={(e) => e.stopPropagation()}
@@ -470,7 +471,7 @@ const AttendancePage = () => {
             </button>
             <img src={selectedImage} alt="Foto Kehadiran" className="max-h-[85vh] w-auto object-contain rounded-2xl shadow-2xl border-4 border-white/10" />
           </div>
-        </div>
+        </div>, document.body)
       )}
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-900 to-indigo-800 rounded-3xl p-8 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">

@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState, useEffect, useRef } from 'react';
 import api from '../api/axios';
 import Button from '../components/Button';
@@ -576,9 +577,9 @@ const UsersPage = () => {
 
             {/* Add/Edit Modal */}
             {showModal && (
-                <div 
+                createPortal(<div 
                     onClick={() => setShowModal(false)}
-                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
                 >
                     <div 
                         onClick={(e) => e.stopPropagation()}
@@ -716,13 +717,13 @@ const UsersPage = () => {
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>, document.body)
             )}
             {/* Delete Confirmation Modal */}
             {showDeleteModal && (
-                <div 
+                createPortal(<div 
                     onClick={() => setShowDeleteModal(false)}
-                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200"
                 >
                     <div 
                         onClick={(e) => e.stopPropagation()}
@@ -746,7 +747,7 @@ const UsersPage = () => {
                             </Button>
                         </div>
                     </div>
-                </div>
+                </div>, document.body)
             )}
             <AlertModal
                 isOpen={alertConfig.isOpen}

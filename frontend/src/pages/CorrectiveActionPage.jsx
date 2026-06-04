@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
@@ -208,9 +209,9 @@ const CorrectiveActionPage = () => {
 
             {/* Corrective Action Detail Modal */}
             {selectedAction && (
-                <div 
+                createPortal(<div 
                     onClick={() => setSelectedAction(null)}
-                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
                 >
                     <div 
                         onClick={(e) => e.stopPropagation()}
@@ -280,7 +281,7 @@ const CorrectiveActionPage = () => {
                             <Button className="w-full rounded-2xl py-4" onClick={() => setSelectedAction(null)}>Tutup Detail</Button>
                         </div>
                     </div>
-                </div>
+                </div>, document.body)
             )}
         </div>
     );
