@@ -236,7 +236,7 @@ const GamificationPage = () => {
                                 key={person.rank}
                                 className={`flex items-center gap-3 md:gap-5 px-4 md:px-6 lg:px-8 py-4 md:py-5 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/30 ${isMe ? 'bg-blue-50 dark:bg-blue-900/10' : ''} ${style.border ? `border-l-4 ${style.border}` : ''}`}
                             >
-                                <div className="text-xl md:text-2xl w-14 md:w-16 text-center shrink-0 font-bold text-slate-500">{style.icon || `#${person.rank}`}</div>
+                                <div className="text-xl md:text-2xl min-w-[50px] md:min-w-[64px] text-left shrink-0 font-bold text-slate-500">{style.icon || `#${person.rank}`}</div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <p className={`font-black text-sm truncate ${style.nameColor || 'text-slate-900 dark:text-white'}`}>{person.name}</p>
