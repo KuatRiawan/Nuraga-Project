@@ -1,0 +1,8 @@
+{
+  "appId": "com.nuraga.app",
+  "appName": "Nuraga",
+  "webDir": "dist",
+  "server": {
+    "cleartext": true
+  }
+}

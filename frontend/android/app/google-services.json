@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "153201686282",
+    "project_id": "nuraga-project-9c3e4",
+    "storage_bucket": "nuraga-project-9c3e4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:153201686282:android:622a5b6a616f5c8e00acf3",
+        "android_client_info": {
+          "package_name": "com.nuraga.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApll2GUh158cdkjJcOw4cFx_NbP2LOv-0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

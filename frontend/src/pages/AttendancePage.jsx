@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '../api/axios';
 import { ShieldCheck, AlertTriangle, Heart, Camera, Clock, UserX, FileText, Check, Download, CheckCircle, XCircle, X } from 'lucide-react';
 import { useAuth } from '../store/AuthContext';
 import { useSocket } from '../hooks/useSocket';
 import { asArray, asObject } from '../utils/safeData';
-
-const API_URL = '/api';
 
 const AttendancePage = () => {
   const { user } = useAuth();
@@ -14,6 +12,15 @@ const AttendancePage = () => {
   const queryClient = useQueryClient();
   const isAdmin = user?.role === 'Admin';
   const [activeTab, setActiveTab] = useState('absensi'); // absensi, izin, laporan
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  // Helper for generating upload URL
+  const getImageUrl = (filename) => {
+      if (!filename) return null;
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '';
+      const backendUrl = apiBaseUrl.startsWith('http') ? apiBaseUrl.replace(/\/api\/?$/, '') : window.location.origin;
+      return `${backendUrl}/uploads/${filename}`;
+  };
 
   // Clock In States
   const [sleepHours, setSleepHours] = useState(7);
@@ -34,8 +41,7 @@ const AttendancePage = () => {
   const { data: todayStatus = { clockedIn: false, clockedOut: false, fatigue_status: null } } = useQuery({
     queryKey: ['attendance', 'today'],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API_URL}/attendance/today`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await api.get('/attendance/today');
       return asObject(res.data);
     },
     enabled: !!user
@@ -45,8 +51,7 @@ const AttendancePage = () => {
   const { data: myHistoryData = { attendance: [], leaves: [] } } = useQuery({
     queryKey: ['attendance', 'my-history'],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API_URL}/attendance/my-history`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await api.get('/attendance/my-history');
       return asObject(res.data);
     },
     enabled: !!user && !isAdmin
@@ -56,8 +61,7 @@ const AttendancePage = () => {
   const { data: allHistoryData = { attendance: [], leaves: [] } } = useQuery({
     queryKey: ['attendance', 'all-history'],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API_URL}/attendance/all`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await api.get('/attendance/all');
       return asObject(res.data);
     },
     enabled: !!user && isAdmin
@@ -66,8 +70,7 @@ const AttendancePage = () => {
   const { data: userOptions = [] } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API_URL}/users`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await api.get('/users');
       return asArray(res.data?.data || res.data);
     },
     enabled: !!user && isAdmin
@@ -235,9 +238,8 @@ const AttendancePage = () => {
       formData.append('stress_level', data.stressLevel);
       formData.append('foto_bukti', data.fotoBukti);
 
-      const res = await axios.post(`${API_URL}/attendance/clock-in`, formData, {
+      const res = await api.post('/attendance/clock-in', formData, {
         headers: { 
-            Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
         }
       });
@@ -267,8 +269,7 @@ const AttendancePage = () => {
   // Clock Out mutation
   const clockOutMutation = useMutation({
     mutationFn: async () => {
-      const token = localStorage.getItem('token');
-      const res = await axios.post(`${API_URL}/attendance/clock-out`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await api.post('/attendance/clock-out');
       return res.data;
     },
     onSuccess: () => {
@@ -293,9 +294,8 @@ const AttendancePage = () => {
       Object.keys(data.leaveForm).forEach(key => formData.append(key, data.leaveForm[key]));
       if (data.leaveDoc) formData.append('document_proof', data.leaveDoc);
 
-      const res = await axios.post(`${API_URL}/attendance/leave`, formData, {
+      const res = await api.post('/attendance/leave', formData, {
         headers: { 
-            Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
         }
       });
@@ -321,8 +321,7 @@ const AttendancePage = () => {
   const approveLeaveMutation = useMutation({
     mutationFn: async ({ id, status }) => {
       if (!isAdmin) throw new Error('Unauthorized');
-      const token = localStorage.getItem('token');
-      const res = await axios.put(`${API_URL}/attendance/leave/${id}`, { status }, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await api.put(`/attendance/leave/${id}`, { status });
       return res.data;
     },
     onSuccess: (_, variables) => {
@@ -425,6 +424,27 @@ const AttendancePage = () => {
                 OK
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* === IMAGE MODAL === */}
+      {selectedImage && (
+        <div
+          onClick={() => setSelectedImage(null)}
+          className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative max-w-3xl w-full flex flex-col items-center justify-center"
+          >
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute -top-12 right-0 md:-right-12 text-white/70 hover:text-white transition-colors bg-white/10 hover:bg-white/20 p-2 rounded-full"
+            >
+              <X size={28} />
+            </button>
+            <img src={selectedImage} alt="Foto Kehadiran" className="max-h-[85vh] w-auto object-contain rounded-2xl shadow-2xl border-4 border-white/10" />
           </div>
         </div>
       )}
@@ -693,6 +713,7 @@ const AttendancePage = () => {
                     <th className="py-4 px-4 font-semibold">Waktu</th>
                     {isAdmin && <th className="py-4 px-4 font-semibold">Pekerja</th>}
                     <th className="py-4 px-4 font-semibold">Tipe</th>
+                    <th className="py-4 px-4 font-semibold">Foto</th>
                     <th className="py-4 px-4 font-semibold">Metrik</th>
                     <th className="py-4 px-4 font-semibold">Status AI</th>
                     </tr>
@@ -706,6 +727,20 @@ const AttendancePage = () => {
                         {(isAdmin) && <td className="py-4 px-4 text-slate-700 dark:text-slate-300 font-bold">{log?.User?.nama || (userList || []).find(u => u?.id_user === log?.id_user)?.nama || 'Tidak tersedia'}</td>}
                         <td className="py-4 px-4">
                             <span className={`px-3 py-1 rounded-full text-xs font-bold ${log?.type === 'Datang' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700'}`}>{log?.type || '-'}</span>
+                        </td>
+                        <td className="py-4 px-4">
+                            {log?.foto_bukti ? (
+                                <img 
+                                    src={getImageUrl(log.foto_bukti)} 
+                                    alt="Foto" 
+                                    className="w-12 h-12 object-cover rounded-xl shadow-sm cursor-pointer hover:scale-110 hover:shadow-md transition-all ring-2 ring-slate-100 dark:ring-slate-800"
+                                    onClick={() => setSelectedImage(getImageUrl(log.foto_bukti))}
+                                />
+                            ) : (
+                                <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 text-xs">
+                                    -
+                                </div>
+                            )}
                         </td>
                         <td className="py-4 px-4 text-slate-500 dark:text-slate-400">
                             {log?.type === 'Datang' ? `Tidur: ${log?.sleep_hours}j | Stres: ${log?.stress_level}` : '-'}
