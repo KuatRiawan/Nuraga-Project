@@ -1,10 +1,10 @@
 # DOKUMEN SPESIFIKASI KEBUTUHAN PERANGKAT LUNAK
-## NURAGA - Integrated Safety Intelligence
+## NURAGA — Integrated Safety Intelligence
 
-**Versi:** 1.0  
-**Tanggal:** 1 Juni 2026  
-**Status:** Final  
-**Standar:** IEEE 830-1998
+**Versi:** 2.0  
+**Tanggal:** 4 Juni 2026  
+**Status:** Final (Revisi)  
+**Standar Acuan:** IEEE 830-1998
 
 ---
 
@@ -12,54 +12,57 @@
 
 ### 1.1 Tujuan Dokumen
 
-Dokumen Spesifikasi Kebutuhan Perangkat Lunak (Software Requirements Specification/SRS) ini menetapkan kebutuhan fungsional dan non-fungsional yang menyeluruh untuk Sistem Nuraga - Integrated Safety Intelligence. Dokumen ini dirancang untuk memberikan panduan kepada tim pengembang, stakeholder, dan quality assurance dalam memahami dan mengimplementasikan sistem secara menyeluruh dan terstruktur.
+Dokumen Spesifikasi Kebutuhan Perangkat Lunak (*Software Requirements Specification*/SRS) ini menetapkan kebutuhan fungsional dan non-fungsional secara menyeluruh untuk Sistem **Nuraga — Integrated Safety Intelligence**. Dokumen ini dirancang sebagai panduan bagi tim pengembang, pemangku kepentingan (*stakeholder*), serta tim penjaminan mutu (*Quality Assurance*) dalam memahami, mengimplementasikan, dan memvalidasi sistem secara terstruktur dan akuntabel.
 
 ### 1.2 Ruang Lingkup Aplikasi
 
-**Nama Sistem:** Nuraga - Integrated Safety Intelligence  
+**Nama Sistem:** Nuraga — Integrated Safety Intelligence  
 **Kategori:** Sistem Informasi Keselamatan dan Kesehatan Kerja (K3/HSE) Terintegrasi  
-**Platform Deployment:** Web Application (Responsive)  
-**Jenis Pengguna:** Multi-user dengan Role-Based Access Control (RBAC)
+**Platform Penyebaran:** Aplikasi Web Responsif  
+**Klasifikasi Pengguna:** Multi-pengguna dengan Kontrol Akses Berbasis Peran (*Role-Based Access Control*/RBAC)
 
-Nuraga adalah solusi digital komprehensif yang dirancang untuk mendigitalisasi, mengotomatisasi, dan mengoptimalkan seluruh aspek manajemen Keselamatan dan Kesehatan Kerja di lingkungan industri dan proyek konstruksi. Sistem ini bertujuan untuk mencapai zero accident dan meningkatkan budaya keselamatan kerja melalui integrasi teknologi AI, real-time analytics, dan collaborative workflows.
+Nuraga merupakan solusi digital komprehensif yang dirancang untuk mendigitalisasi, mengotomatisasi, dan mengoptimalkan seluruh aspek manajemen Keselamatan dan Kesehatan Kerja di lingkungan industri dan proyek konstruksi. Sistem ini bertujuan untuk mencapai *zero accident* dan meningkatkan budaya keselamatan kerja melalui integrasi teknologi kecerdasan buatan (*AI*), analitik waktu-nyata (*real-time analytics*), serta alur kerja kolaboratif.
 
 ### 1.3 Konvensi Dokumen
 
-- **[MUST]**: Kebutuhan yang wajib diimplementasikan
-- **[SHOULD]**: Kebutuhan yang sangat disarankan untuk diimplementasikan
-- **[MAY]**: Kebutuhan opsional untuk implementasi di masa depan
-- *Teks miring*: Istilah teknis atau acuan khusus
-- **Teks tebal**: Istilah penting atau heading
-- `Monospace`: Nama field database, variabel, atau nilai spesifik
+- **[MUST]**: Kebutuhan yang wajib diimplementasikan.
+- **[SHOULD]**: Kebutuhan yang sangat disarankan untuk diimplementasikan.
+- **[MAY]**: Kebutuhan opsional untuk implementasi di masa mendatang.
+- *Teks miring*: Istilah teknis asing yang tidak memiliki padanan kata baku dalam Bahasa Indonesia.
+- **Teks tebal**: Istilah penting, judul, atau penekanan khusus.
+- `Monospace`: Nama *field* basis data, variabel, atau nilai spesifik.
 
 ### 1.4 Audiens yang Dituju
 
-1. **Pengembang Backend (Node.js/Express):** Untuk pemahaman API, business logic, dan database schema
-2. **Pengembang Frontend (React.js):** Untuk UI/UX design specifications dan user workflow
-3. **Database Administrator:** Untuk struktur database dan relationships
-4. **Project Manager & Stakeholder:** Untuk scope, timeline, dan deliverables
-5. **Quality Assurance Engineer:** Untuk test case design dan acceptance criteria
-6. **Safety Officer/HSE Manager:** Untuk verifikasi compliance dengan standar K3 dan regulasi
+1. **Pengembang *Backend* (Node.js/Express):** Untuk pemahaman *API*, logika bisnis, dan skema basis data.
+2. **Pengembang *Frontend* (React.js/Vite):** Untuk spesifikasi desain antarmuka pengguna (*UI/UX*) dan alur kerja pengguna.
+3. **Administrator Basis Data:** Untuk memahami struktur basis data dan relasinya.
+4. **Manajer Proyek dan Pemangku Kepentingan:** Untuk memahami ruang lingkup, jadwal, dan *deliverables*.
+5. **Insinyur Penjaminan Mutu (*QA*):** Untuk perancangan skenario pengujian dan kriteria penerimaan.
+6. **Petugas K3/Manajer HSE:** Untuk verifikasi kepatuhan terhadap standar dan regulasi K3 yang berlaku.
 
 ### 1.5 Definisi, Akronim, dan Singkatan
 
 | Singkatan | Definisi Lengkap |
 |-----------|-----------------|
 | **K3** | Keselamatan dan Kesehatan Kerja |
-| **HSE** | Health, Safety, and Environment |
-| **SRS** | Software Requirements Specification |
-| **IEEE** | Institute of Electrical and Electronics Engineers |
-| **RBAC** | Role-Based Access Control |
-| **JWT** | JSON Web Token |
-| **TRIR** | Total Recordable Incident Rate |
-| **LTI** | Lost Time Injury |
-| **APD** | Alat Pelindung Diri (Personal Protective Equipment/PPE) |
-| **e-PTW** | Electronic Permit to Work |
-| **QR** | Quick Response (kode barcode 2D) |
-| **SOP** | Standard Operating Procedure |
-| **API** | Application Programming Interface |
-| **CRUD** | Create, Read, Update, Delete |
-| **ORM** | Object-Relational Mapping |
+| **HSE** | *Health, Safety, and Environment* |
+| **SRS** | *Software Requirements Specification* |
+| **IEEE** | *Institute of Electrical and Electronics Engineers* |
+| **RBAC** | *Role-Based Access Control* (Kontrol Akses Berbasis Peran) |
+| **JWT** | *JSON Web Token* |
+| **TRIR** | *Total Recordable Incident Rate* |
+| **LTI** | *Lost Time Injury* (Cedera Hilang Waktu Kerja) |
+| **APD** | Alat Pelindung Diri (*Personal Protective Equipment*/PPE) |
+| **e-PTW** | *Electronic Permit to Work* (Izin Kerja Elektronik) |
+| **QR** | *Quick Response* (kode matriks 2D) |
+| **SOP** | *Standard Operating Procedure* (Prosedur Operasional Standar) |
+| **API** | *Application Programming Interface* |
+| **CRUD** | *Create, Read, Update, Delete* |
+| **ORM** | *Object-Relational Mapping* |
+| **CAPA** | *Corrective and Preventive Action* (Tindakan Perbaikan dan Pencegahan) |
+| **XSS** | *Cross-Site Scripting* |
+| **CORS** | *Cross-Origin Resource Sharing* |
 
 ---
 
@@ -67,100 +70,106 @@ Nuraga adalah solusi digital komprehensif yang dirancang untuk mendigitalisasi, 
 
 ### 2.1 Perspektif Produk
 
-Nuraga adalah aplikasi web berbasis cloud yang berfungsi sebagai hub terpusat untuk manajemen K3 di seluruh organisasi. Sistem ini mengintegrasikan berbagai modul yang saling terhubung untuk memberikan visibility penuh terhadap:
+Nuraga merupakan aplikasi web berbasis *cloud* yang berfungsi sebagai pusat kendali terpadu untuk manajemen K3 di seluruh organisasi. Sistem ini mengintegrasikan berbagai modul yang saling terhubung guna memberikan visibilitas penuh terhadap:
 
-- Status keselamatan kerja real-time
-- Riwayat insiden dan hazard
-- Compliance dengan regulasi K3
-- Performance metrics dan trend analysis
-- Kolaborasi antar peran dalam safety management
+- Status keselamatan kerja secara waktu-nyata (*real-time*).
+- Riwayat insiden dan temuan bahaya (*hazard*).
+- Kepatuhan terhadap regulasi K3 yang berlaku.
+- Metrik kinerja keselamatan dan analisis tren.
+- Kolaborasi antarperan dalam manajemen keselamatan.
 
 **Arsitektur Sistem:**
 ```
 ┌─────────────────────────────────────────┐
 │       Frontend (React.js + Vite)        │
-│  ├─ Dynamic Chunking                    │
-│  └─ State & Routing Management          │
+│  ├─ Pemisahan Kode Dinamis             │
+│  └─ Manajemen State & Routing          │
 └──────────────────┬──────────────────────┘
-                   │ (REST API via HttpOnly Cookies)
+                   │ (REST API melalui HttpOnly Cookies)
 ┌──────────────────▼──────────────────────┐
 │   Backend (Node.js + Express.js)        │
-│  ├─ Cookie-Parser & Security Middleware │
-│  ├─ Authentication (HttpOnly & Secure)  │
-│  ├─ AI & Data Science Integration       │
-│  └─ API Endpoints & Rate Limiting       │
+│  ├─ cookie-parser & Middleware Keamanan │
+│  ├─ Autentikasi (HttpOnly & Secure)    │
+│  ├─ Integrasi AI & Ilmu Data           │
+│  └─ Endpoint API & Pembatasan Laju     │
 └──────────────────┬──────────────────────┘
-                   │ (SQL Query)
+                   │ (Kueri SQL)
 ┌──────────────────▼──────────────────────┐
-│  Database (PostgreSQL + Sequelize ORM)  │
-│  ├─ Relational Constraints (Cascade)    │
-│  ├─ Historical Data & Audit Log         │
-│  └─ Transactional Data                  │
+│  Basis Data (PostgreSQL + Sequelize ORM)│
+│  ├─ Konstrain Relasional (Cascade)     │
+│  ├─ Data Historis & Log Audit          │
+│  └─ Data Transaksional                 │
 └─────────────────────────────────────────┘
 ```
 
-### 2.2 Karakteristik Pengguna (Roles)
+### 2.2 Karakteristik Pengguna (Peran)
 
-Berdasarkan struktur enumerasi pada basis data, sistem Nuraga mendukung hak akses berbasis *Role-Based Access Control* (RBAC) dengan tingkatan sebagai berikut:
+Berdasarkan struktur enumerasi pada skema basis data (`enum_Users_role`), sistem Nuraga mendukung enam peran dengan tingkatan hak akses sebagai berikut:
 
-#### 2.2.1 Operator / Vendor / Staff (Worker Level)
-- **Tingkat Kemampuan:** Low to Medium
-- **Akses:** Dasbor terbatas, pengiriman laporan bahaya/insiden, pengajuan izin kerja (e-PTW).
+#### 2.2.1 Staff / Operator / Vendor (Tingkat Pekerja)
+- **Tingkat Kemampuan:** Rendah hingga Menengah
+- **Hak Akses:** Dasbor terbatas, pengiriman laporan bahaya dan insiden, pengajuan izin kerja (*e-PTW*).
 - **Frekuensi Penggunaan:** Harian
-- **Tugas Utama:** Absensi harian, lapor bahaya (*hazard*), manajemen kelelahan (*fatigue*).
+- **Tugas Utama:** Presensi/absensi harian, pelaporan bahaya (*hazard*), penilaian mandiri tingkat kelelahan (*fatigue*).
 
 #### 2.2.2 Supervisor (SPV)
-- **Tingkat Kemampuan:** Medium
-- **Akses:** Memonitor tim, persetujuan level pertama (izin kerja).
+- **Tingkat Kemampuan:** Menengah
+- **Hak Akses:** Pemantauan tim, persetujuan tahap pertama untuk izin kerja.
 - **Frekuensi Penggunaan:** Harian
-- **Tugas Utama:** Pemantauan kehadiran bawahan, pengawasan laporan, evaluasi awal K3.
+- **Tugas Utama:** Pemantauan kehadiran bawahan, pengawasan laporan, evaluasi awal keselamatan kerja.
 
-#### 2.2.3 HSE (Health, Safety, and Environment Officer)
-- **Tingkat Kemampuan:** High
-- **Akses:** Akses analitik, verifikasi laporan insiden, kontrol gamifikasi.
+#### 2.2.3 HSE (*Health, Safety, and Environment Officer*)
+- **Tingkat Kemampuan:** Tinggi
+- **Hak Akses:** Akses analitik menyeluruh, verifikasi laporan insiden, pengelolaan gamifikasi.
 - **Frekuensi Penggunaan:** Harian
-- **Tugas Utama:** Audit K3, persetujuan dokumen kritis, pengawasan metrik keselamatan.
+- **Tugas Utama:** Pelaksanaan audit K3, persetujuan dokumen kritis, pengawasan metrik keselamatan.
 
-#### 2.2.4 Manager / Admin
-- **Tingkat Kemampuan:** High
-- **Akses:** Akses penuh ke seluruh konfigurasi sistem, dasbor manajerial.
-- **Frekuensi Penggunaan:** Berkala / Harian (untuk Admin)
-- **Tugas Utama:** Manajemen data pengguna, kontrol keamanan sistem, pengambilan keputusan strategis.
+#### 2.2.4 Manager
+- **Tingkat Kemampuan:** Tinggi
+- **Hak Akses:** Persetujuan akhir, dasbor strategis tingkat eksekutif.
+- **Frekuensi Penggunaan:** Berkala (2—3 kali per minggu)
+- **Tugas Utama:** Pengambilan keputusan strategis, peninjauan metrik keseluruhan.
+
+#### 2.2.5 Admin
+- **Tingkat Kemampuan:** Tinggi
+- **Hak Akses:** Akses penuh ke seluruh konfigurasi sistem, manajemen pengguna, dan pengaturan keamanan.
+- **Frekuensi Penggunaan:** Harian
+- **Tugas Utama:** Manajemen data pengguna, kendali keamanan sistem, pemeliharaan konfigurasi.
 
 ### 2.3 Lingkungan Operasional
 
-- **Platform:** Web-based, responsive untuk desktop dan mobile
-- **Browser Support:** Chrome v90+, Firefox v88+, Safari v14+, Edge v90+
-- **Network:** Internet connectivity required (min. 1 Mbps)
-- **Deployment:** Cloud infrastructure (dapat di-host on-premise jika diperlukan)
-- **Operating Hours:** 24/7 availability dengan scheduled maintenance window
+- **Platform:** Berbasis web, responsif untuk perangkat *desktop* dan *mobile*.
+- **Dukungan Peramban:** Chrome v90+, Firefox v88+, Safari v14+, Edge v90+.
+- **Jaringan:** Memerlukan konektivitas internet (minimal 1 Mbps).
+- **Penyebaran:** Infrastruktur *cloud* AWS (EC2 t2.micro) dengan manajemen proses PM2. Dapat di-*host* secara *on-premise* bila diperlukan.
+- **Jam Operasional:** Ketersediaan 24/7 dengan jendela pemeliharaan terjadwal.
 
 ### 2.4 Asumsi dan Dependensi
 
 #### Asumsi Teknis
-1. PostgreSQL v12+ tersedia dan dikonfigurasi dengan baik
-2. Node.js runtime v16+ terinstal di server backend
-3. Browser modern tersedia untuk semua end-user
-4. Network connectivity stabil untuk semua lokasi operasional
-5. Storage capacity minimal 100 GB untuk historical data dan uploads
+1. PostgreSQL versi 12 atau lebih baru tersedia dan dikonfigurasi dengan benar.
+2. *Runtime* Node.js versi 18+ (direkomendasikan 20.x LTS) terpasang di peladen *backend*.
+3. Peramban web modern tersedia bagi seluruh pengguna akhir.
+4. Konektivitas jaringan stabil untuk semua lokasi operasional.
+5. Kapasitas penyimpanan minimal 100 GB untuk data historis dan unggahan berkas.
 
 #### Asumsi Organisasi
-1. Setiap pengguna memiliki unique identifier dan email address
-2. Struktur organisasi sudah defined (Staff → SPV → HSE → Manager)
-3. Kebijakan K3 sudah documented dan ready untuk digitalisasi
-4. Budget untuk maintenance dan upgrade sudah diallokasikan
+1. Setiap pengguna memiliki identifikasi unik dan alamat surel (*email*).
+2. Struktur organisasi telah ditetapkan (Staff → Supervisor → HSE → Manager → Admin).
+3. Kebijakan K3 telah terdokumentasi dan siap untuk didigitalisasi.
+4. Anggaran untuk pemeliharaan dan peningkatan sistem telah dialokasikan.
 
 #### Dependensi Eksternal
-1. Email service provider (untuk notifikasi dan OTP)
-2. **WhatsApp Baileys (WebSocket):** Terhubung via WebSocket untuk menyediakan *bot* dan notifikasi SOS darurat secara _real-time_. Memerlukan manajemen sesi dan pemindaian *QR Code*.
-3. Integrasi *Artificial Intelligence*: API internal (`nuraga-ai`) atau eksternal untuk prediksi data dan agen cerdas.
-4. File storage service (untuk dokumen uploads)
-5. Keamanan data center dan backup infrastructure
+1. **Penyedia Layanan Surel:** Untuk notifikasi dan *One-Time Password* (OTP).
+2. **WhatsApp Baileys (*WebSocket*):** Terhubung melalui protokol *WebSocket* untuk menyediakan *bot* notifikasi dan siaran darurat SOS secara waktu-nyata. Memerlukan manajemen sesi dan pemindaian Kode QR.
+3. **Integrasi Kecerdasan Buatan (*AI*):** *API* internal (`nuraga-ai`) atau eksternal untuk prediksi data dan asisten cerdas.
+4. **Layanan Penyimpanan Berkas:** Untuk penyimpanan dokumen dan unggahan bukti foto/lampiran.
+5. **Infrastruktur Keamanan Pusat Data:** Keamanan fisik dan logis serta infrastruktur *backup*.
 
-#### Non-Functional Dependencies
-1. Sistem harus mendukung integrasi dengan payroll system existing (API future)
-2. Sistem harus kompatibel dengan QR code scanner devices
-3. Sistem dapat diintegrasikan dengan safety equipment (IoT sensors) di masa depan
+#### Dependensi Non-Fungsional
+1. Sistem harus mendukung integrasi dengan sistem penggajian (*payroll*) yang sudah ada (melalui *API* di masa mendatang).
+2. Sistem harus kompatibel dengan perangkat pemindai Kode QR.
+3. Sistem dapat diintegrasikan dengan peralatan keselamatan berbasis IoT (sensor) di masa mendatang.
 
 ---
 
@@ -2196,493 +2205,376 @@ Monitoring:
 ├─ Visualization: Grafana
 ├─ Logging: ELK Stack (Elasticsearch, Logstash, Kibana)
 ├─ APM: New Relic atau Datadog
-└─ Alerting: PagerDuty integration
-```
-
-### 3.11.6 Data Strategy & Privacy
-
-**FR-11.1.7 [MUST]** Data governance untuk responsible data usage:
-
-**Data Collection Principles:**
-- Consent: Explicit user consent untuk data collection
-- Minimization: Collect only what's necessary
-- Purpose Limitation: Use data only untuk stated purpose
-- Retention: Delete data after retention period
-
-**Data Privacy Measures:**
-```
-Personal Data Protection:
-├─ Anonymization: Remove direct identifiers (name → worker_id)
-├─ Pseudonymization: Use consistent non-identifiable IDs
-├─ Encryption: TLS in-transit, AES-256 at-rest
-├─ Access Control: RBAC, audit logging untuk data access
-└─ Breach Response: Incident response plan, user notification
-
-Regulatory Compliance:
-├─ GDPR compliance (if EU operations)
-├─ Indonesia data protection law (if applicable)
-├─ Right to be forgotten (data deletion capability)
-├─ Data portability (user can export their data)
-└─ Transparency (explain model decisions)
-
-Data Retention Policy:
-├─ Operational data: 7 years (regulatory requirement)
-├─ ML training data: 5-year rolling window
-├─ Model artifacts: Keep all historical versions
-├─ Backup data: 30-day retention
-└─ Deletion: Automated archival & deletion workflows
-```
-
-**Synthetic Data & Privacy-Preserving ML:**
-```
-Privacy-Preserving Techniques [FUTURE]:
-├─ Federated Learning: Train models on-device, aggregate gradients
-├─ Differential Privacy: Add noise untuk individual privacy
-├─ Homomorphic Encryption: Compute on encrypted data
-├─ Synthetic Data Generation: Create realistic yet private datasets
-└─ Data Anonymization: k-anonymity, l-diversity
-```
-
-### 3.11.7 Cost & Resource Planning
-
-**FR-11.1.8 [SHOULD]** ML infrastructure cost optimization:
-
-**Estimated Annual ML Budget (Year 1):**
-```
-Personnel:
-├─ Machine Learning Engineer (1): Rp 180M/year
-├─ Data Engineer (1): Rp 160M/year
-├─ Data Scientist (1 part-time): Rp 100M/year
-└─ Subtotal: Rp 440M
-
-Infrastructure:
-├─ GPU instances (training): Rp 60M/month = Rp 720M/year
-├─ Model serving infrastructure: Rp 40M/month = Rp 480M/year
-├─ Data storage (S3/GCS): Rp 15M/month = Rp 180M/year
-├─ Monitoring & tools: Rp 20M/month = Rp 240M/year
-└─ Subtotal: Rp 1.62B
-
-Tools & Services:
-├─ MLflow, Weights & Biases: Rp 20M/month = Rp 240M/year
-├─ GPU cloud credits (Paperspace, Lambda): Rp 100M/year
-├─ Data labeling service (Labelbox): Rp 50M/year
-└─ Subtotal: Rp 390M
-
-Total ML Budget Year 1: Rp 2.45B (~12% of revenue for dedicated ML team + infra)
-```
-
-**Cost Optimization Strategies:**
-```
-Reduction Tactics:
-├─ Spot/preemptible instances: 70% cost reduction for training
-├─ Model quantization: Reduce model size, faster inference, cheaper serving
-├─ Cached features: Avoid recomputing features
-├─ Batch processing: Group predictions untuk throughput optimization
-├─ Open-source tools: MLflow (free) vs proprietary solutions
-└─ Bring-your-own-data: Customers contribute training data
-```
-
-**ROI & Business Impact:**
-```
-Safety Impact:
-├─ Incident prevention: 25-30% reduction via early warning
-├─ Cost per incident prevented: Rp 10-100M
-├─ Year 1 prevented incidents: ~50-100
-├─ Total economic benefit: Rp 500M - Rp 5B
-└─ ML investment ROI: 200-2000% (excellent)
-
-Business Metrics:
-├─ Feature adoption: Predictive analytics adoption >60% of HSE users
-├─ Customer satisfaction: NPS improvement +10 points
-├─ Retention: Churn reduction 50% for customers using AI features
-└─ Upsell: AI analytics add-on adoption 30% of customer base
+└─ Alerting: Integrasi PagerDuty
 ```
 
 ---
 
 ## 4. KEBUTUHAN NON-FUNGSIONAL
 
-### 4.1 Kebutuhan Kinerja (Performance)
+### 4.1 Kebutuhan Kinerja
 
-**NFR-1.1 [MUST]** Response Time:
-- API response time < 500ms untuk 95% requests
-- Dashboard load time < 2 detik (untuk first contentful paint)
-- Page navigation < 1 detik (untuk client-side routing)
-- Database query execution < 100ms (untuk single record queries)
-- Bulk operation (>100 records) < 5 detik
+**NFR-1.1 [MUST]** Waktu Respons:
+- Waktu respons *API* kurang dari 500 md untuk 95% permintaan.
+- Waktu muat dasbor kurang dari 2 detik (untuk *First Contentful Paint*).
+- Navigasi antarhalaman kurang dari 1 detik (untuk *client-side routing*).
+- Eksekusi kueri basis data kurang dari 100 md (untuk kueri rekaman tunggal).
+- Operasi massal (lebih dari 100 rekaman) kurang dari 5 detik.
 
-**NFR-1.2 [MUST]** Throughput & Scalability:
-- System harus support minimum 1000 concurrent users
-- Database connection pool: 50-100 active connections
-- Support untuk 100+ incidents per day
-- Support untuk 500+ attendance records per day
-- Batch processing untuk 10.000+ records dalam time window reasonable
+**NFR-1.2 [MUST]** Kapasitas dan Skalabilitas:
+- Sistem harus mendukung minimal 1.000 pengguna secara bersamaan (*concurrent users*).
+- Kumpulan koneksi basis data (*connection pool*): 50—100 koneksi aktif.
+- Dukungan untuk lebih dari 100 laporan insiden per hari.
+- Dukungan untuk lebih dari 500 catatan kehadiran per hari.
+- Pemrosesan massal (*batch processing*) untuk lebih dari 10.000 rekaman dalam jendela waktu yang wajar.
 
-**NFR-1.3 [SHOULD]** Optimasi & Skalabilitas:
-- Memori Node.js dioptimalkan (menggunakan *flag* `--max-old-space-size` pada server produksi EC2) untuk pencegahan kebuntuan pembersihan memori (*Garbage Collector lock*).
-- **Paginasi Backend (Limit & Offset):** Seluruh data masif seperti `Incidents`, `Hazards`, dan `Attendance` menggunakan skema paginasi penuh di tingkat basis data.
-- Pemisahan kode (*Code splitting*) & *Dynamic Chunking* pada kompilasi React Vite.
-- Optimasi kueri basis data (penggunaan indeks pada kolom yang sering dicari).
-- Strategi *caching* (Redis untuk data yang sering diakses).
-- CDN untuk aset statis (CSS, JavaScript, gambar).
+**NFR-1.3 [SHOULD]** Optimasi dan Skalabilitas:
+- Memori Node.js dioptimalkan menggunakan parameter `--max-old-space-size` pada peladen produksi (EC2) guna mencegah kebuntuan pembersihan memori (*Garbage Collector lock*).
+- **Paginasi *Backend* (*Limit* dan *Offset*):** Seluruh data masif seperti `Incidents`, `Hazards`, dan `Attendance` menggunakan skema paginasi penuh di tingkat kueri basis data.
+- Pemisahan kode (*code splitting*) dan *Dynamic Chunking* pada proses kompilasi React melalui Vite.
+- Optimasi kueri basis data melalui penggunaan indeks pada kolom yang sering dicari.
+- Strategi *caching* menggunakan Redis untuk data yang sering diakses.
+- *CDN* untuk aset statis (CSS, JavaScript, gambar).
 
-### 4.2 Kebutuhan Keamanan (Security)
+### 4.2 Kebutuhan Keamanan
 
-**NFR-2.1 [MUST]** Autentikasi, Sesi, & Keamanan Jaringan:
-- **HttpOnly Cookies**: Penggunaan kuki aman (HttpOnly, Secure, SameSite) untuk menyimpan *Access Token* dan *Refresh Token* demi perlindungan penuh terhadap serangan XSS (menggantikan `localStorage`).
-- **Network Protections**: 
+**NFR-2.1 [MUST]** Autentikasi, Sesi, dan Keamanan Jaringan:
+- **Kuki *HttpOnly***: Penggunaan kuki aman (*HttpOnly*, *Secure*, *SameSite*) untuk menyimpan *Access Token* dan *Refresh Token* demi perlindungan penuh terhadap serangan *XSS* (menggantikan penyimpanan berbasis `localStorage`).
+- **Perlindungan Jaringan**:
   - `helmet`: Konfigurasi *HTTP headers* untuk perlindungan aplikasi *backend*.
   - `cors`: *Cross-Origin Resource Sharing* difilter ketat hanya untuk domain aplikasi yang terdaftar.
-  - `express-rate-limit`: Proteksi terhadap serangan *brute force* (contoh: 15 permintaan per 15 menit pada jalur autentikasi).
-- Masa berlaku token: 1 jam untuk *access token*.
+  - `express-rate-limit`: Proteksi terhadap serangan *brute force* (contoh: 1.000 permintaan per 15 menit secara global, dengan pembatasan lebih ketat pada jalur autentikasi).
+- Masa berlaku *access token*: 1 jam.
 - Masa berlaku *refresh token*: 7 hari.
-- Kemampuan pencabutan token (proses *logout* akan membatalkan token).
+- Kemampuan pencabutan token: proses *logout* akan membatalkan token yang aktif.
 
 - Kontrol Akses Berbasis Peran (RBAC):
-  - 4 peran: Staff, Supervisor, HSE Officer, Manager.
-  - Hak akses spesifik per modul/fitur.
-  - Pendekatan tolak secara *default* (hanya izinkan hak akses yang diberikan secara eksplisit).
-  - Audit berkala dari pemetaan peran ke hak akses.
+  - Enam peran: Admin, HSE, Supervisor, Manager, Staff, Vendor.
+  - Hak akses spesifik per modul dan fitur.
+  - Pendekatan tolak secara bawaan (*deny-by-default*); hanya mengizinkan hak akses yang diberikan secara eksplisit.
+  - Audit berkala terhadap pemetaan peran dan hak akses.
 
-**NFR-2.2 [MUST]** Password Security:
-- Minimum length: 12 characters
-- Complexity requirement: Uppercase + Lowercase + Digits + Special characters
-- Password hashing: bcrypt dengan salt rounds minimum 10
-- Password history: Cannot reuse last 5 passwords
-- Password expiry: Force change every 90 days [SHOULD]
-- Account lockout: After 5 failed login attempts, lock untuk 15 minutes
-- Multi-factor authentication (MFA) [SHOULD]
+**NFR-2.2 [MUST]** Keamanan Kata Sandi:
+- Panjang minimal: 6 karakter (sesuai implementasi *seeder* saat ini).
+- Enkripsi kata sandi: *bcrypt* dengan putaran *salt* minimal 10.
+- Riwayat kata sandi: Tidak boleh menggunakan kembali 5 kata sandi terakhir [SHOULD].
+- Penguncian akun: Setelah 5 kali percobaan masuk yang gagal, akun dikunci selama 15 menit [SHOULD].
+- Autentikasi multifaktor (MFA) [SHOULD].
 
-**NFR-2.3 [MUST]** Data Protection:
-- Encryption in-transit: HTTPS/TLS 1.2+ untuk semua connections
-- Encryption at-rest: Database encryption (Transparent Data Encryption)
-- Sensitive data masking:
-  - Phone numbers: Mask 6 digits (08XXXX4567)
-  - Email: Mask partial (user****@email.com)
-  - Identity numbers (KTP): Mask except last 4 digits
-- Database audit logging untuk sensitive data access
+**NFR-2.3 [MUST]** Perlindungan Data:
+- Enkripsi dalam transit: HTTPS/TLS 1.2+ untuk semua koneksi.
+- Enkripsi dalam penyimpanan: Enkripsi basis data (*Transparent Data Encryption*) [SHOULD].
+- Penyamaran data sensitif:
+  - Nomor telepon: 6 digit disamarkan (08XXXX4567).
+  - Surel: Disamarkan sebagian (user****@email.com).
+  - Nomor identitas (KTP): Hanya 4 digit terakhir yang ditampilkan.
+- Pencatatan audit untuk akses data sensitif.
 
-**NFR-2.4 [MUST]** Input Validation & Injection Prevention:
-- All user inputs validated pada server-side (not relying on client validation)
-- SQL injection prevention: Use parameterized queries (ORM protection)
-- XSS prevention: Input sanitization dan output encoding
-- CSRF protection: Token-based CSRF prevention
-- File upload validation: Type, size, content verification
+**NFR-2.4 [MUST]** Validasi Masukan dan Pencegahan Injeksi:
+- Semua masukan pengguna divalidasi di sisi peladen (tidak mengandalkan validasi sisi klien saja).
+- Pencegahan injeksi SQL: Penggunaan kueri terparameterisasi melalui *ORM* (Sequelize).
+- Pencegahan *XSS*: Sanitasi masukan dan *encoding* keluaran.
+- Perlindungan *CSRF*: Pencegahan berbasis token *CSRF*.
+- Validasi unggahan berkas: Tipe, ukuran, dan verifikasi konten.
 
-**NFR-2.5 [MUST]** Audit & Logging:
-- Comprehensive audit trail untuk semua critical operations:
-  - User login/logout
-  - Data access (especially sensitive data)
-  - Data modification (create, update, delete)
-  - Permission/role changes
-  - System configuration changes
-- Log retention: Minimum 1 year
-- Log integrity: Prevent tampering dengan log hashing/digital signature
-- Regular audit log review untuk suspicious activities
+**NFR-2.5 [MUST]** Audit dan Pencatatan Log:
+- Jejak audit komprehensif untuk semua operasi kritis:
+  - Masuk/keluar pengguna.
+  - Akses data (terutama data sensitif).
+  - Modifikasi data (buat, perbarui, hapus).
+  - Perubahan hak akses/peran.
+  - Perubahan konfigurasi sistem.
+- Retensi log: Minimal 1 tahun.
+- Integritas log: Pencegahan manipulasi melalui *hashing*/tanda tangan digital.
+- Peninjauan berkala log audit untuk aktivitas mencurigakan.
 
-**NFR-2.6 [SHOULD]** Vulnerability Management:
-- Regular security vulnerability scanning (SAST - Static Analysis)
-- Dependency vulnerability checking (npm audit, OWASP DependencyCheck)
-- Annual penetration testing
-- Security incident response plan
+**NFR-2.6 [SHOULD]** Manajemen Kerentanan:
+- Pemindaian kerentanan keamanan secara berkala (SAST — Analisis Statis).
+- Pemeriksaan kerentanan dependensi (`npm audit`, OWASP DependencyCheck).
+- Pengujian penetrasi tahunan.
+- Rencana respons insiden keamanan.
 
-**NFR-2.7 [MUST]** API Security:
-- API authentication required untuk all endpoints
-- Rate limiting: 100 requests per minute per IP
-- API key rotation policy
-- Request payload size limit: 10 MB
-- Query parameter validation
+**NFR-2.7 [MUST]** Keamanan *API*:
+- Autentikasi wajib untuk semua *endpoint API*.
+- Pembatasan laju (*rate limiting*): 1.000 permintaan per 15 menit per IP (global).
+- Batas ukuran *payload* permintaan: 10 MB.
+- Validasi parameter kueri.
 
-### 4.3 Kebutuhan Ketersediaan (Availability)
+### 4.3 Kebutuhan Ketersediaan
 
-**NFR-3.1 [MUST]** Uptime & Reliability:
-- Target uptime: 99.5% (expected downtime ~3.6 hours/bulan)
-- Mean Time To Recovery (MTTR): < 1 hour
-- Graceful degradation: non-critical features dapat disabled jika database unavailable
+**NFR-3.1 [MUST]** Waktu Aktif dan Keandalan:
+- Target waktu aktif (*uptime*): 99,5% (estimasi waktu henti ~3,6 jam per bulan).
+- Rata-rata Waktu Pemulihan (*MTTR*): Kurang dari 1 jam.
+- Degradasi bertahap (*graceful degradation*): Fitur non-kritis dapat dinonaktifkan apabila basis data tidak tersedia.
 
-**NFR-3.2 [MUST]** Disaster Recovery & Backup:
-- Database backup frequency: Daily full backup + hourly incremental
-- Backup retention: 30 days
-- Backup verification: Regular restore test (monthly)
-- RTO (Recovery Time Objective): 4 hours
-- RPO (Recovery Point Objective): 1 hour (max data loss)
-- Redundancy: Database replication untuk failover capability
+**NFR-3.2 [MUST]** Pemulihan Bencana dan Cadangan:
+- Frekuensi pencadangan basis data: Pencadangan penuh harian + pencadangan inkremental setiap jam.
+- Retensi cadangan: 30 hari.
+- Verifikasi cadangan: Uji pemulihan berkala (bulanan).
+- *RTO* (Tujuan Waktu Pemulihan): 4 jam.
+- *RPO* (Tujuan Titik Pemulihan): 1 jam (kehilangan data maksimum).
+- Redundansi: Replikasi basis data untuk kemampuan *failover*.
 
-**NFR-3.3 [MUST]** Business Continuity:
-- Incident tracking system tidak boleh down (critical priority)
-- Dashboard analytics dapat operate dengan cached data jika database briefly unavailable
-- Emergency SOS feature always accessible (offline support)
-- Communication channels untuk service status updates
+**NFR-3.3 [MUST]** Keberlangsungan Bisnis:
+- Sistem pelacakan insiden tidak boleh mengalami gangguan (prioritas kritis).
+- Analitik dasbor dapat beroperasi dengan data *cache* apabila basis data tidak tersedia sebentar.
+- Fitur darurat SOS harus selalu dapat diakses (dukungan *offline*).
+- Saluran komunikasi untuk pembaruan status layanan.
 
-**NFR-3.4 [SHOULD]** Load Balancing:
-- Multiple application server instances
-- Load balancer distribution (round-robin atau least-connections)
-- Sticky session untuk maintain user context jika needed
+**NFR-3.4 [SHOULD]** Penyeimbang Beban (*Load Balancing*):
+- Beberapa instansi peladen aplikasi.
+- Distribusi penyeimbang beban (*round-robin* atau *least-connections*).
+- Sesi melekat (*sticky session*) untuk mempertahankan konteks pengguna apabila diperlukan.
 
-### 4.4 Kebutuhan Usability (Usability)
+### 4.4 Kebutuhan Kebergunaan (*Usability*)
 
-**NFR-4.1 [MUST]** User Interface Design:
-- Responsive design untuk desktop (1920x1080), tablet (768px), mobile (375px)
-- Consistent UI components across application
-- Dark mode support [SHOULD]
-- Accessibility compliance: WCAG 2.1 Level AA
-  - Color contrast ratio: 4.5:1 minimum
-  - Keyboard navigation support
-  - Screen reader compatibility
+**NFR-4.1 [MUST]** Desain Antarmuka Pengguna:
+- Desain responsif untuk *desktop* (1920×1080), tablet (768px), dan ponsel (375px).
+- Komponen antarmuka pengguna (*UI*) yang konsisten di seluruh aplikasi.
+- Dukungan mode gelap (*dark mode*) [SHOULD].
+- Kepatuhan aksesibilitas: WCAG 2.1 Tingkat AA [SHOULD].
+  - Rasio kontras warna: minimal 4,5:1.
+  - Dukungan navigasi *keyboard*.
+  - Kompatibilitas pembaca layar (*screen reader*).
 
-**NFR-4.2 [MUST]** User Experience:
-- Intuitive navigation dengan clear information hierarchy
-- Minimal clicks untuk access common features (< 3 clicks)
-- Confirmation dialog untuk destructive actions (delete, archive)
-- Undo functionality dimana applicable
-- Real-time form validation feedback
+**NFR-4.2 [MUST]** Pengalaman Pengguna:
+- Navigasi intuitif dengan hierarki informasi yang jelas.
+- Jumlah klik minimal untuk mengakses fitur umum (kurang dari 3 klik).
+- Dialog konfirmasi untuk tindakan destruktif (hapus, arsipkan).
+- Fungsionalitas pembatalan (*undo*) bilamana memungkinkan.
+- Umpan balik validasi formulir secara waktu-nyata.
 
-**NFR-4.3 [MUST]** Multilingual Support:
-- Default: Indonesian (Bahasa Indonesia)
-- Support English UI [SHOULD]
-- Date/time localization (use system locale)
-- Number formatting per locale
+**NFR-4.3 [MUST]** Dukungan Multibahasa:
+- Bahasa bawaan: Bahasa Indonesia.
+- Dukungan antarmuka dalam Bahasa Inggris [SHOULD].
+- Lokalisasi format tanggal/waktu sesuai lokal (*locale*) sistem.
+- Pemformatan angka sesuai lokal.
 
-**NFR-4.4 [MUST]** Help & Documentation:
-- In-app help tooltips untuk complex features
-- User guide documentation
-- Admin guide untuk system configuration
-- Video tutorials untuk key workflows [SHOULD]
+**NFR-4.4 [MUST]** Bantuan dan Dokumentasi:
+- *Tooltip* bantuan dalam aplikasi untuk fitur yang kompleks.
+- Dokumentasi panduan pengguna.
+- Panduan administrasi untuk konfigurasi sistem.
+- Tutorial video untuk alur kerja utama [SHOULD].
 
-### 4.5 Kebutuhan Maintainability (Maintainability)
+### 4.5 Kebutuhan Pemeliharaan (*Maintainability*)
 
-**NFR-5.1 [MUST]** Code Quality:
-- Code style guide: Airbnb style guide untuk JavaScript
-- ESLint configuration untuk code linting
-- Prettier configuration untuk code formatting
-- JSDoc comments untuk functions dan modules
-- Test coverage: Minimum 70% line coverage
+**NFR-5.1 [MUST]** Kualitas Kode:
+- Panduan gaya kode: Konvensi yang konsisten untuk JavaScript/JSX.
+- Konfigurasi ESLint untuk pemeriksaan kode (*linting*).
+- Konfigurasi Prettier untuk pemformatan kode.
+- Komentar JSDoc untuk fungsi dan modul.
+- Cakupan pengujian: Minimal 70% cakupan baris [SHOULD].
 
-**NFR-5.2 [MUST]** Documentation:
-- API documentation (OpenAPI/Swagger spec)
-- Database schema documentation (ERD, data dictionary)
-- Deployment guide (setup, configuration, deployment steps)
-- Troubleshooting guide
-- Change log (version history)
+**NFR-5.2 [MUST]** Dokumentasi:
+- Dokumentasi *API* (spesifikasi *OpenAPI/Swagger*).
+- Dokumentasi skema basis data (*ERD*, kamus data).
+- Panduan penyebaran (*setup*, konfigurasi, langkah penyebaran).
+- Panduan pemecahan masalah (*troubleshooting*).
+- Catatan perubahan (*changelog*) untuk riwayat versi.
 
-**NFR-5.3 [MUST]** Monitoring & Observability:
-- Application logging (structured JSON logging)
-- Performance monitoring (response times, error rates)
-- Database monitoring (query performance, connection pool)
-- Error tracking (Sentry atau equivalent)
-- Health check endpoints (liveness, readiness)
+**NFR-5.3 [MUST]** Pemantauan dan Observabilitas:
+- Pencatatan log aplikasi (format JSON terstruktur).
+- Pemantauan kinerja (waktu respons, tingkat kesalahan).
+- Pemantauan basis data (kinerja kueri, kumpulan koneksi).
+- Pelacakan kesalahan (Sentry atau yang setara).
+- *Endpoint* pemeriksaan kesehatan (*health check*): *liveness*, *readiness*.
 
-**NFR-5.4 [SHOULD]** Technology Stack Stability:
-- Use stable, widely-adopted frameworks (React, Express, PostgreSQL)
-- Avoid bleeding-edge dependencies (use matured versions)
-- Regular dependency updates (monthly)
-- Keep Node.js version in LTS support window
+**NFR-5.4 [SHOULD]** Stabilitas Tumpukan Teknologi:
+- Menggunakan kerangka kerja (*framework*) yang stabil dan diadopsi secara luas (React, Express, PostgreSQL).
+- Menghindari dependensi versi terbaru yang belum stabil; menggunakan versi yang telah matang.
+- Pembaruan dependensi secara berkala (bulanan).
+- Mempertahankan versi Node.js dalam jendela dukungan LTS.
 
-### 4.6 Kebutuhan Compliance & Legal
+### 4.6 Kebutuhan Kepatuhan dan Hukum
 
-**NFR-6.1 [MUST]** Regulatory Compliance:
-- Data privacy: GDPR-like data protection (encryption, retention policies)
-- Indonesia specific: Compliance dengan UU No. 13 Tahun 2003 (K3)
-- Data retention: Delete personal data sesuai retention policy
-- Right to be forgotten: User dapat request data deletion
+**NFR-6.1 [MUST]** Kepatuhan Regulasi:
+- Privasi data: Perlindungan data sejenis GDPR (enkripsi, kebijakan retensi).
+- Spesifik Indonesia: Kepatuhan terhadap UU No. 13 Tahun 2003 tentang Ketenagakerjaan (aspek K3).
+- Retensi data: Penghapusan data pribadi sesuai kebijakan retensi.
+- Hak untuk dilupakan (*right to be forgotten*): Pengguna dapat meminta penghapusan data.
 
-**NFR-6.2 [MUST]** Audit Trail & Compliance Reporting:
-- Complete audit trail untuk regulatory inspection
-- Compliance report generation untuk K3 audits
-- Data integrity verification (hashing)
-- User action attribution (user-level logging)
+**NFR-6.2 [MUST]** Jejak Audit dan Pelaporan Kepatuhan:
+- Jejak audit lengkap untuk inspeksi regulator.
+- Pembuatan laporan kepatuhan untuk audit K3.
+- Verifikasi integritas data melalui *hashing*.
+- Atribusi tindakan pengguna (pencatatan log di tingkat pengguna).
 
-**NFR-6.3 [MUST]** Data Localization [jika diperlukan]:
-- All data stored dalam Indonesia (database location)
-- No data export ke foreign servers without explicit approval
-- Compliance dengan Peraturan Menkominfo tentang Data Center
+**NFR-6.3 [MUST]** Lokalisasi Data (apabila diperlukan):
+- Seluruh data disimpan di Indonesia (lokasi basis data).
+- Tidak ada ekspor data ke peladen luar negeri tanpa persetujuan eksplisit.
+- Kepatuhan terhadap Peraturan Menkominfo tentang Pusat Data.
 
 ---
 
-## 5. GAMBARAN STRUKTUR DATABASE
+## 5. GAMBARAN STRUKTUR BASIS DATA
 
-### 5.1 Entitas Utama & Relationship
+### 5.1 Entitas Utama dan Relasi
 
 ```mermaid
 erDiagram
-    USERS ||--o{ ATTENDANCE : records
-    USERS ||--o{ HAZARD_REPORT : submits
-    USERS ||--o{ INCIDENT_REPORT : submits
-    USERS ||--o{ WORK_PERMIT : approves
-    USERS ||--o{ AUDIT_EXECUTION : conducts
-    USERS ||--o{ CORRECTIVE_ACTION : assigns
-    USERS ||--o{ USER_POINTS : earns
-    USERS ||--o{ USER_ACHIEVEMENT : unlocks
-    
-    HAZARD_REPORT ||--o{ HAZARD_ASSIGNMENT : creates
-    HAZARD_ASSIGNMENT ||--o{ CORRECTIVE_ACTION : links
-    
-    INCIDENT_REPORT ||--o{ ROOT_CAUSE_ANALYSIS : includes
-    INCIDENT_REPORT ||--o{ CORRECTIVE_ACTION : requires
-    INCIDENT_REPORT ||--o{ INCIDENT_AFFECTED : involves
-    
-    WORK_PERMIT ||--o{ PERMIT_WORKER : lists
-    WORK_PERMIT ||--o{ PERMIT_APD : requires
-    WORK_PERMIT ||--o{ PERMIT_GAS_TEST : includes
-    WORK_PERMIT ||--o{ PERMIT_APPROVAL : follows
-    
-    AUDIT_PLAN ||--o{ AUDIT_EXECUTION : schedules
-    AUDIT_PLAN ||--o{ CHECKLIST_TEMPLATE : uses
-    AUDIT_EXECUTION ||--o{ AUDIT_ITEM_RESPONSE : records
-    AUDIT_ITEM_RESPONSE ||--o{ AUDIT_FINDING : generates
-    AUDIT_FINDING ||--o{ CORRECTIVE_ACTION : creates
-    
-    CHECKLIST_TEMPLATE ||--o{ CHECKLIST_ITEM : contains
-    CHECKLIST_ITEM ||--o{ AUDIT_ITEM_RESPONSE : answers
-    
-    ASSET_MASTER ||--o{ AUDIT_ITEM_RESPONSE : inspects
-    
-    EMPLOYEE_CERTIFICATION ||--o{ CERTIFICATION_TYPE : belongs_to
-    
-    VOUCHER ||--o{ VOUCHER_REDEMPTION : allows
-    USER_POINTS ||--o{ VOUCHER_REDEMPTION : converts_to
+    USERS ||--o{ ATTENDANCE : mencatat
+    USERS ||--o{ HAZARD_REPORT : mengirim
+    USERS ||--o{ INCIDENT_REPORT : melaporkan
+    USERS ||--o{ WORK_PERMIT : mengajukan
+    USERS ||--o{ AUDIT : melaksanakan
+    USERS ||--o{ CORRECTIVE_ACTION : ditugaskan
+    USERS ||--o{ CERTIFICATION : memiliki
+    USERS ||--o{ VOUCHER : memperoleh
+    USERS ||--o{ FATIGUE_LOG : mencatat
+    USERS ||--o{ CHAT_MESSAGE : mengirim
+    USERS ||--o{ LEAVE_REQUEST : mengajukan
+    USERS ||--o{ EMERGENCY_CALL : mengaktifkan
+    USERS ||--o{ AUDIT_LOG : menghasilkan
+
+    HAZARD_REPORT ||--o{ CORRECTIVE_ACTION : memicu
+    INCIDENT_REPORT ||--o{ CORRECTIVE_ACTION : memicu
+
+    WORK_PERMIT }o--|| USERS : disetujui_oleh
+    EMERGENCY_CALL }o--|| USERS : ditangani_oleh
 ```
 
-### 5.2 Entitas & Kolom Utama
+### 5.2 Entitas dan Kolom Utama
 
 | Entitas | Kolom Kunci | Deskripsi |
 |---------|------------|-----------|
-| **USERS** | user_id, email, password_hash, role, full_name, department, phone | Manajemen user dengan RBAC |
-| **ATTENDANCE** | attendance_id, user_id, date, check_in/out_time, fatigue_status | Pencatatan kehadiran harian |
-| **HAZARD_REPORT** | hazard_id, reporter_id, location, category, risk_level, status | Pelaporan potensi bahaya |
-| **INCIDENT_REPORT** | incident_id, location, severity, status, total_loss_cost | Pelaporan kecelakaan kerja |
-| **WORK_PERMIT** | permit_id, type, location, status, issue_date, valid_to | Izin kerja elektronik |
-| **AUDIT_EXECUTION** | execution_id, plan_id, executed_by, overall_score | Pelaksanaan audit keselamatan |
-| **CORRECTIVE_ACTION** | action_id, origin_type, responsible_id, deadline, status | Tindakan perbaikan |
-| **EMERGENCY_ALERT** | alert_id, activation_time, type, location, status | Tombol darurat SOS |
-| **EMPLOYEE_CERT** | cert_id, user_id, cert_type_id, expiry_date, status | Sertifikasi karyawan |
-| **USER_POINTS** | point_id, user_id, activity_id, points_earned, date | Poin gamification |
+| **Users** | `id_user`, `email`, `password`, `role`, `nama`, `nik`, `jabatan`, `area_kerja`, `points` | Manajemen pengguna dengan RBAC dan gamifikasi |
+| **Attendance** | `id_attendance`, `id_user`, `tanggal`, `jam_masuk`, `jam_keluar`, `status`, `jam_tidur` | Pencatatan kehadiran harian dan data kelelahan |
+| **HazardReport** | `id_hazard`, `id_user`, `lokasi`, `kategori`, `deskripsi`, `tingkat_risiko`, `status` | Pelaporan potensi bahaya |
+| **IncidentReport** | `id_incident`, `id_user`, `lokasi`, `kategori`, `tingkat_keparahan`, `status` | Pelaporan kecelakaan kerja |
+| **WorkPermit** | `id_permit`, `id_user`, `approved_by`, `tipe`, `lokasi`, `status`, `valid_from`, `valid_to` | Izin kerja elektronik (e-PTW) |
+| **Audit** | `id_audit`, `auditor_id`, `lokasi`, `temuan`, `status` | Pelaksanaan audit keselamatan |
+| **CorrectiveAction** | `id_action`, `id_hazard`, `id_incident`, `assigned_to`, `status`, `tenggat` | Tindakan perbaikan (CAPA) |
+| **EmergencyCall** | `id_emergency`, `id_user`, `handled_by`, `tipe`, `status` | Panggilan darurat SOS |
+| **Certification** | `id_certification`, `id_user`, `nama_sertifikat`, `tanggal_terbit`, `tanggal_kedaluwarsa` | Sertifikasi K3 karyawan |
+| **Voucher** | `id_voucher`, `id_user`, `kode`, `poin_dibutuhkan`, `status` | Voucer penukaran poin gamifikasi |
+| **FatigueLog** | `id_fatigue`, `id_user`, `jam_tidur`, `tingkat_stres`, `skor_risiko`, `status` | Log penilaian kelelahan |
+| **ChatMessage** | `id_message`, `id_user`, `pesan`, `tipe` | Pesan obrolan global waktu-nyata |
 
-### 5.3 Relasi Utama
+### 5.3 Aturan Relasi dan Integritas Data
 
-- **Users ↔ Attendance**: One user memiliki many attendance records (historical)
-- **Users ↔ Roles**: Many-to-many dengan permissions (RBAC)
-- **Hazard ↔ Corrective Action**: One hazard dapat memicu multiple CAs
-- **Incident ↔ Root Cause Analysis**: One incident memiliki one RCA
-- **Work Permit ↔ Workers**: Many-to-many (multi-person permit)
-- **Audit ↔ Findings**: One audit execution dapat generate multiple findings
-- **Findings ↔ Corrective Action**: Auto-link dari findings ke CAs
-
-### 5.4 Data Consistency & Integrity
-
-- Foreign Key constraints pada all junction tables
-- Cascade delete rules carefully defined (e.g., delete user → keep historical records)
-- Unique constraints pada business keys (Permit ID, Incident ID, etc)
-- Check constraints pada enum fields dan numeric ranges
-- Indexes pada frequently queried columns (user_id, date, status)
+- **Pengguna ↔ Kehadiran:** Satu pengguna memiliki banyak catatan kehadiran (historis). Penghapusan pengguna akan menghapus seluruh catatan terkait (`ON DELETE CASCADE`).
+- **Pengguna ↔ Laporan Bahaya/Insiden:** Satu pengguna dapat mengirim banyak laporan. Penghapusan pengguna akan menghapus semua laporannya secara kaskade.
+- **Pengguna ↔ Izin Kerja (pembuat):** Kaskade penghapusan. Penghapusan pengguna menghapus izin yang dibuatnya.
+- **Pengguna ↔ Izin Kerja (penyetuju):** Penghapusan pengguna menetapkan kolom `approved_by` menjadi `NULL` (`ON DELETE SET NULL`).
+- **Pengguna ↔ Panggilan Darurat (penangan):** Penghapusan pengguna menetapkan kolom `handled_by` menjadi `NULL`.
+- **Pengguna ↔ Log Audit:** Penghapusan pengguna menetapkan kolom `id_user` pada log audit menjadi `NULL`.
+- **Laporan Bahaya ↔ Tindakan Perbaikan:** Satu laporan bahaya dapat memicu beberapa tindakan perbaikan. Kaskade penghapusan.
+- **Laporan Insiden ↔ Tindakan Perbaikan:** Satu laporan insiden dapat memicu beberapa tindakan perbaikan. Kaskade penghapusan.
+- Konstrain kunci asing (*foreign key*) pada semua tabel relasi.
+- Konstrain unik pada kunci bisnis (ID Izin Kerja, ID Insiden, dsb.).
+- Indeks pada kolom yang sering dicari (`id_user`, `tanggal`, `status`).
 
 ---
 
 ## 6. PERSIAPAN IMPLEMENTASI
 
-### 6.1 Technology Stack Implementation Map
+### 6.1 Peta Tumpukan Teknologi
 
-| Komponen | Technology | Justifikasi |
-|----------|-----------|------------|
-| Frontend | React.js v18+ | Component-based, large ecosystem, performance optimization |
-| Styling | Tailwind CSS | Utility-first, rapid development, responsive design |
-| State Management | React Context API atau Redux | Centralized state untuk complex data flow |
-| HTTP Client | Axios | Promise-based, interceptor support, error handling |
-| Backend | Node.js v16+ LTS | JavaScript unified stack, non-blocking I/O |
-| Framework | Express.js v4+ | Lightweight, middleware support, mature ecosystem |
-| Database | PostgreSQL v12+ | ACID compliance, JSON support, reliability |
-| ORM | Sequelize | Type-safe, migration support, association management |
-| Authentication | JWT + bcrypt | Stateless, secure, standard industry practice |
-| API Documentation | Swagger/OpenAPI | Interactive API exploration, code generation |
-| Deployment | Docker | Containerization, environment consistency |
-| Cloud Platform | AWS/GCP/Azure | Auto-scaling, managed services, regional deployment |
+| Komponen | Teknologi | Justifikasi |
+|----------|-----------|-------------|
+| *Frontend* | React.js v18+ | Berbasis komponen, ekosistem luas, optimasi kinerja |
+| Kompilasi *Frontend* | Vite | Pembuatan *bundle* cepat, *Hot Module Replacement*, pemisahan kode dinamis |
+| *Styling* | Tailwind CSS | Utilitas-pertama (*utility-first*), pengembangan cepat, desain responsif |
+| Manajemen *State* | React *Context API* | *State* tersentralisasi untuk alur data kompleks |
+| Klien HTTP | Axios | Berbasis *Promise*, dukungan *interceptor*, penanganan kesalahan |
+| *Backend* | Node.js v20 LTS | Tumpukan JavaScript terpadu, I/O non-pemblokiran |
+| Kerangka Kerja | Express.js v4+ | Ringan, dukungan *middleware*, ekosistem matang |
+| Basis Data | PostgreSQL v12+ | Kepatuhan ACID, dukungan JSON, keandalan tinggi |
+| *ORM* | Sequelize v6+ | Keamanan tipe, dukungan migrasi, manajemen asosiasi |
+| Autentikasi | JWT + *bcrypt* + Kuki *HttpOnly* | *Stateless*, aman, standar industri |
+| Waktu-Nyata | Socket.IO v4+ | Komunikasi dua arah, obrolan global, notifikasi |
+| Notifikasi | WhatsApp Baileys v7+ | *Bot* notifikasi SOS, siaran darurat |
+| Manajemen Proses | PM2 | Pemantauan produksi, *auto-restart*, manajemen log |
+| Platform *Cloud* | AWS EC2 | Penyebaran terkelola, skalabilitas, ketersediaan regional |
 
-### 6.2 Development Phases
+### 6.2 Fase Pengembangan
 
-**Phase 1 - Foundation (Bulan 1-2):**
-- Setup development environment
-- Implement user authentication dan RBAC
-- Database schema & migrations
-- Basic CRUD APIs untuk master data
+**Fase 1 — Fondasi (Bulan 1—2):**
+- Penyiapan lingkungan pengembangan.
+- Implementasi autentikasi pengguna dan RBAC.
+- Skema basis data dan migrasi.
+- *API* CRUD dasar untuk data induk.
 
-**Phase 2 - Core Modules (Bulan 3-4):**
-- Attendance & Fatigue module
-- Work Permits module
-- Hazard Reports module
-- Incident Reports module
+**Fase 2 — Modul Inti (Bulan 3—4):**
+- Modul Kehadiran dan Kelelahan.
+- Modul Izin Kerja (e-PTW).
+- Modul Laporan Bahaya.
+- Modul Laporan Insiden.
 
-**Phase 3 - Advanced Features (Bulan 5-6):**
-- Safety Audits module
-- Corrective Actions module
-- Dashboard & Analytics
-- Emergency Response system
+**Fase 3 — Fitur Lanjutan (Bulan 5—6):**
+- Modul Audit Keselamatan.
+- Modul Tindakan Perbaikan.
+- Dasbor dan Analitik.
+- Sistem Tanggap Darurat.
 
-**Phase 4 - Gamification & Polish (Bulan 7):**
-- Gamification & Rewards system
-- Certifications module
-- Performance optimization
-- Security hardening
+**Fase 4 — Gamifikasi dan Penyempurnaan (Bulan 7):**
+- Sistem Gamifikasi dan Penghargaan.
+- Modul Sertifikasi.
+- Optimasi kinerja.
+- Penguatan keamanan.
 
-**Phase 5 - Testing & Deployment (Bulan 8):**
-- Comprehensive testing (unit, integration, E2E)
-- User acceptance testing
-- Deployment to production
-- Training & documentation
+**Fase 5 — Pengujian dan Penyebaran (Bulan 8):**
+- Pengujian komprehensif (unit, integrasi, *end-to-end*).
+- Pengujian penerimaan pengguna (*UAT*).
+- Penyebaran ke lingkungan produksi.
+- Pelatihan dan dokumentasi.
 
-### 6.3 Success Criteria
+### 6.3 Kriteria Keberhasilan
 
-- Semua 10 modul fully functional dan tested
-- Security audit passed
-- Performance benchmark met (response times < 500ms)
-- User acceptance test hasil positif
-- Zero critical bugs pada launch
-- Documentation completed
-- Team trained dan ready untuk support
+- Seluruh modul berfungsi penuh dan telah diuji.
+- Audit keamanan berhasil dilalui.
+- Tolok ukur kinerja terpenuhi (waktu respons kurang dari 500 md).
+- Hasil pengujian penerimaan pengguna bersifat positif.
+- Tidak ada *bug* kritis pada saat peluncuran.
+- Dokumentasi selesai dan lengkap.
+- Tim telah terlatih dan siap memberikan dukungan.
 
 ---
 
-## 7. GLOSSARY & ISTILAH TEKNIS
+## 7. GLOSARIUM DAN ISTILAH TEKNIS
 
 | Istilah | Definisi |
 |---------|----------|
-| **TRIR** | Total Recordable Incident Rate - jumlah kecelakaan yang dilaporkan per 200.000 jam kerja |
-| **LTI** | Lost Time Injury - kecelakaan yang mengakibatkan hilang waktu kerja |
-| **e-PTW** | Electronic Permit to Work - sistem izin kerja dalam bentuk digital |
-| **APD** | Alat Pelindung Diri - peralatan keselamatan personal (PPE) |
-| **5-Whys** | Teknik analisis akar masalah dengan bertanya "Why" lima kali berturut-turut |
-| **RBAC** | Role-Based Access Control - kontrol akses berdasarkan peran pengguna |
-| **JWT** | JSON Web Token - token authentication berbentuk JSON |
-| **QR Code** | Quick Response Code - kode matriks 2D untuk identifikasi otomatis |
-| **Zero Accident** | Target perusahaan untuk mencapai nol kecelakaan kerja |
-| **Hazard** | Potensi bahaya yang dapat menyebabkan kecelakaan/cedera |
-| **Risk** | Kemungkinan terjadinya hazard dan dampaknya (Low/Medium/High) |
-| **Incident** | Kecelakaan/kejadian yang sudah terjadi, bukan potensi |
-| **SOS** | Tombol darurat untuk emergency response |
-| **FCP** | First Contentful Paint - metrik untuk kecepatan loading halaman |
-| **RCA** | Root Cause Analysis - analisis untuk menemukan akar penyebab masalah |
-| **MTTR** | Mean Time To Recovery - rata-rata waktu untuk recovery dari outage |
-| **RPO/RTO** | Recovery Point/Time Objective - target recovery dalam disaster recovery |
+| **TRIR** | *Total Recordable Incident Rate* — jumlah kecelakaan yang dilaporkan per 200.000 jam kerja. |
+| **LTI** | *Lost Time Injury* — kecelakaan yang mengakibatkan hilangnya waktu kerja. |
+| **e-PTW** | *Electronic Permit to Work* — sistem izin kerja dalam bentuk digital. |
+| **APD** | Alat Pelindung Diri — peralatan keselamatan personal (*PPE*). |
+| **5-Whys** | Teknik analisis akar masalah dengan mengajukan pertanyaan "Mengapa?" lima kali berturut-turut. |
+| **RBAC** | *Role-Based Access Control* — kontrol akses berdasarkan peran pengguna. |
+| **JWT** | *JSON Web Token* — token autentikasi berbentuk JSON. |
+| **Kode QR** | *Quick Response Code* — kode matriks 2D untuk identifikasi otomatis. |
+| ***Zero Accident*** | Target organisasi untuk mencapai nol kecelakaan kerja. |
+| ***Hazard*** | Potensi bahaya yang dapat menyebabkan kecelakaan atau cedera. |
+| **Risiko** | Kemungkinan terjadinya bahaya (*hazard*) dan dampaknya (Rendah/Sedang/Tinggi). |
+| **Insiden** | Kecelakaan atau kejadian yang sudah terjadi, bukan sekadar potensi. |
+| **SOS** | Tombol darurat untuk sistem tanggap darurat (*emergency response*). |
+| **FCP** | *First Contentful Paint* — metrik untuk mengukur kecepatan pemuatan halaman. |
+| **RCA** | *Root Cause Analysis* — analisis untuk menemukan akar penyebab masalah. |
+| **MTTR** | *Mean Time To Recovery* — rata-rata waktu pemulihan dari gangguan. |
+| **RPO/RTO** | *Recovery Point/Time Objective* — target pemulihan dalam pemulihan bencana. |
+| **CAPA** | *Corrective and Preventive Action* — tindakan perbaikan dan pencegahan. |
+| ***Seeder*** | Skrip pengisian data awal ke dalam basis data untuk keperluan pengujian. |
+| ***Middleware*** | Lapisan perangkat lunak perantara yang memproses permintaan sebelum mencapai logika bisnis. |
 
 ---
 
 ## 8. PENUTUP
 
-Dokumen SRS ini menetapkan requirement komprehensif untuk sistem Nuraga - Integrated Safety Intelligence. Implementasi sistem harus mengikuti standar IEEE 830 dan best practices dalam K3 management.
+Dokumen SRS ini menetapkan kebutuhan komprehensif untuk Sistem Nuraga — Integrated Safety Intelligence. Implementasi sistem harus mengikuti standar IEEE 830 serta praktik terbaik dalam manajemen Keselamatan dan Kesehatan Kerja (K3).
 
-**Perubahan dokumen:** Setiap perubahan atau penambahan requirement harus melalui proses formal change management dan dokumentasi versi.
+**Pengelolaan Perubahan Dokumen:** Setiap perubahan atau penambahan kebutuhan harus melalui proses manajemen perubahan formal dan didokumentasikan dengan riwayat versi yang jelas.
 
-**Status Dokumen:** Final v1.0 - Ready untuk development
+**Status Dokumen:** Final v2.0 — Siap untuk pengembangan dan pengujian.
 
-**Approval:**
-- [ ] Project Manager
-- [ ] Technical Lead
-- [ ] HSE Manager
-- [ ] Stakeholder
+**Persetujuan:**
+- [ ] Manajer Proyek
+- [ ] Pimpinan Teknis
+- [ ] Manajer HSE
+- [ ] Pemangku Kepentingan
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** 1 Juni 2026  
-**Created by:** Tim CC26-PRU428 
-**Contact:** [CC26-PRU428@student.devacademy.id]
-
+**Versi Dokumen:** 2.0  
+**Terakhir Diperbarui:** 4 Juni 2026  
+**Disusun oleh:** Tim CC26-PRU428  
+**Kontak:** [CC26-PRU428@student.devacademy.id]
