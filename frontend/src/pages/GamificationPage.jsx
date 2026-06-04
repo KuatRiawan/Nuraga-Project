@@ -318,7 +318,7 @@ const GamificationPage = () => {
 
             {/* Vouchers Slide-out Drawer */}
             {showVouchersDrawer && (
-                createPortal(<div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] transition-opacity duration-300" onClick={() => setShowVouchersDrawer(false)} />
+                createPortal(<div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] transition-opacity duration-300" onClick={() => setShowVouchersDrawer(false)} />, document.body)
             )}
             <div className={`fixed inset-y-0 right-0 w-full sm:w-[400px] md:w-[480px] bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 z-[100] transform transition-transform duration-300 ease-in-out shadow-2xl flex flex-col ${showVouchersDrawer ? 'translate-x-0' : 'translate-x-full'}`}>
                 {/* Header */}
@@ -462,7 +462,7 @@ const GamificationPage = () => {
                     </div>
                 </div>, document.body)
             )}
-        </div>, document.body)
+        </div>
     );
 };
 
