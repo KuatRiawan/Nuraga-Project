@@ -228,7 +228,7 @@ const GamificationPage = () => {
                     </h2>
                 </div>
                 <div className="divide-y divide-slate-50 dark:divide-slate-800/50">
-                    {sortedLeaderboard.map((person) => {
+                    {sortedLeaderboard.slice(0, 20).map((person) => {
                         const style = RANK_STYLES[person.rank] || {};
                         const isMe = person.name === user?.nama;
                         return (
@@ -256,6 +256,13 @@ const GamificationPage = () => {
                             </div>
                         );
                     })}
+                    {sortedLeaderboard.length > 20 && (
+                        <div className="p-4 text-center border-t border-slate-100 dark:border-slate-800">
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                Menampilkan Top 20 dari {sortedLeaderboard.length} Karyawan
+                            </p>
+                        </div>
+                    )}
                 </div>
             </div>
 
