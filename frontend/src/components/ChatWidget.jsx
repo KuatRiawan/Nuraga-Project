@@ -12,6 +12,7 @@ const ChatWidget = () => {
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [activeUsers, setActiveUsers] = useState([]);
 
     // Mentions state
     const [allUsers, setAllUsers] = useState([]);
@@ -114,10 +115,23 @@ const ChatWidget = () => {
             }
         };
 
+        const handleActiveUsersUpdate = (users) => {
+            // Deduplicate users by id_user
+            const uniqueMap = new Map();
+            users.forEach(u => {
+                if (!uniqueMap.has(u.id_user)) {
+                    uniqueMap.set(u.id_user, u);
+                }
+            });
+            setActiveUsers(Array.from(uniqueMap.values()));
+        };
+
         socket.on('receive_global_message', handleReceive);
+        socket.on('active_users_update', handleActiveUsersUpdate);
 
         return () => {
             socket.off('receive_global_message', handleReceive);
+            socket.off('active_users_update', handleActiveUsersUpdate);
         };
     }, [socket, user, isOpen]);
 
@@ -231,21 +245,35 @@ const ChatWidget = () => {
                 <div className="fixed inset-0 sm:inset-auto sm:bottom-28 sm:right-6 w-full h-[100dvh] sm:w-96 sm:h-[30rem] bg-white dark:bg-slate-900 sm:border border-slate-200 dark:border-slate-800 sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in sm:slide-in-from-bottom-5 duration-300 z-[100]">
                     {/* Header */}
                     <div className="bg-blue-600 dark:bg-blue-700 p-4 flex items-center justify-between shadow-sm z-10">
-                        <div className="flex items-center gap-3">
-                            <div className="bg-white/20 p-2 rounded-xl">
+                        <div className="flex items-center gap-3 flex-1">
+                            <div className="bg-white/20 p-2 rounded-xl shrink-0">
                                 <MessageCircle size={20} className="text-white" />
                             </div>
-                            <div>
-                                <h3 className="text-white font-bold text-sm">Safety Coordination</h3>
-                                <div className="flex items-center gap-1.5 mt-0.5">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
-                                    <span className="text-blue-100 text-[10px] font-medium tracking-wide uppercase">Live Global Chat</span>
+                            <div className="flex-1 min-w-0">
+                                <h3 className="text-white font-bold text-sm truncate">Safety Coordination</h3>
+                                <div className="flex items-center justify-between mt-0.5 pr-2">
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+                                        <span className="text-blue-100 text-[10px] font-medium tracking-wide uppercase">Live Global Chat • {activeUsers.length} Online</span>
+                                    </div>
+                                    <div className="flex -space-x-1.5 opacity-90 hover:opacity-100 transition-opacity">
+                                        {activeUsers.slice(0, 3).map(u => (
+                                            <div key={u.id_user} title={u.nama} className="w-4 h-4 rounded-full bg-blue-500 border border-blue-600 flex items-center justify-center text-[8px] text-white font-bold shrink-0">
+                                                {u.nama.charAt(0)}
+                                            </div>
+                                        ))}
+                                        {activeUsers.length > 3 && (
+                                            <div title={`${activeUsers.length - 3} lainnya`} className="w-4 h-4 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-[7px] text-slate-700 font-bold shrink-0">
+                                                +{activeUsers.length - 3}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         <button
                             onClick={() => setIsOpen(false)}
-                            className="p-2 text-blue-100 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+                            className="p-2 text-blue-100 hover:text-white hover:bg-white/10 rounded-xl transition-colors ml-2 shrink-0"
                         >
                             <X size={20} />
                         </button>

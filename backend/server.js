@@ -195,11 +195,30 @@ function startServer(port, retries = 5) {
         }
     });
 
+    const globalChatUsers = new Map();
+
     io.on('connection', (socket) => {
         console.log(`User ${socket.user?.id || 'unknown'} connected to WebSocket`);
+        
         socket.on('join_global_chat', () => {
             socket.join('global_chat');
             console.log(`[Socket] User ${socket.user.nama} joined global_chat`);
+            if (socket.user) {
+                globalChatUsers.set(socket.id, {
+                    id_user: socket.user.id || socket.user.id_user,
+                    nama: socket.user.nama,
+                    role: socket.user.role || 'User'
+                });
+                io.to('global_chat').emit('active_users_update', Array.from(globalChatUsers.values()));
+            }
+        });
+
+        socket.on('leave_global_chat', () => {
+            socket.leave('global_chat');
+            if (globalChatUsers.has(socket.id)) {
+                globalChatUsers.delete(socket.id);
+                io.to('global_chat').emit('active_users_update', Array.from(globalChatUsers.values()));
+            }
         });
 
         socket.on('send_global_message', async (data) => {
@@ -225,6 +244,10 @@ function startServer(port, retries = 5) {
 
         socket.on('disconnect', () => {
             console.log(`User ${socket.user?.id || 'unknown'} disconnected from WebSocket`);
+            if (globalChatUsers.has(socket.id)) {
+                globalChatUsers.delete(socket.id);
+                io.to('global_chat').emit('active_users_update', Array.from(globalChatUsers.values()));
+            }
         });
     });
 
