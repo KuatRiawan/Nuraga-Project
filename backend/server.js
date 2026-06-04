@@ -71,8 +71,8 @@ app.use('/uploads', express.static(UPLOADS_DIR));
 const { applyUserCascadeConstraints } = require('./migrations/applyUserCascadeConstraints');
 
 // Associations — ON DELETE rules for User removal (C3)
-const cascade = { onDelete: 'CASCADE', hooks: true };
-const setNull = { onDelete: 'SET NULL', hooks: true };
+const cascade = { onDelete: 'CASCADE', hooks: false };
+const setNull = { onDelete: 'SET NULL', hooks: false };
 
 User.hasMany(HazardReport, { foreignKey: 'id_user', sourceKey: 'id_user', ...cascade });
 HazardReport.belongsTo(User, { foreignKey: 'id_user', targetKey: 'id_user', ...cascade });
