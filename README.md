@@ -75,30 +75,75 @@ Dashboard interaktif yang menampilkan metrik keselamatan kerja secara real-time:
 
 ---
 
-## Mulai Menggunakan
+## Petunjuk Setup Environment
 
-### Untuk Pengguna (Pekerja & Manajer K3)
+Sistem ini terdiri dari 3 komponen utama: Frontend, Backend, dan AI Service. Berikut adalah cara untuk mengatur *environment* (lingkungan kerja) untuk masing-masing komponen:
 
-1. **Akses Dashboard Nuraga** melalui browser di `https://nuraga.yourcompany.com`
-2. **Login** menggunakan kredensial yang diberikan oleh tim K3
-3. **Laporkan bahaya** melalui form laporan teks biasa
-4. **Pantau metrik keselamatan** tim Anda secara real-time
+1. **Backend (`/backend`)**
+   - Masuk ke direktori `backend`.
+   - Salin file `.env.example` menjadi `.env` (contoh di terminal: `cp .env.example .env`).
+   - Buka file `.env` dan sesuaikan nilai variabel seperti kredensial database (DB_USER, DB_PASS), `JWT_SECRET`, dan lainnya agar sesuai dengan lokal Anda.
 
-### Untuk Admin Teknis
+2. **Frontend (`/frontend`)**
+   - Masuk ke direktori `frontend`.
+   - Salin file `.env.example` menjadi `.env` (contoh di terminal: `cp .env.example .env`).
+   - Pastikan URL API menunjuk ke server backend yang tepat.
 
+3. **AI Service (`/aiservice`)**
+   - AI service tidak memerlukan file `.env` khusus untuk dijalankan secara dasar (kecuali ditambahkan integrasi lanjutan).
+
+---
+
+## Cara Menjalankan Aplikasi
+
+Aplikasi dapat dijalankan baik menggunakan Docker maupun secara manual (lokal).
+
+### Opsi 1: Menjalankan dengan Docker (Rekomendasi)
+Untuk kemudahan setup, Anda dapat menjalankan seluruh layanan sekaligus menggunakan Docker Compose.
 ```bash
-# Pull docker image
-docker pull nuraga/platform:latest
+# Pastikan Anda berada di direktori root proyek
+docker-compose up -d --build
+```
+*(Catatan: Pastikan file `docker-compose.yml` telah tersedia jika memilih opsi ini).*
 
-# Run with docker-compose
-docker-compose up -d
+### Opsi 2: Menjalankan Secara Manual (Lokal)
+
+**1. Menjalankan Backend (Node.js)**
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+**2. Menjalankan AI Service (Python / FastAPI)**
+Buka terminal/tab baru dan jalankan:
+```bash
+cd aiservice
+python -m venv .venv
+source .venv/bin/activate  # Untuk Windows gunakan: .venv\Scripts\activate
+pip install -r requirements.txt
+python main.py
+```
+
+**3. Menjalankan Frontend (React/Vite)**
+Buka terminal/tab baru dan jalankan:
+```bash
+cd frontend
+npm install
+npm run dev
 ```
 
 ---
 
-## Studi Kasus
+## Tautan Model ML
 
-> *Setelah mengimplementasikan Nuraga selama 6 bulan, PT. Industri Maju mencatat penurunan 42% insiden kecelakaan kerja dan peningkatan 35% kecepatan respons terhadap laporan bahaya.*
+Proyek ini memanfaatkan model AI untuk fitur prediksi kelelahan (WellGuard) dan klasifikasi bahaya (Hazard-NLP).
+
+> **🔗 LINK MODEL ML GOOGLE DRIVE:** `https://drive.google.com/drive/folders/1vha7juCjcoUO4XWSxib-zvedRy18LyUv?usp=sharing`
+
+
+
+
 
 ---
 
@@ -110,17 +155,15 @@ docker-compose up -d
 | Hazard-NLP (Klasifikasi Bahaya) | ✅ Rilis v1.0 |
 | Manajemen Sertifikasi | ✅ Rilis v1.0 |
 | Dashboard Metrik K3 | ✅ Rilis v1.0 |
-| Mobile App (Android/iOS) | 🚧 Dalam Pengembangan |
-| Real-time Alert System | 🚧 Dalam Pengembangan |
+| Mobile App (Android/iOS) | ✅ Rilis v1.0 |
+| Real-time Alert System | ✅ Rilis v1.0 |
 | Integrasi IoT (Wearables) | 📋 Terencana |
 
 ---
 
 ## Kontak & Dukungan
 
-- **Email**: support@nuraga.com
-- **Dokumentasi Lengkap**: [docs.nuraga.com](https://docs.nuraga.com)
-- **API Reference**: [api.nuraga.com/docs](https://api.nuraga.com/docs)
+- **Email**: cc26-pru428@student.devacademy.id
 
 ---
 
