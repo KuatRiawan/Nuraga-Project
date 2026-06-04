@@ -13,6 +13,11 @@ api.interceptors.response.use(
 
         // If error is 401 and we haven't tried refreshing yet
         if (error.response?.status === 401 && !originalRequest._retry) {
+            // Do not attempt to refresh if the failed request was a login or refresh itself
+            if (originalRequest.url.includes('/auth/login') || originalRequest.url.includes('/auth/refresh-token')) {
+                return Promise.reject(error);
+            }
+
             originalRequest._retry = true;
 
             try {
@@ -27,7 +32,7 @@ api.interceptors.response.use(
                 return api(originalRequest);
             } catch (refreshError) {
                 // Refresh token failed or expired, force logout
-                if (window.location.pathname !== '/login') {
+                if (!window.location.pathname.includes('/login')) {
                     window.location.href = '/login';
                 }
                 return Promise.reject(refreshError);
