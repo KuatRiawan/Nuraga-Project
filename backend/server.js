@@ -40,7 +40,7 @@ app.set('trust proxy', 1);
 
 const globalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // 100 requests per 15 minutes
+    max: 1000, // 1000 requests per 15 minutes to allow dashboard fetching and hot reloads
     message: { message: 'Terlalu banyak request, silakan coba lagi setelah 15 menit.' }
 });
 app.use('/api', globalLimiter);

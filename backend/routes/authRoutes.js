@@ -8,19 +8,19 @@ const upload = require('../middlewares/uploadMiddleware');
 // Rate limiters for auth endpoints
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // 5 requests per 15 minutes
+    max: 20, // Increased to 20 for development/normal usage
     message: { message: 'Terlalu banyak percobaan login, silakan coba lagi setelah 15 menit.' }
 });
 
 const registerLimiter = rateLimit({
     windowMs: 60 * 1000, // 1 minute
-    max: 5, // 5 requests per minute
+    max: 20, // Increased to 20
     message: { message: 'Terlalu banyak percobaan registrasi. Harap tunggu 1 menit.' }
 });
 
 const refreshTokenLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // 5 requests per 15 minutes
+    max: 50, // Increased
     message: { message: 'Terlalu banyak percobaan refresh token. Harap tunggu 15 menit.' }
 });
 
