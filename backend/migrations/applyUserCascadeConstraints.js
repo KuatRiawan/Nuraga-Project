@@ -18,6 +18,7 @@ const USER_CHILD_CASCADE = [
     { table: 'FatigueLogs', column: 'id_user' },
     { table: 'Audits', column: 'auditor_id' },
     { table: 'CorrectiveActions', column: 'assigned_to' },
+    { table: 'chat_messages', column: 'id_user' },
 ];
 
 const USER_CHILD_SET_NULL = [
