@@ -78,50 +78,54 @@ Nuraga adalah aplikasi web berbasis cloud yang berfungsi sebagai hub terpusat un
 **Arsitektur Sistem:**
 ```
 ┌─────────────────────────────────────────┐
-│       Frontend (React.js + Tailwind)    │
+│       Frontend (React.js + Vite)        │
+│  ├─ Dynamic Chunking                    │
+│  └─ State & Routing Management          │
 └──────────────────┬──────────────────────┘
-                   │ (REST API)
+                   │ (REST API via HttpOnly Cookies)
 ┌──────────────────▼──────────────────────┐
 │   Backend (Node.js + Express.js)        │
-│  ├─ Authentication (JWT)                │
-│  ├─ Business Logic Layer                │
-│  ├─ Data Validation                     │
-│  └─ API Endpoints                       │
+│  ├─ Cookie-Parser & Security Middleware │
+│  ├─ Authentication (HttpOnly & Secure)  │
+│  ├─ AI & Data Science Integration       │
+│  └─ API Endpoints & Rate Limiting       │
 └──────────────────┬──────────────────────┘
                    │ (SQL Query)
 ┌──────────────────▼──────────────────────┐
 │  Database (PostgreSQL + Sequelize ORM)  │
-│  ├─ User & Role Management              │
+│  ├─ Relational Constraints (Cascade)    │
 │  ├─ Historical Data & Audit Log         │
 │  └─ Transactional Data                  │
 └─────────────────────────────────────────┘
 ```
 
-### 2.2 Karakteristik Pengguna
+### 2.2 Karakteristik Pengguna (Roles)
 
-#### 2.2.1 Staff/Pekerja (Worker)
+Berdasarkan struktur enumerasi pada basis data, sistem Nuraga mendukung hak akses berbasis *Role-Based Access Control* (RBAC) dengan tingkatan sebagai berikut:
+
+#### 2.2.1 Operator / Vendor / Staff (Worker Level)
 - **Capability Level:** Low to Medium
-- **Akses:** Dashboard terbatas, submit reports, lihat status personal
-- **Frekuensi Penggunaan:** Daily
-- **Primary Tasks:** Absensi, lapor hazard/incident, lihat rekomendasi fatigue
+- **Akses:** Dasbor terbatas, pengiriman laporan bahaya/insiden, pengajuan izin kerja (e-PTW).
+- **Frekuensi Penggunaan:** Harian
+- **Primary Tasks:** Absensi harian, lapor bahaya (*hazard*), manajemen kelelahan (*fatigue*).
 
 #### 2.2.2 Supervisor (SPV)
 - **Capability Level:** Medium
-- **Akses:** Approve work permits, monitor tim, review reports
-- **Frekuensi Penggunaan:** Daily
-- **Primary Tasks:** Persetujuan bertingkat, monitoring kehadiran, oversight laporan
+- **Akses:** Memonitor tim, persetujuan level pertama (izin kerja).
+- **Frekuensi Penggunaan:** Harian
+- **Primary Tasks:** Pemantauan kehadiran bawahan, *oversight* laporan, evaluasi awal K3.
 
-#### 2.2.3 Safety Officer (HSE)
+#### 2.2.3 HSE (Health, Safety, and Environment Officer)
 - **Capability Level:** High
-- **Akses:** Semua fitur, generate analytics, set policies
-- **Frekuensi Penggunaan:** Daily
-- **Primary Tasks:** Audit, approve permits, analyze trends, manage certifications
+- **Akses:** Akses analitik, verifikasi laporan insiden, kontrol gamifikasi.
+- **Frekuensi Penggunaan:** Harian
+- **Primary Tasks:** Audit K3, persetujuan dokumen kritis, pengawasan matriks keselamatan.
 
-#### 2.2.4 Manager/Direktur
-- **Capability Level:** Medium
-- **Akses:** Dashboard strategis, reports, approval final
-- **Frekuensi Penggunaan:** 2-3x per minggu
-- **Primary Tasks:** Approval final, review metrics, strategic decisions
+#### 2.2.4 Manager / Admin
+- **Capability Level:** High
+- **Akses:** Akses penuh ke seluruh konfigurasi sistem, dasbor manajerial.
+- **Frekuensi Penggunaan:** Berkala / Harian (untuk Admin)
+- **Primary Tasks:** Manajemen data *user*, kontrol keamanan sistem, pengambilan keputusan strategis.
 
 ### 2.3 Lingkungan Operasional
 
@@ -147,9 +151,9 @@ Nuraga adalah aplikasi web berbasis cloud yang berfungsi sebagai hub terpusat un
 4. Budget untuk maintenance dan upgrade sudah diallokasikan
 
 #### Dependensi Eksternal
-1. Email service provider (untuk notifikasi dan recovery)
-2. SMS gateway (untuk emergency alerts)
-3. WhatsApp Business API (untuk notifikasi push)
+1. Email service provider (untuk notifikasi dan OTP)
+2. **WhatsApp Baileys (WebSocket):** Terhubung via WebSocket untuk menyediakan *bot* dan notifikasi SOS darurat secara _real-time_. Memerlukan manajemen sesi dan pemindaian *QR Code*.
+3. Integrasi *Artificial Intelligence*: API internal (`nuraga-ai`) atau eksternal untuk prediksi data dan agen cerdas.
 4. File storage service (untuk dokumen uploads)
 5. Keamanan data center dan backup infrastructure
 
@@ -1268,7 +1272,7 @@ Modul Gamification memotivasi pekerja untuk aktif berkontribusi pada keselamatan
   - Daily login ke system: 1 point
 
 **FR-10.1.2 [MUST]** Leaderboard:
-- Individual leaderboard (monthly, quarterly, yearly)
+- Individual leaderboard dibatasi hanya untuk menampilkan **Top 20** karyawan secara default pada UI untuk optimasi *rendering* memori peramban (*browser memory management*).
 - Team leaderboard (aggregated points dari team members)
 - Department leaderboard
 - Show ranking dengan points total, activities count, achievements
@@ -1405,7 +1409,7 @@ Leaderboard (view/cache):
 
 ### 3.11.1 Deskripsi
 
-Modul AI & Data Science mengintegrasikan machine learning models dan advanced analytics untuk memberikan **predictive insights**, **intelligent recommendations**, dan **anomaly detection**. Sistem menggunakan historical data dari semua modules untuk menciptakan actionable intelligence yang mendukung preventive safety management (zero accident culture).
+Modul AI & Data Science mengintegrasikan model *machine learning* dan analitik lanjutan untuk memberikan **predictive insights**, **intelligent recommendations**, dan **anomaly detection**. Secara arsitektur, servis AI ini berjalan sebagai proses terpisah (misalnya `nuraga-ai`) yang berinteraksi dengan sistem *backend* utama. Sistem menggunakan data historis dan fitur **Asisten Cerdas (AI Chat)** untuk menciptakan *actionable intelligence* yang mendukung manajemen K3 preventif secara interaktif.
 
 ### 3.11.2 AI Components & Machine Learning Models
 
@@ -2314,21 +2318,25 @@ Business Metrics:
 - Support untuk 500+ attendance records per day
 - Batch processing untuk 10.000+ records dalam time window reasonable
 
-**NFR-1.3 [SHOULD]** Optimization:
-- Image optimization (compression, lazy loading)
-- Code splitting untuk React components
+**NFR-1.3 [SHOULD]** Optimization & Scalability:
+- Node.js memori dioptimalkan (menggunakan *flag* `--max-old-space-size` pada *production* EC2) untuk pencegahan *Garbage Collector lock*.
+- **Paginasi Backend (Limit & Offset):** Seluruh data masif seperti `Incidents`, `Hazards`, dan `Attendance` menggunakan skema *pagination* penuh di tingkat basis data.
+- Code splitting & Dynamic Chunking pada kompilasi React Vite.
 - Database query optimization (indexing pada frequently queried columns)
 - Caching strategy (Redis untuk frequently accessed data)
 - CDN untuk static assets (CSS, JavaScript, images)
 
 ### 4.2 Kebutuhan Keamanan (Security)
 
-**NFR-2.1 [MUST]** Authentication & Authorization:
-- JWT (JSON Web Token) untuk session management
-  - Token expiry: 24 hours untuk access token
-  - Refresh token expiry: 7 days
-  - Secure token storage (HttpOnly cookies atau secure localStorage)
-  - Token revocation capability (logout invalidate token)
+**NFR-2.1 [MUST]** Authentication, Session, & Network Security:
+- **HttpOnly Cookies**: Penggunaan *cookies* aman (HttpOnly, Secure, SameSite) untuk menyimpan Access Token dan Refresh Token demi perlindungan penuh terhadap serangan XSS (menggantikan `localStorage`).
+- **Network Protections**: 
+  - `helmet`: Konfigurasi *HTTP headers* untuk perlindungan aplikasi *backend*.
+  - `cors`: *Cross-Origin Resource Sharing* difilter ketat hanya untuk *domain* aplikasi yang terdaftar.
+  - `express-rate-limit`: Proteksi terhadap serangan *brute force* (contoh: 15 *request* per 15 menit pada jalur autentikasi).
+- Token expiry: 1 jam untuk *access token*.
+- Refresh token expiry: 7 hari.
+- Token revocation capability (logout invalidate token)
 
 - Role-Based Access Control (RBAC):
   - 4 roles: Staff, Supervisor, HSE Officer, Manager
