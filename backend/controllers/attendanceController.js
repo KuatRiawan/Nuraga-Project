@@ -44,7 +44,7 @@ exports.clockIn = async (req, res) => {
                 const aiResponse = await axios.post(`${AI_SERVICE_URL}/predict-fatigue`, {
                     sleep_hours: parseFloat(sleep_hours),
                     stress_level: parseFloat(stress_level)
-                }, { timeout: 5000 });
+                }, { timeout: 15000 });
                 aiPrediction = aiResponse.data;
             } catch (error) {
                 if (error.code === 'ECONNABORTED') {

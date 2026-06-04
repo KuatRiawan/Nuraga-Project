@@ -17,7 +17,7 @@ const analyzeRisk = async (req, res) => {
         const aiResponse = await axios.post(`${AI_SERVICE_URL}/predict-risk`, {
             description: deskripsi,
             location: lokasi
-        }, { timeout: 5000 });
+        }, { timeout: 15000 });
 
         const data = aiResponse.data || {};
 
