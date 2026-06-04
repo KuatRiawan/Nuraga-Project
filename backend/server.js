@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const sequelize = require('./config/db');
 const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
 
 // Import models to sync
 const User = require('./models/User');
@@ -34,6 +35,15 @@ if (!process.env.JWT_SECRET || process.env.JWT_SECRET.trim() === '') {
 }
 
 const app = express();
+
+app.set('trust proxy', 1);
+
+const globalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // 100 requests per 15 minutes
+    message: { message: 'Terlalu banyak request, silakan coba lagi setelah 15 menit.' }
+});
+app.use('/api', globalLimiter);
 
 const corsOrigins = (process.env.CORS_ORIGIN || process.env.CLIENT_URL || '')
     .split(',')

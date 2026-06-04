@@ -7,9 +7,9 @@ const upload = require('../middlewares/uploadMiddleware');
 
 // Rate limiters for auth endpoints
 const loginLimiter = rateLimit({
-    windowMs: 60 * 1000, // 1 minute
-    max: 15, // 15 requests per minute
-    message: { message: 'Terlalu banyak percobaan login. Harap tunggu 1 menit.' }
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // 5 requests per 15 minutes
+    message: { message: 'Terlalu banyak percobaan login, silakan coba lagi setelah 15 menit.' }
 });
 
 const registerLimiter = rateLimit({
