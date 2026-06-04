@@ -427,7 +427,7 @@ const DashboardPage = () => {
                             <Button onClick={() => { navigate('/attendance'); setShowAttendancePopup(false); }} className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-2xl shadow-xl shadow-blue-500/20 transition-all flex justify-center items-center">
                                 Menuju Halaman Absensi
                             </Button>
-                            <Button onClick={() => { navigate('/attendance'); setShowAttendancePopup(false); }} className="w-full py-3.5 bg-orange-100 dark:bg-orange-500/20 hover:bg-orange-200 text-orange-700 dark:text-orange-400 font-bold text-sm rounded-2xl border border-orange-500/30 transition-all flex justify-center items-center">
+                            <Button onClick={() => { navigate('/attendance'); setShowAttendancePopup(false); }} className="w-full py-3.5 bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm rounded-2xl shadow-xl shadow-orange-500/20 transition-all flex justify-center items-center">
                                 Ajukan Izin / Cuti
                             </Button>
                             <button onClick={() => setShowAttendancePopup(false)} className="w-full py-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-bold transition-colors">
