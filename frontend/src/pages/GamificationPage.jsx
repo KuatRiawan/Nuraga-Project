@@ -320,7 +320,8 @@ const GamificationPage = () => {
             {showVouchersDrawer && (
                 createPortal(<div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] transition-opacity duration-300" onClick={() => setShowVouchersDrawer(false)} />, document.body)
             )}
-            <div className={`fixed inset-y-0 right-0 w-full sm:w-[400px] md:w-[480px] bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 z-[100] transform transition-transform duration-300 ease-in-out shadow-2xl flex flex-col ${showVouchersDrawer ? 'translate-x-0' : 'translate-x-full'}`}>
+            {createPortal(
+                <div className={`fixed inset-y-0 right-0 w-full sm:w-[400px] md:w-[480px] bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 z-[10000] transform transition-transform duration-300 ease-in-out shadow-2xl flex flex-col ${showVouchersDrawer ? 'translate-x-0' : 'translate-x-full'}`}>
                 {/* Header */}
                 <div className="p-4 md:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
                     <div className="flex-1 min-w-0">
@@ -422,7 +423,7 @@ const GamificationPage = () => {
                         })
                     )}
                 </div>
-            </div>
+            </div>, document.body)}
 
             {/* Claim Confirmation Modal */}
             {showClaimModal && (
