@@ -21,6 +21,7 @@ const SystemConfig = require('./models/SystemConfig');
 const FatigueLog = require('./models/FatigueLog');
 const Attendance = require('./models/Attendance');
 const LeaveRequest = require('./models/LeaveRequest');
+const ChatMessage = require('./models/ChatMessage');
 const { autoExpirePermits } = require('./controllers/workPermitController');
 const whatsappService = require('./services/whatsappService');
 const { startFileCleanupScheduler } = require('./utils/fileCleanup');
@@ -116,6 +117,8 @@ LeaveRequest.belongsTo(User, { foreignKey: 'id_user', targetKey: 'id_user', ...c
 User.hasMany(FatigueLog, { foreignKey: 'id_user', sourceKey: 'id_user', ...cascade });
 FatigueLog.belongsTo(User, { foreignKey: 'id_user', targetKey: 'id_user', ...cascade });
 
+User.hasMany(ChatMessage, { foreignKey: 'id_user', sourceKey: 'id_user', ...cascade });
+ChatMessage.belongsTo(User, { foreignKey: 'id_user', targetKey: 'id_user', ...cascade });
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
@@ -135,7 +138,7 @@ app.use('/api/config', require('./routes/configRoutes'));
 app.use('/api/wa', require('./routes/whatsappRoutes'));
 app.use('/api/fatigue', require('./routes/fatigueRoutes'));
 app.use('/api/attendance', require('./routes/attendanceRoutes'));
-
+app.use('/api/chat', require('./routes/chatRoutes'));
 
 app.get('/', (req, res) => {
     res.json({ message: 'Welcome to Nuraga API' });
@@ -178,6 +181,32 @@ function startServer(port, retries = 5) {
 
     io.on('connection', (socket) => {
         console.log(`User ${socket.user?.id || 'unknown'} connected to WebSocket`);
+        socket.on('join_global_chat', () => {
+            socket.join('global_chat');
+            console.log(`[Socket] User ${socket.user.nama} joined global_chat`);
+        });
+
+        socket.on('send_global_message', async (data) => {
+            try {
+                // Save to DB
+                const newMsg = await ChatMessage.create({
+                    id_user: socket.user.id,
+                    pesan: data.pesan,
+                    tipe: 'global'
+                });
+
+                // Fetch with User info
+                const fullMsg = await ChatMessage.findByPk(newMsg.id_message, {
+                    include: [{ model: User, attributes: ['id_user', 'nama', 'role'] }]
+                });
+
+                // Broadcast
+                io.to('global_chat').emit('receive_global_message', fullMsg);
+            } catch (err) {
+                console.error('[Chat] Error saving/sending message:', err);
+            }
+        });
+
         socket.on('disconnect', () => {
             console.log(`User ${socket.user?.id || 'unknown'} disconnected from WebSocket`);
         });

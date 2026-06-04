@@ -177,9 +177,9 @@ const DashboardPage = () => {
             api.get('/stats').catch(() => ({ data: { totalHazards: 0, totalIncidents: 0, totalAudits: 0, pendingActions: 0 } })),
             api.get('/permits').catch(() => ({ data: [] })),
             api.get('/stats/report-data').catch(() => ({ data: { summary: { audits: 0 } } })),
-            api.get('/incidents').catch(() => ({ data: [] })),
+            api.get('/incidents?limit=1000').catch(() => ({ data: [] })),
             api.get(certsUrl).catch(() => ({ data: [] })),
-            api.get('/hazards').catch(() => ({ data: [] })),
+            api.get('/hazards?limit=1000').catch(() => ({ data: [] })),
             api.get('/actions').catch(() => ({ data: [] })),
             usersPromise
         ]);
@@ -310,26 +310,28 @@ const DashboardPage = () => {
         }, 5000);
         return () => clearInterval(interval);
     }, []);
-
-
+    const thirtyDaysAgoForCards = new Date();
+    thirtyDaysAgoForCards.setDate(thirtyDaysAgoForCards.getDate() - 30);
+    const incidents30Days = asArray(dashboardData?.incidents).filter(i => new Date(i.createdAt) >= thirtyDaysAgoForCards).length;
+    const hazards30Days = asArray(dashboardData?.hazards).filter(h => new Date(h.createdAt) >= thirtyDaysAgoForCards).length;
 
     const statCards = [
         {
             title: 'Total Insiden',
-            value: stats.totalIncidents,
+            value: dashboardData ? incidents30Days : stats.totalIncidents,
             icon: <FileText className="text-red-400" />,
-            trend: 'Reported',
-            trendPercentage: stats.totalIncidents > 0 ? '+12%' : '0%',
-            trendColor: stats.totalIncidents > 0 ? 'text-red-500' : 'text-slate-400 dark:text-slate-500',
+            trend: '30 Hari Terakhir',
+            trendPercentage: incidents30Days > 0 ? '+12%' : '0%',
+            trendColor: incidents30Days > 0 ? 'text-red-500' : 'text-slate-400 dark:text-slate-500',
             color: 'bg-red-500/10'
         },
         {
             title: 'Total Bahaya',
-            value: stats.totalHazards,
+            value: dashboardData ? hazards30Days : stats.totalHazards,
             icon: <AlertCircle className="text-amber-400" />,
-            trend: 'Active',
-            trendPercentage: stats.totalHazards > 0 ? '+8%' : '0%',
-            trendColor: stats.totalHazards > 0 ? 'text-red-500' : 'text-slate-400 dark:text-slate-500',
+            trend: '30 Hari Terakhir',
+            trendPercentage: hazards30Days > 0 ? '+8%' : '0%',
+            trendColor: hazards30Days > 0 ? 'text-amber-500' : 'text-slate-400 dark:text-slate-500',
             color: 'bg-amber-500/10'
         },
         {
@@ -884,19 +886,26 @@ const DashboardPage = () => {
                                 <div className="space-y-3">
                                     <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider">Masa Berlaku SIO / Lisensi (30 Hari)</h4>
                                     {expiringCertifications.length > 0 ? (
-                                        <div className="space-y-2">
-                                            {expiringCertifications.map(cert => (
-                                                <div key={cert.id_certification} className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-center justify-between gap-4">
-                                                    <div>
-                                                        <p className="text-xs font-bold text-amber-800 dark:text-amber-400">{cert.nama_personil}</p>
-                                                        <p className="text-[10px] text-amber-700/80 dark:text-amber-500/80 mt-0.5">{cert.jenis_sertifikasi} · No: {cert.nomor_sertifikat}</p>
+                                        <>
+                                            <div className="space-y-2 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
+                                                {expiringCertifications.map(cert => (
+                                                    <div key={cert.id_certification} className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-center justify-between gap-4">
+                                                        <div>
+                                                            <p className="text-xs font-bold text-amber-800 dark:text-amber-400">{cert.nama_personil}</p>
+                                                            <p className="text-[10px] text-amber-700/80 dark:text-amber-500/80 mt-0.5">{cert.jenis_sertifikasi} · No: {cert.nomor_sertifikat}</p>
+                                                        </div>
+                                                        <span className="text-[9px] font-black uppercase bg-amber-500/20 text-amber-700 dark:text-amber-400 px-2 py-1 rounded-lg shrink-0">
+                                                            Akan Habis
+                                                        </span>
                                                     </div>
-                                                    <span className="text-[9px] font-black uppercase bg-amber-500/20 text-amber-700 dark:text-amber-400 px-2 py-1 rounded-lg shrink-0">
-                                                        Akan Habis
-                                                    </span>
-                                                </div>
-                                            ))}
-                                        </div>
+                                                ))}
+                                            </div>
+                                            {expiringCertifications.length > 3 && (
+                                                <p className="text-[10px] text-center font-bold text-slate-400 mt-2">
+                                                    +{expiringCertifications.length - 3} Lisensi lainnya (Scroll untuk melihat)
+                                                </p>
+                                            )}
+                                        </>
                                     ) : dashboardData?.certs?.length === 0 ? (
                                         <div className="p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/50 rounded-2xl text-center">
                                             <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Belum ada data SIO / Sertifikat yang terdaftar.</span>

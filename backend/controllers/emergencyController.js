@@ -3,6 +3,7 @@ const EmergencyCall = require('../models/EmergencyCall');
 const User = require('../models/User');
 const Certification = require('../models/Certification');
 const WorkPermit = require('../models/WorkPermit');
+const ChatMessage = require('../models/ChatMessage');
 const wa = require('../services/whatsappService');
 
 // Simple in-memory cooldown cache for SOS spam prevention
@@ -61,6 +62,8 @@ const triggerEmergency = async (req, res) => {
 
         if (victimPermit) {
             victimZone = victimPermit.lokasi;
+        } else if (victimUser && victimUser.area_kerja) {
+            victimZone = victimUser.area_kerja;
         }
 
         // Create emergency log in the database
@@ -74,7 +77,7 @@ const triggerEmergency = async (req, res) => {
             where: { status: 'Active' },
             include: [{
                 model: User,
-                attributes: ['id_user', 'nama', 'email', 'role']
+                attributes: ['id_user', 'nama', 'email', 'role', 'area_kerja']
             }]
         });
 
@@ -99,22 +102,28 @@ const triggerEmergency = async (req, res) => {
         // 3. Match responders to the victim's current active permit zone
         const zoneResponders = [];
         for (const responder of allResponders) {
-            const responderPermit = activePermits.find(permit => {
-                const zoneMatch = permit.lokasi.toLowerCase().includes(victimZone.toLowerCase()) ||
-                    victimZone.toLowerCase().includes(permit.lokasi.toLowerCase());
-                if (!zoneMatch) return false;
-                if (permit.id_user === responder.id_user) return true;
+            let zoneMatch = false;
+            if (responder.area_kerja && responder.area_kerja.toLowerCase().includes(victimZone.toLowerCase())) {
+                zoneMatch = true;
+            } else {
+                const responderPermit = activePermits.find(permit => {
+                    const permitMatch = permit.lokasi.toLowerCase().includes(victimZone.toLowerCase()) ||
+                        victimZone.toLowerCase().includes(permit.lokasi.toLowerCase());
+                    if (!permitMatch) return false;
+                    if (permit.id_user === responder.id_user) return true;
 
-                let workers = [];
-                try {
-                    workers = typeof permit.daftar_pekerja === 'string'
-                        ? JSON.parse(permit.daftar_pekerja)
-                        : permit.daftar_pekerja;
-                } catch (e) { }
-                return Array.isArray(workers) && workers.some(w => w.toLowerCase() === responder.nama.toLowerCase());
-            });
+                    let workers = [];
+                    try {
+                        workers = typeof permit.daftar_pekerja === 'string'
+                            ? JSON.parse(permit.daftar_pekerja)
+                            : permit.daftar_pekerja;
+                    } catch (e) { }
+                    return Array.isArray(workers) && workers.some(w => w.toLowerCase() === responder.nama.toLowerCase());
+                });
+                if (responderPermit) zoneMatch = true;
+            }
 
-            if (responderPermit) {
+            if (zoneMatch) {
                 zoneResponders.push(responder);
             }
         }
@@ -137,91 +146,35 @@ const triggerEmergency = async (req, res) => {
                 },
                 responders: finalResponders
             });
-        }
 
-        const notifyEmergencyContacts = async () => {
-            const responderNames = finalResponders.map(r => `• ${r.nama} (${r.role})`).join('\n') || '• Belum ada responder ditemukan';
-            const broadcastMessage =
-                `🚨 *[NURAGA SAFETY — DARURAT SOS!]*\n\n` +
-                `⚠️ Jenis Kejadian: *${jenis_kejadian}*\n` +
-                `📍 Lokasi: *${victimZone}*\n` +
-                `👤 Pelapor: *${victimName || 'Tidak diketahui'}*\n` +
-                `🕐 Waktu: ${new Date().toLocaleString('id-ID')}\n\n` +
-                `👷 Responder yang Diarahkan:\n${responderNames}\n\n` +
-                `Tetap waspada, ikuti instruksi HSE, dan beri akses untuk tim responder.`;
+            // AUTO SEND MESSAGE TO GLOBAL CHAT
+            try {
+                const systemMessageContent = `🚨 LAPORAN DARURAT SOS! 🚨\n\nPELAPOR: ${victimName.toUpperCase()}\nKEJADIAN: ${(jenis_kejadian || 'Tidak Diketahui').toUpperCase()}\nLOKASI: ${victimZone.toUpperCase()}\n\nMohon segera merespons ke lokasi atau berikan koordinasi di grup ini!`;
 
-            const allUsers = await User.findAll({
-                attributes: ['id_user', 'nama', 'role', 'no_whatsapp'],
-                where: {
-                    no_whatsapp: {
-                        [Op.ne]: null
-                    }
-                }
-            });
+                const chatMsg = await ChatMessage.create({
+                    id_user: req.user.id,
+                    pesan: systemMessageContent
+                });
 
-            console.log('[Emergency] WhatsApp broadcast candidates:', allUsers.map(u => ({ id: u.id_user, nama: u.nama, role: u.role, no_whatsapp: !!u.no_whatsapp })));
-            for (const u of allUsers) {
-                if (u.no_whatsapp) {
-                    try {
-                        await wa.sendMessage(u.no_whatsapp, broadcastMessage);
-                    } catch (err) {
-                        console.error(`[WhatsApp] Failed to notify ${u.nama}:`, err.message);
-                    }
-                } else {
-                    console.warn(`[WhatsApp] Skipping ${u.nama} — no_whatsapp not set`);
-                }
-            }
-
-            // Also notify responders directly - batch query to avoid N+1
-            const responderIds = finalResponders
-                .filter(r => r && r.id_user)
-                .map(r => r.id_user);
-            
-            const responderUsersMap = new Map();
-            if (responderIds.length > 0) {
-                const responderUsers = await User.findAll({
-                    attributes: ['id_user', 'nama', 'role', 'no_whatsapp'],
-                    where: {
-                        id_user: { [Op.in]: responderIds }
+                io.to('global_chat').emit('receive_global_message', {
+                    ...chatMsg.toJSON(),
+                    User: {
+                        nama: victimName,
+                        role: victimUser ? victimUser.role : 'System'
                     }
                 });
-                responderUsers.forEach(u => responderUsersMap.set(u.id_user, u));
+            } catch (chatErr) {
+                console.error('[Emergency] Failed to send auto-chat message', chatErr);
             }
-
-            for (const responder of finalResponders) {
-                try {
-                    const responderUser = responder && responder.id_user ? responderUsersMap.get(responder.id_user) : null;
-                    const phone = (responderUser && responderUser.no_whatsapp) || (responder && responder.no_whatsapp);
-                    if (phone) {
-                        await wa.sendMessage(phone,
-                            `🚨 *[NURAGA SAFETY — ANDA DITUGASKAN SEBAGAI RESPONDER]*\n\n` +
-                            `Jenis Kejadian: *${jenis_kejadian}*\n` +
-                            `Lokasi: *${victimZone}*\n` +
-                            `Pelapor: ${victimName || 'Tidak diketahui'}\n\n` +
-                            `Segera bergerak ke lokasi kejadian!`
-                        );
-                    } else {
-                        console.warn(`[WhatsApp] Responder ${responder.nama || responderUser?.nama || responder.id_user} has no_whatsapp, skipping.`);
-                    }
-                } catch (err) {
-                    console.error('[WhatsApp] Error notifying responder:', err.message);
-                }
-            }
-        };
+        }
 
         res.status(201).json({
-            message: 'Darurat dipicu dan notifikasi personil sedang dikirim',
+            message: 'Darurat dipicu dan sirine sedang dibunyikan di web/aplikasi.',
             emergency: {
                 ...emergency.toJSON(),
                 reporter_name: victimName
             },
             responders: finalResponders
-        });
-
-        setImmediate(() => {
-            notifyEmergencyContacts().catch((waErr) => {
-                console.error('[WhatsApp] Emergency notification failed:', waErr.message);
-            });
         });
     } catch (error) {
         console.error('[Internal] Error:', error);
@@ -271,44 +224,29 @@ const resolveEmergency = async (req, res) => {
             });
         }
 
-        const notifyResolvedContacts = async () => {
-            const waMessage = 
-                `✅ *[NURAGA SAFETY — STATUS AMAN]*\n\n` +
-                `Peringatan Darurat untuk kejadian *${emergency.jenis_kejadian}* di *${emergency.lokasi}* telah dicabut.\n\n` +
-                `Kondisi dinyatakan *Kondusif/Aman* oleh: ${resolverName} (${req.user.role}).\n` +
-                `Waktu Selesai: ${new Date().toLocaleString('id-ID')}\n\n` +
-                `Seluruh staf dapat kembali beraktivitas normal.`;
+        // AUTO SEND RESOLVE MESSAGE TO GLOBAL CHAT
+        try {
+            const systemMessageContent = `✅ STATUS AMAN ✅\n\nPeringatan Darurat untuk kejadian ${(emergency.jenis_kejadian || 'Tidak Diketahui').toUpperCase()} di ${emergency.lokasi.toUpperCase()} telah dicabut.\n\nKondisi dinyatakan Kondusif oleh: ${resolverName.toUpperCase()}\nWaktu Selesai: ${new Date().toLocaleString('id-ID')}`;
 
-            const allUsers = await User.findAll({
-                attributes: ['id_user', 'nama', 'role', 'no_whatsapp'],
-                where: {
-                    no_whatsapp: {
-                        [Op.ne]: null
-                    }
-                }
+            const chatMsg = await ChatMessage.create({
+                id_user: req.user.id,
+                pesan: systemMessageContent
             });
 
-            console.log('[Emergency][Resolve] WhatsApp broadcast candidates:', allUsers.map(u => ({ id: u.id_user, nama: u.nama, role: u.role, no_whatsapp: !!u.no_whatsapp })));
-            for (const u of allUsers) {
-                if (u.no_whatsapp) {
-                    try {
-                        await wa.sendMessage(u.no_whatsapp, waMessage);
-                    } catch (err) {
-                        console.error(`[WhatsApp] Failed to notify ${u.nama} on resolve:`, err.message);
+            if (io) {
+                io.to('global_chat').emit('receive_global_message', {
+                    ...chatMsg.toJSON(),
+                    User: {
+                        nama: resolverName,
+                        role: req.user.role
                     }
-                } else {
-                    console.warn(`[WhatsApp] Skipping ${u.nama} on resolve — no_whatsapp not set`);
-                }
+                });
             }
-        };
+        } catch (chatErr) {
+            console.error('[Emergency] Failed to send auto-chat resolve message', chatErr);
+        }
 
         res.json({ message: 'Status darurat berhasil dicabut (kondusif).', emergency });
-
-        setImmediate(() => {
-            notifyResolvedContacts().catch((waErr) => {
-                console.error('[WhatsApp] Resolve notification failed:', waErr.message);
-            });
-        });
     } catch (error) {
         console.error('[Internal] Error:', error);
         res.status(500).json({ message: 'Internal server error' });

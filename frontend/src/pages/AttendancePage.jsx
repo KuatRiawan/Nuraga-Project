@@ -12,6 +12,7 @@ const AttendancePage = () => {
   const queryClient = useQueryClient();
   const isAdmin = user?.role === 'Admin';
   const [activeTab, setActiveTab] = useState('absensi'); // absensi, izin, laporan
+  const [activeSubTab, setActiveSubTab] = useState('absensi'); // absensi, izin (untuk di dalam tab laporan)
   const [selectedImage, setSelectedImage] = useState(null);
 
   // Helper for generating upload URL
@@ -36,6 +37,7 @@ const AttendancePage = () => {
   const [selectedUserId, setSelectedUserId] = useState('all');
   const [startDateFilter, setStartDateFilter] = useState('');
   const [endDateFilter, setEndDateFilter] = useState('');
+  const [searchHistoryName, setSearchHistoryName] = useState('');
 
   // Fetch today's status using React Query
   const { data: todayStatus = { clockedIn: false, clockedOut: false, fatigue_status: null } } = useQuery({
@@ -107,8 +109,29 @@ const AttendancePage = () => {
     if (endDateFilter && logDate) {
       matchesEnd = logDate <= endDateFilter;
     }
+
+    let matchesSearch = true;
+    if (searchHistoryName) {
+      const u = userList.find(user => user.id_user === log.id_user);
+      const name = (log.User?.nama || u?.nama || '').toLowerCase();
+      matchesSearch = name.includes(searchHistoryName.toLowerCase());
+    }
     
-    return matchesUser && matchesStart && matchesEnd;
+    return matchesUser && matchesStart && matchesEnd && matchesSearch;
+  });
+
+  const filteredLeaves = (historyData?.leaves || []).filter(leave => {
+    if (!leave) return false;
+    const matchesUser = !isAdmin || selectedUserId === 'all' || leave.id_user === Number(selectedUserId);
+    
+    let matchesSearch = true;
+    if (searchHistoryName) {
+      const u = userList.find(user => user.id_user === leave.id_user);
+      const name = (leave.User?.nama || u?.nama || '').toLowerCase();
+      matchesSearch = name.includes(searchHistoryName.toLowerCase());
+    }
+    
+    return matchesUser && matchesSearch;
   });
 
   // Popup notification
@@ -668,21 +691,37 @@ const AttendancePage = () => {
                     )}
                 </div>
 
-                <div className={`grid grid-cols-1 sm:grid-cols-${isAdmin ? '3' : '2'} gap-4`}>
+                {/* Sub-Tab Toggle Pills */}
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-full max-w-md mx-auto sm:mx-0">
+                    <button 
+                        onClick={() => setActiveSubTab('absensi')} 
+                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${activeSubTab === 'absensi' ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                    >
+                        Riwayat Absensi
+                    </button>
+                    <button 
+                        onClick={() => setActiveSubTab('izin')} 
+                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${activeSubTab === 'izin' ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                    >
+                        Riwayat Izin/Cuti
+                    </button>
+                </div>
+
+                <div className={`grid grid-cols-1 md:grid-cols-${isAdmin ? '3' : '2'} sm:grid-cols-2 gap-4 mt-6`}>
                     {isAdmin && (
+                        <>
+
                         <div className="flex flex-col gap-1.5">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Pekerja</label>
-                            <select
-                                value={selectedUserId}
-                                onChange={e => setSelectedUserId(e.target.value)}
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Cari Nama</label>
+                            <input
+                                type="text"
+                                placeholder="Ketik nama pekerja..."
+                                value={searchHistoryName}
+                                onChange={e => setSearchHistoryName(e.target.value)}
                                 className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-4 py-3 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value="all">Semua Pekerja</option>
-                                {(userList || []).map(u => (
-                                    <option key={u?.id_user} value={u?.id_user}>{u?.nama} ({u?.role})</option>
-                                ))}
-                            </select>
+                            />
                         </div>
+                        </>
                     )}
                     <div className="flex flex-col gap-1.5">
                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Dari Tanggal</label>
@@ -705,67 +744,67 @@ const AttendancePage = () => {
                 </div>
             </div>
             
-            {(filteredAttendance || []).length > 0 ? (
-            <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                <thead>
-                    <tr className="bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 text-sm border-b border-slate-200 dark:border-slate-800">
-                    <th className="py-4 px-4 font-semibold">Waktu</th>
-                    {isAdmin && <th className="py-4 px-4 font-semibold">Pekerja</th>}
-                    <th className="py-4 px-4 font-semibold">Tipe</th>
-                    <th className="py-4 px-4 font-semibold">Foto</th>
-                    <th className="py-4 px-4 font-semibold">Metrik</th>
-                    <th className="py-4 px-4 font-semibold">Status AI</th>
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 text-sm">
-                    {(filteredAttendance || []).map((log) => (
-                    <tr key={log?.id_attendance} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-slate-100 dark:border-slate-800/40">
-                        <td className="py-4 px-4 text-slate-700 dark:text-slate-300 font-medium">
-                        {log?.createdAt ? new Date(log.createdAt).toLocaleString('id-ID') : '-'}
-                        </td>
-                        {(isAdmin) && <td className="py-4 px-4 text-slate-700 dark:text-slate-300 font-bold">{log?.User?.nama || (userList || []).find(u => u?.id_user === log?.id_user)?.nama || 'Tidak tersedia'}</td>}
-                        <td className="py-4 px-4">
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${log?.type === 'Datang' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700'}`}>{log?.type || '-'}</span>
-                        </td>
-                        <td className="py-4 px-4">
-                            {log?.foto_bukti ? (
-                                <img 
-                                    src={getImageUrl(log.foto_bukti)} 
-                                    alt="Foto" 
-                                    className="w-12 h-12 object-cover rounded-xl shadow-sm cursor-pointer hover:scale-110 hover:shadow-md transition-all ring-2 ring-slate-100 dark:ring-slate-800"
-                                    onClick={() => setSelectedImage(getImageUrl(log.foto_bukti))}
-                                />
-                            ) : (
-                                <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 text-xs">
-                                    -
-                                </div>
-                            )}
-                        </td>
-                        <td className="py-4 px-4 text-slate-500 dark:text-slate-400">
-                            {log?.type === 'Datang' ? `Tidur: ${log?.sleep_hours}j | Stres: ${log?.stress_level}` : '-'}
-                        </td>
-                        <td className="py-4 px-4">
-                        {log?.type === 'Datang' && log?.fatigue_status ? (
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(log.fatigue_status)}`}>
-                                {log.fatigue_status}
-                            </span>
-                        ) : '-'}
-                        </td>
-                    </tr>
-                    ))}
-                </tbody>
-                </table>
-            </div>
-            ) : <p className="text-slate-500 text-center py-8">Belum ada riwayat absensi.</p>}
-        </div>
- 
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm p-8 transition-colors">
-            <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2"><UserX className="w-5 h-5 text-orange-500"/> Riwayat Pengajuan Izin/Cuti</h2>
-            {(historyData?.leaves || []).length > 0 ? (
-            <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                <thead>
+            {activeSubTab === 'absensi' && (
+                (filteredAttendance || []).length > 0 ? (
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                    <thead>
+                        <tr className="bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 text-sm border-b border-slate-200 dark:border-slate-800">
+                        <th className="py-4 px-4 font-semibold">Waktu</th>
+                        {isAdmin && <th className="py-4 px-4 font-semibold">Pekerja</th>}
+                        <th className="py-4 px-4 font-semibold">Tipe</th>
+                        <th className="py-4 px-4 font-semibold">Foto</th>
+                        <th className="py-4 px-4 font-semibold">Metrik</th>
+                        <th className="py-4 px-4 font-semibold">Status AI</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 text-sm">
+                        {(filteredAttendance || []).map((log) => (
+                        <tr key={log?.id_attendance} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-slate-100 dark:border-slate-800/40">
+                            <td className="py-4 px-4 text-slate-700 dark:text-slate-300 font-medium">
+                            {log?.createdAt ? new Date(log.createdAt).toLocaleString('id-ID') : '-'}
+                            </td>
+                            {(isAdmin) && <td className="py-4 px-4 text-slate-700 dark:text-slate-300 font-bold">{log?.User?.nama || (userList || []).find(u => u?.id_user === log?.id_user)?.nama || 'Tidak tersedia'}</td>}
+                            <td className="py-4 px-4">
+                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${log?.type === 'Datang' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700'}`}>{log?.type || '-'}</span>
+                            </td>
+                            <td className="py-4 px-4">
+                                {log?.foto_bukti ? (
+                                    <img 
+                                        src={getImageUrl(log.foto_bukti)} 
+                                        alt="Foto" 
+                                        className="w-12 h-12 object-cover rounded-xl shadow-sm cursor-pointer hover:scale-110 hover:shadow-md transition-all ring-2 ring-slate-100 dark:ring-slate-800"
+                                        onClick={() => setSelectedImage(getImageUrl(log.foto_bukti))}
+                                    />
+                                ) : (
+                                    <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 text-xs">
+                                        -
+                                    </div>
+                                )}
+                            </td>
+                            <td className="py-4 px-4 text-slate-500 dark:text-slate-400">
+                                {log?.type === 'Datang' ? `Tidur: ${log?.sleep_hours}j | Stres: ${log?.stress_level}` : '-'}
+                            </td>
+                            <td className="py-4 px-4">
+                            {log?.type === 'Datang' && log?.fatigue_status ? (
+                                <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(log.fatigue_status)}`}>
+                                    {log.fatigue_status}
+                                </span>
+                            ) : '-'}
+                            </td>
+                        </tr>
+                        ))}
+                    </tbody>
+                    </table>
+                </div>
+                ) : <p className="text-slate-500 text-center py-8">Belum ada riwayat absensi.</p>
+            )}
+
+            {activeSubTab === 'izin' && (
+                filteredLeaves.length > 0 ? (
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                    <thead>
                     <tr className="bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 text-sm border-b border-slate-200 dark:border-slate-800">
                     {isAdmin && <th className="py-4 px-4 font-semibold">Pekerja</th>}
                     <th className="py-4 px-4 font-semibold">Tipe</th>
@@ -776,7 +815,7 @@ const AttendancePage = () => {
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 text-sm">
-                    {(historyData?.leaves || []).map((leave) => (
+                    {filteredLeaves.map((leave) => (
                     <tr key={leave?.id_leave} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-slate-100 dark:border-slate-800/40">
                         {isAdmin && <td className="py-4 px-4 text-slate-700 dark:text-slate-300 font-bold">{leave?.User?.nama || '-'}</td>}
                         <td className="py-4 px-4 font-medium text-slate-700 dark:text-slate-300">{leave?.type || '-'}</td>
@@ -803,8 +842,7 @@ const AttendancePage = () => {
                 </tbody>
                 </table>
             </div>
-            ) : (
-                <p className="text-slate-500 text-center py-8">Belum ada pengajuan izin/cuti.</p>
+            ) : <p className="text-slate-500 text-center py-8">Belum ada pengajuan izin/cuti.</p>
             )}
         </div>
       </div>

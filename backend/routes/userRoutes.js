@@ -16,14 +16,19 @@ const { protect, authorize } = require('../middlewares/authMiddleware');
 router.post('/login', loginUser);
 
 // ==========================================
+// 🟡 RUTE UMUM (Wajib punya token JWT, semua role bisa)
+// ==========================================
+// Semua user yang login butuh data user lain untuk fitur Mention
+router.get('/', protect, getAllUsers);
+
+// ==========================================
 // 🔴 RUTE PRIVAT (Wajib punya token JWT & Role Admin)
 // ==========================================
 // Mulai dari baris ini ke bawah, semua rute dijaga ketat oleh satpam!
 router.use(protect, authorize('Admin'));
 
 // Rute manajemen user (Hanya bisa diakses oleh Admin yang sudah login)
-router.post('/', createUser); // <-- Pintu pendaftaran sudah aman digembok lagi
-router.get('/', getAllUsers);
+router.post('/', createUser);
 router.put('/:id', updateUser);
 router.delete('/:id', deleteUser);
 

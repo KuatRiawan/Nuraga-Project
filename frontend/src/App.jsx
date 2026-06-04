@@ -25,6 +25,7 @@ import GamificationPage from './pages/GamificationPage';
 import AuditLogPage from './pages/AuditLogPage';
 import AttendancePage from './pages/AttendancePage';
 import { asArray } from './utils/safeData';
+import ChatWidget from './components/ChatWidget';
 
 const queryClient = new QueryClient();
 
@@ -210,10 +211,10 @@ const EmergencyListener = () => {
 
     if (resolveData) {
         return (
-            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-emerald-950/80 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-emerald-950/90 animate-in fade-in duration-300">
                 <div className="bg-white dark:bg-slate-900 border-4 border-emerald-500 rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
-                    <div className="absolute -top-24 -left-24 w-48 h-48 bg-emerald-500/10 rounded-full animate-ping" />
-                    <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-emerald-500/10 rounded-full animate-ping" />
+                    <div className="absolute -top-24 -left-24 w-48 h-48 bg-emerald-500/10 rounded-full animate-pulse" />
+                    <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-emerald-500/10 rounded-full animate-pulse" />
                     
                     <div className="flex flex-col items-center text-center space-y-4">
                         <div className="p-4 bg-emerald-500 rounded-full text-white shadow-lg shadow-emerald-500/40">
@@ -240,10 +241,10 @@ const EmergencyListener = () => {
     const { emergency = {}, responders = [] } = alertData || {};
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-red-950/80 backdrop-blur-md animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-red-950/90 animate-in fade-in duration-300">
             <div className="bg-white dark:bg-slate-900 border-4 border-red-600 rounded-[2.5rem] p-8 max-w-lg w-full shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
-                <div className="absolute -top-24 -left-24 w-48 h-48 bg-red-500/10 rounded-full animate-ping" />
-                <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-red-500/10 rounded-full animate-ping" />
+                <div className="absolute -top-24 -left-24 w-48 h-48 bg-red-500/10 rounded-full animate-pulse" />
+                <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-red-500/10 rounded-full animate-pulse" />
 
                 <div className="flex flex-col items-center text-center space-y-6">
                     <div className="p-5 bg-red-500 rounded-full text-white animate-bounce shadow-lg shadow-red-500/40">
@@ -309,9 +310,9 @@ function App() {
             <ThemeProvider>
                 <AuthProvider>
                     <Router>
-                    <EmergencyListener />
-
-                    <Routes>
+                        <EmergencyListener />
+                        <ChatWidget />
+                        <Routes>
                         <Route path="/login" element={<LoginPage />} />
                         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                         <Route path="/reset-password" element={<ResetPasswordPage />} />

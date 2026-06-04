@@ -208,10 +208,10 @@ const EmergencyControls = ({ compact = false, onTriggered }) => {
                         
                         <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl mb-6">
                             <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">
-                                Detail / Personil Dihubungi:
+                                {alertModal.isError ? 'Pesan Kesalahan:' : 'Status Sistem:'}
                             </p>
                             <p className="text-slate-700 dark:text-slate-300 text-sm whitespace-pre-wrap font-medium">
-                                {alertModal.respondersList}
+                                {alertModal.isError ? alertModal.respondersList : 'Sirine bahaya dihidupkan dan notifikasi darurat telah disiarkan ke Global Chat.'}
                             </p>
                         </div>
                         
