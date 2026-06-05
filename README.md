@@ -141,10 +141,6 @@ Proyek ini memanfaatkan model AI untuk fitur prediksi kelelahan (WellGuard) dan 
 
 > **🔗 LINK MODEL ML GOOGLE DRIVE:** `https://drive.google.com/drive/folders/1vha7juCjcoUO4XWSxib-zvedRy18LyUv?usp=sharing`
 
-
-
-
-
 ---
 
 ## Roadmap Pengembangan
