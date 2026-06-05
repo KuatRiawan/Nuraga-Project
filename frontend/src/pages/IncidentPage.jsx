@@ -97,7 +97,6 @@ const IncidentPage = () => {
     const isFieldRole = ['Staff', 'Operator', 'Vendor', 'Kontraktor'].includes(user?.role);
     const canEditInvestigation = user?.role === 'HSE' || user?.role === 'Admin';
 
-    // Auto open form if redirected from dashboard quick action
     useEffect(() => {
         if (location.state?.openForm) {
             setShowForm(true);
@@ -209,11 +208,11 @@ const IncidentPage = () => {
             </div>
 
             {showForm && (
-                createPortal(<div 
+                createPortal(<div
                     onClick={() => { stopCamera(); setShowForm(false); setPreview(null); }}
                     className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
                 >
-                    <div 
+                    <div
                         onClick={(e) => e.stopPropagation()}
                         className="bg-white dark:bg-slate-800 border-t-8 border-red-600 w-full max-w-2xl rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
                     >
@@ -349,7 +348,7 @@ const IncidentPage = () => {
                 </div>, document.body)
             )}
 
-            {/* Incident List */}
+            {/* Daftar Insiden */}
             <div className="space-y-4">
                 {incidents.length === 0 && (
                     <div className="p-16 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl">
@@ -400,12 +399,12 @@ const IncidentPage = () => {
                     </div>
                 ))}
 
-                {/* Pagination Controls */}
+                {/* Kontrol Halaman */}
                 {totalPages > 1 && (
                     <div className="flex justify-center items-center gap-4 mt-6">
-                        <Button 
-                            variant="secondary" 
-                            disabled={page === 1} 
+                        <Button
+                            variant="secondary"
+                            disabled={page === 1}
                             onClick={() => setPage(p => Math.max(1, p - 1))}
                         >
                             Sebelumnya
@@ -413,9 +412,9 @@ const IncidentPage = () => {
                         <span className="text-sm font-bold text-slate-500">
                             Halaman {page} dari {totalPages}
                         </span>
-                        <Button 
-                            variant="secondary" 
-                            disabled={page === totalPages} 
+                        <Button
+                            variant="secondary"
+                            disabled={page === totalPages}
                             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                         >
                             Selanjutnya
@@ -424,13 +423,13 @@ const IncidentPage = () => {
                 )}
             </div>
 
-            {/* selectedIncident Detail Modal */}
+            {/* Modal Detail Insiden Terpilih */}
             {selectedIncident && (
-                createPortal(<div 
+                createPortal(<div
                     onClick={() => setSelectedIncident(null)}
                     className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
                 >
-                    <div 
+                    <div
                         onClick={(e) => e.stopPropagation()}
                         className="bg-white dark:bg-slate-800 border-t-8 border-red-600 w-full max-w-2xl rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
                     >
@@ -450,7 +449,7 @@ const IncidentPage = () => {
                         </div>
 
                         <div className="space-y-6 text-sm text-slate-650 dark:text-slate-350">
-                            {/* Incident Info Grid */}
+                            {/* Grid Info Insiden */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-800">
                                 <div>
                                     <p className="text-[10px] font-black text-slate-450 uppercase tracking-widest">Pelapor</p>
@@ -466,7 +465,7 @@ const IncidentPage = () => {
                                 </div>
                             </div>
 
-                            {/* Chronology */}
+                            {/* Kronologi */}
                             <div className="space-y-1.5">
                                 <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">Kronologi Kejadian</h3>
                                 <p className="p-5 bg-slate-50 dark:bg-slate-900/30 rounded-2xl border border-slate-100 dark:border-slate-800/80 leading-relaxed">
@@ -474,7 +473,7 @@ const IncidentPage = () => {
                                 </p>
                             </div>
 
-                            {/* Photo Attachment if available */}
+                            {/* Lampiran Foto jika tersedia */}
                             {selectedIncident.foto && (
                                 <div className="space-y-1.5">
                                     <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">Foto Dokumentasi</h3>
@@ -484,7 +483,7 @@ const IncidentPage = () => {
                                 </div>
                             )}
 
-                            {/* Investigation Module (5 Whys & Loss Cost) */}
+                            {/* Modul Investigasi (5 Why & Biaya Kerugian) */}
                             {canEditInvestigation ? (
                                 <form onSubmit={handleSaveInvestigation} className="space-y-5 border-t border-slate-100 dark:border-slate-800 pt-5">
                                     <div className="flex items-center justify-between">
@@ -538,7 +537,7 @@ const IncidentPage = () => {
                                     </h3>
                                     {(!selectedIncident.loss_cost && (!selectedIncident.five_whys || Object.values(selectedIncident.five_whys).every(w => !w))) ? (
                                         <div className="p-6 bg-slate-50 dark:bg-slate-900/30 rounded-2xl border border-slate-100 dark:border-slate-800 text-center text-slate-450 dark:text-slate-500 font-bold">
-                                            ⚠️ Belum diinvestigasi oleh HSE Officer.
+                                            Belum diinvestigasi oleh HSE Officer.
                                         </div>
                                     ) : (
                                         <div className="space-y-4">
@@ -572,13 +571,13 @@ const IncidentPage = () => {
                 </div>, document.body)
             )}
 
-            {/* Success Modal */}
+            {/* Modal Sukses */}
             {showSuccessModal && (
-                createPortal(<div 
+                createPortal(<div
                     onClick={() => setShowSuccessModal(false)}
                     className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
                 >
-                    <div 
+                    <div
                         onClick={(e) => e.stopPropagation()}
                         className="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-200"
                     >

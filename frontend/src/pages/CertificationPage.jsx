@@ -31,7 +31,6 @@ const getWhatsAppLink = (cert, daysLeft) => {
 };
 
 const K3_CERTIFICATE_LIST = [
-    // Ahli K3 (AK3) Umum & Spesialis
     "Ahli K3 Umum (AK3U)",
     "Ahli K3 Spesialis Listrik",
     "Ahli K3 Spesialis Penanggulangan Kebakaran",
@@ -43,25 +42,21 @@ const K3_CERTIFICATE_LIST = [
     "Ahli K3 Spesialis Konstruksi Madya",
     "Ahli K3 Spesialis Konstruksi Utama",
 
-    // K3 Penanggulangan Kebakaran
     "Petugas Peran Kebakaran (Tingkat D)",
     "Regu Penanggulangan Kebakaran (Tingkat C)",
     "Koordinator Unit Penanggulangan Kebakaran (Tingkat B)",
     "Ahli K3 Spesialis Penanggulangan Kebakaran (Tingkat A)",
 
-    // K3 Ketinggian
     "Tenaga Kerja Bangunan Tinggi (TKBT) Tingkat 1",
     "Tenaga Kerja Bangunan Tinggi (TKBT) Tingkat 2",
     "Tenaga Kerja Pada Ketinggian (TKPK) Tingkat 1",
     "Tenaga Kerja Pada Ketinggian (TKPK) Tingkat 2",
     "Tenaga Kerja Pada Ketinggian (TKPK) Tingkat 3",
 
-    // K3 Ruang Terbatas (Confined Space)
     "Petugas Gas Tester",
     "Teknisi Ruang Terbatas",
     "Rescuer Ruang Terbatas",
 
-    // K3 Pesawat Angkat dan Angkut (PAA)
     "Operator Forklift Kelas I",
     "Operator Forklift Kelas II",
     "Operator Mobile Crane Kelas I",
@@ -77,35 +72,29 @@ const K3_CERTIFICATE_LIST = [
     "Rigger (Juru Ikat Beban)",
     "Teknisi Pesawat Angkat dan Angkut",
 
-    // K3 Pesawat Tenaga dan Produksi (PTP)
     "Operator Genset",
     "Operator Mesin Produksi dan Perkakas",
     "Operator Tanur (Furnace)",
     "Teknisi PTP",
 
-    // K3 Pesawat Uap dan Bejana Tekan (PUBT)
     "Operator Ketel Uap (Boiler) Kelas I",
     "Operator Ketel Uap (Boiler) Kelas II",
     "Teknisi Pesawat Uap dan Bejana Tekan",
 
-    // K3 Pengelasan (Welder)
     "Juru Las (Welder) Kelas I",
     "Juru Las (Welder) Kelas II",
     "Juru Las (Welder) Kelas III",
 
-    // K3 Listrik & Perancah (Scaffolding)
     "Teknisi K3 Listrik",
     "Teknisi Perancah (Scaffolder)",
     "Supervisi Perancah (Inspector Scaffolding)",
     "Petugas K3 Konstruksi",
 
-    // Kesehatan Kerja & Lingkungan
     "Petugas P3K (First Aider)",
     "Petugas K3 Kimia",
     "Paramedis K3",
     "Dokter Pemeriksa Kesehatan Tenaga Kerja (Dokter Hiperkes)",
 
-    // Sistem Manajemen K3 (SMK3)
     "Auditor Internal SMK3",
     "Auditor Eksternal SMK3"
 ];
@@ -136,7 +125,6 @@ const CertificationPage = () => {
             item.toLowerCase().includes(query.toLowerCase())
           );
 
-    // Fetch certifications using React Query
     const { data: rawCerts = [], isLoading: certsLoading, refetch: refetchCerts } = useQuery({
         queryKey: ['certifications', isAdmin],
         queryFn: async () => {
@@ -147,10 +135,8 @@ const CertificationPage = () => {
         enabled: !!user
     });
 
-    // Sort: expiring soon first
     const certs = asArray(rawCerts).sort((a, b) => getDaysUntilExpiry(a.tanggal_expired) - getDaysUntilExpiry(b.tanggal_expired));
 
-    // Fetch users using React Query (Admin only)
     const { data: users = [], isLoading: usersLoading } = useQuery({
         queryKey: ['users'],
         queryFn: async () => {
@@ -160,7 +146,6 @@ const CertificationPage = () => {
         enabled: isAdmin
     });
 
-    // Create/Update certification mutation
     const saveCertMutation = useMutation({
         mutationFn: async (data) => {
             if (editingCert) {
@@ -183,7 +168,6 @@ const CertificationPage = () => {
         }
     });
 
-    // Delete certification mutation
     const deleteCertMutation = useMutation({
         mutationFn: async (certId) => {
             const res = await api.delete(`/certifications/${certId}`);
@@ -234,7 +218,6 @@ const CertificationPage = () => {
         setFormData({ id_user: '', nama_personil: '', jenis_sertifikasi: '', nomor_sertifikat: '', tanggal_terbit: '', tanggal_expired: '' });
     };
 
-    // Count certs expiring ≤ 30 days
     const expiringCount = certs.filter(c => getDaysUntilExpiry(c.tanggal_expired) <= 30 && getDaysUntilExpiry(c.tanggal_expired) > 0).length;
 
     return (
@@ -253,7 +236,7 @@ const CertificationPage = () => {
                 )}
             </div>
 
-            {/* Expiry Alert Banner */}
+            {/* Banner Peringatan Kadaluarsa */}
             {expiringCount > 0 && (
                 <div className="flex items-start gap-4 p-5 bg-amber-500/10 border border-amber-500/30 rounded-2xl animate-in slide-in-from-top-4 duration-300">
                     <div className="p-2 bg-amber-500 rounded-xl text-white mt-0.5 shrink-0">
@@ -268,7 +251,7 @@ const CertificationPage = () => {
                 </div>
             )}
 
-            {/* Add/Edit Certification Modal */}
+            {/* Modal Tambah/Edit Sertifikasi */}
             {showForm && (
                 createPortal(<div 
                     onClick={handleCloseForm}
@@ -327,7 +310,6 @@ const CertificationPage = () => {
                                         onChange={(e) => setFormData({ ...formData, jenis_sertifikasi: e.target.value })}
                                         onFocus={() => setShowSuggestions(true)}
                                         onBlur={() => {
-                                            // Delay closing suggestions so clicks on suggestions can register
                                             setTimeout(() => setShowSuggestions(false), 200);
                                         }}
                                         required
@@ -387,7 +369,7 @@ const CertificationPage = () => {
                 </div>, document.body)
             )}
 
-            {/* Certification Cards */}
+            {/* Kartu Sertifikasi */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {certsLoading ? (
                     <div className="md:col-span-3 p-16 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl">
@@ -412,7 +394,7 @@ const CertificationPage = () => {
 
                     return (
                         <div key={cert.id_certification} className={`border-2 p-6 rounded-2xl relative overflow-hidden group shadow-sm hover:shadow-md transition-all duration-300 ${cardStyle}`}>
-                            {/* Expiry Pulse Indicator */}
+                            {/* Indikator Denyut Kadaluarsa */}
                             {isExpiring && (
                                 <div className="absolute top-4 right-4">
                                     <span className="flex items-center gap-1.5 text-[10px] font-black text-amber-600 bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-full animate-pulse">

@@ -6,7 +6,6 @@ const CorrectiveAction = require('../models/CorrectiveAction');
 const User = require('../models/User');
 const Attendance = require('../models/Attendance');
 
-// Simple In-memory Cache
 let cache = {
     stats: null,
     statsExpiry: 0,
@@ -16,7 +15,7 @@ let cache = {
     reportDataExpiry: 0,
 };
 
-const CACHE_TTL = 10000; // 10 seconds TTL
+const CACHE_TTL = 10000; // TTL 10 detik
 
 const clearStatsCache = () => {
     cache.stats = null;
@@ -40,7 +39,6 @@ const getDashboardStats = async (req, res) => {
         const totalAudits = await Audit.count();
         const pendingActions = await CorrectiveAction.count({ where: { status: 'Open' } });
 
-        // Calculate work hours for TRIR/LTI (last 365 days)
         const oneYearAgo = new Date();
         oneYearAgo.setDate(oneYearAgo.getDate() - 365);
         
@@ -48,7 +46,6 @@ const getDashboardStats = async (req, res) => {
             where: { createdAt: { [Op.gte]: oneYearAgo } }
         });
 
-        // Count unique users who clocked in during the last 365 days
         const activeUsersYear = await Attendance.findAll({
             where: { 
                 type: 'Datang',
@@ -58,16 +55,13 @@ const getDashboardStats = async (req, res) => {
             group: ['id_user']
         });
         
-        const numberOfWorkers = activeUsersYear.length || 1; // Avoid division by zero
-        const workingDaysYear = 260; // Approx 260 working days a year
-        const hoursPerDay = 8; // Standard 8-hour workday
+        const numberOfWorkers = activeUsersYear.length || 1; // Hindari pembagian dengan nol
+        const workingDaysYear = 260; // Sekitar 260 hari kerja per tahun
+        const hoursPerDay = 8; // Standar hari kerja 8 jam
         const totalWorkHours = numberOfWorkers * workingDaysYear * hoursPerDay;
 
-        // TRIR = (Total Incidents * 200,000) / Total Work Hours
         const trir = incidentsLastYear > 0 ? (incidentsLastYear * 200000) / totalWorkHours : 0;
 
-        // LTI Rate = (Lost Time Incidents * 200,000) / Total Work Hours
-        // For simplicity, we'll use incidents categorized as 'Lost Time' or just incidentsLastYear
         const ltiRate = incidentsLastYear > 0 ? (incidentsLastYear * 200000) / totalWorkHours : 0;
 
         const statsData = {
@@ -110,7 +104,6 @@ const getMonthlyAnalytics = async (req, res) => {
             attributes: ['createdAt']
         });
 
-        // Group by date (simple implementation)
         const analytics = {};
         for (let i = 0; i <= 30; i++) {
             const date = new Date(thirtyDaysAgo);
@@ -150,7 +143,6 @@ const getReportData = async (req, res) => {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-        // Limit columns to avoid loading long text fields (deskripsi, five_whys, kronologi, etc.)
         const hazards = await HazardReport.findAll({
             where: { createdAt: { [Op.gte]: thirtyDaysAgo } },
             order: [['createdAt', 'DESC']]

@@ -39,7 +39,7 @@ const Attendance = sequelize.define('Attendance', {
     },
     foto_bukti: {
         type: DataTypes.STRING,
-        allowNull: true, // required for clock-in but we'll enforce in controller
+        allowNull: true, // wajib untuk absensi masuk tapi akan divalidasi di controller
     }
 }, {
     timestamps: true,

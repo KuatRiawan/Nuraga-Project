@@ -12,7 +12,7 @@ const SafetyCharts = () => {
             const res = await api.get('/stats/monthly');
             return res.data;
         },
-        refetchInterval: 60000 // Short Polling every 60s
+        refetchInterval: 60000 // Polling pendek setiap 60 detik
     });
 
     if (isLoading) return <div className="h-64 flex items-center justify-center text-slate-400">Loading charts...</div>;

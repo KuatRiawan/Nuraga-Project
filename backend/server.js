@@ -7,7 +7,6 @@ const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
 
-// Import models to sync
 const User = require('./models/User');
 const HazardReport = require('./models/HazardReport');
 const IncidentReport = require('./models/IncidentReport');
@@ -30,7 +29,6 @@ const { UPLOADS_DIR } = require('./utils/paths');
 
 dotenv.config();
 
-// Validate JWT secret on startup - server cannot run without security
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET.trim() === '') {
     console.error('FATAL: JWT_SECRET environment variable is missing or empty. Server cannot start without security.');
     process.exit(1);
@@ -41,8 +39,8 @@ const app = express();
 app.set('trust proxy', 1);
 
 const globalLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 1000, // 1000 requests per 15 minutes to allow dashboard fetching and hot reloads
+    windowMs: 15 * 60 * 1000, // 15 menit
+    max: 1000, // 1000 permintaan per 15 menit
     message: { message: 'Terlalu banyak request, silakan coba lagi setelah 15 menit.' }
 });
 app.use('/api', globalLimiter);
@@ -65,12 +63,10 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve uploads
 app.use('/uploads', express.static(UPLOADS_DIR));
 
 const { applyUserCascadeConstraints } = require('./migrations/applyUserCascadeConstraints');
 
-// Associations — ON DELETE rules for User removal (C3)
 const cascade = { onDelete: 'CASCADE', hooks: false };
 const setNull = { onDelete: 'SET NULL', hooks: false };
 
@@ -122,7 +118,6 @@ FatigueLog.belongsTo(User, { foreignKey: 'id_user', targetKey: 'id_user', ...cas
 User.hasMany(ChatMessage, { foreignKey: 'id_user', sourceKey: 'id_user', ...cascade });
 ChatMessage.belongsTo(User, { foreignKey: 'id_user', targetKey: 'id_user', ...cascade });
 
-// Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/hazards', require('./routes/hazardRoutes'));
@@ -148,8 +143,6 @@ app.get('/', (req, res) => {
 
 const PORT = parseInt(process.env.PORT, 10) || 5000;
 
-// Sync Database & Start Server with robust port handling
-// force:false = don't touch existing tables (safest for production-like use)
 function startServer(port, retries = 5) {
     const server = app.listen(port, () => {
         console.log(`Server is running on port ${port}`);
@@ -161,12 +154,10 @@ function startServer(port, retries = 5) {
             methods: ["GET", "POST"],
             credentials: true
         },
-        maxHttpBufferSize: 1e6 // 1MB limit to prevent WebSocket memory bomb attacks
+        maxHttpBufferSize: 1e6 // Batas 1MB
     });
 
-    // JWT Authentication middleware for Socket.io
     io.use((socket, next) => {
-        // Parse cookies from handshake headers
         let token;
         const cookieHeader = socket.handshake.headers.cookie;
         if (cookieHeader) {
@@ -177,7 +168,6 @@ function startServer(port, retries = 5) {
             token = cookies.token;
         }
         
-        // Fallback for backwards compatibility if needed during migration
         if (!token) {
             token = socket.handshake.auth.token || socket.handshake.headers.authorization?.replace('Bearer ', '');
         }
@@ -223,19 +213,16 @@ function startServer(port, retries = 5) {
 
         socket.on('send_global_message', async (data) => {
             try {
-                // Save to DB
                 const newMsg = await ChatMessage.create({
                     id_user: socket.user.id,
                     pesan: data.pesan,
                     tipe: 'global'
                 });
 
-                // Fetch with User info
                 const fullMsg = await ChatMessage.findByPk(newMsg.id_message, {
                     include: [{ model: User, attributes: ['id_user', 'nama', 'role'] }]
                 });
 
-                // Broadcast
                 io.to('global_chat').emit('receive_global_message', fullMsg);
             } catch (err) {
                 console.error('[Chat] Error saving/sending message:', err);
@@ -280,7 +267,6 @@ sequelize.sync().then(async () => {
         console.error('Failed to apply User cascade FK constraints:', err.message);
     }
 
-    // Safety Migrations for Users
     try {
         await sequelize.query('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "points" INTEGER DEFAULT 0;');
         await sequelize.query('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "no_whatsapp" VARCHAR(255) NULL;');
@@ -292,7 +278,6 @@ sequelize.sync().then(async () => {
         console.error('Failed to add columns to Users:', err.message);
     }
 
-    // Safety Migrations for WorkPermits
     try {
         await sequelize.query('ALTER TABLE "WorkPermits" ADD COLUMN IF NOT EXISTS "close_applicant_sig" BOOLEAN DEFAULT false;');
         await sequelize.query('ALTER TABLE "WorkPermits" ADD COLUMN IF NOT EXISTS "close_supervisor_sig" BOOLEAN DEFAULT false;');
@@ -303,7 +288,6 @@ sequelize.sync().then(async () => {
         console.error('Failed to add close-out columns to WorkPermits:', err.message);
     }
 
-    // Safety Migrations for HazardReports
     try {
         await sequelize.query('ALTER TABLE "HazardReports" ADD COLUMN IF NOT EXISTS "is_verified" BOOLEAN DEFAULT false;');
         console.log('HazardReports columns verified successfully');
@@ -311,16 +295,13 @@ sequelize.sync().then(async () => {
         console.error('Failed to add columns to HazardReports:', err.message);
     }
 
-    // Add Expired to enum status in database (PostgreSQL specific)
     try {
         await sequelize.query('ALTER TYPE "enum_WorkPermits_status" ADD VALUE IF NOT EXISTS \'Expired\';');
         console.log('WorkPermits status enum verified successfully');
     } catch (err) {
-        // May fail if not Postgres or already exists, which is fine
         console.warn('Postgres enum alteration warning:', err.message);
     }
 
-    // Add Staff to enum role in database (PostgreSQL specific)
     try {
         await sequelize.query('ALTER TYPE "enum_Users_role" ADD VALUE IF NOT EXISTS \'Staff\';');
         console.log('Users role enum verified successfully');
@@ -328,7 +309,6 @@ sequelize.sync().then(async () => {
         console.warn('Postgres role enum alteration warning:', err.message);
     }
 
-    // Add Vendor to enum role in database (PostgreSQL specific)
     try {
         await sequelize.query('ALTER TYPE "enum_Users_role" ADD VALUE IF NOT EXISTS \'Vendor\';');
         console.log('Users role enum Vendor verified successfully');
@@ -336,7 +316,6 @@ sequelize.sync().then(async () => {
         console.warn('Postgres role enum Vendor alteration warning:', err.message);
     }
 
-    // Migrate any Operator role to Staff
     try {
         await sequelize.query('UPDATE "Users" SET role = \'Staff\' WHERE role = \'Operator\';');
         console.log('Migrated all Operator users to Staff successfully');
@@ -344,7 +323,6 @@ sequelize.sync().then(async () => {
         console.warn('Operator to Staff migration warning:', err.message);
     }
 
-    // Add jenis_kelamin column to Users if not exists
     try {
         await sequelize.query('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "jenis_kelamin" VARCHAR(30) DEFAULT \'Laki-laki\';');
         console.log('Users jenis_kelamin column verified successfully');
@@ -352,7 +330,6 @@ sequelize.sync().then(async () => {
         console.warn('Postgres Users jenis_kelamin column alteration warning:', err.message);
     }
 
-    // Run auto-expiration check immediately and start the 60-second periodic interval
     try {
         await autoExpirePermits();
         setInterval(autoExpirePermits, 60000);
@@ -361,14 +338,12 @@ sequelize.sync().then(async () => {
         console.error('Failed to start auto-expiration scheduler:', err.message);
     }
 
-    // Start file cleanup scheduler (deletes files older than 90 days)
     try {
         startFileCleanupScheduler();
     } catch (err) {
         console.error('Failed to start file cleanup scheduler:', err.message);
     }
 
-    // Seed default configurations if empty
     try {
         const configCount = await SystemConfig.count();
         if (configCount === 0) {
@@ -399,7 +374,6 @@ sequelize.sync().then(async () => {
 
     startServer(PORT);
 
-    // Start WhatsApp Baileys connection
     try {
         whatsappService.connect();
         console.log('[WhatsApp] Baileys connection initiated. Check terminal for QR code.');
@@ -407,7 +381,6 @@ sequelize.sync().then(async () => {
         console.error('[WhatsApp] Failed to start Baileys:', err.message);
     }
 
-    // Global unhandled rejection handler for WhatsApp service
     process.on('unhandledRejection', (reason, promise) => {
         console.error('[WhatsApp] Unhandled Rejection at:', promise, 'reason:', reason);
     });

@@ -23,7 +23,6 @@ const WorkPermitPage = () => {
     const [approvalLoading, setApprovalLoading] = useState(false);
     const [error, setError] = useState('');
 
-    // States for Housekeeping Close Out
     const [showCloseModal, setShowCloseModal] = useState(false);
     const [closeForm, setCloseForm] = useState({
         housekeeping_verified: false,
@@ -47,7 +46,6 @@ const WorkPermitPage = () => {
         mutationFn: async (formData) => {
             const formDataToSend = new FormData();
             
-            // Append all fields
             Object.keys(formData).forEach(key => {
                 if (key === 'daftar_pekerja' || key === 'bahaya' || key === 'apd') {
                     formDataToSend.append(key, JSON.stringify(formData[key]));
@@ -262,7 +260,7 @@ const WorkPermitPage = () => {
                 </div>
             )}
 
-            {/* Selected Permit Detail & Signing Modal */}
+            {/* Modal Detail {/* Selected Permit Detail & Signing Modal */} Tanda Tangan Izin */}
             {selectedPermit && (
                 <div 
                     onClick={() => setSelectedPermit(null)}
@@ -288,11 +286,11 @@ const WorkPermitPage = () => {
                         </div>
 
                         <div className="space-y-6 text-sm text-slate-600 dark:text-slate-300">
-                            {/* Visual Approval Flow Progress */}
+                            {/* Progres Alur Persetujuan Visual */}
                             <div className="bg-slate-50 dark:bg-slate-900/30 p-6 rounded-2xl border border-slate-200 dark:border-slate-850 space-y-4">
                                 <p className="text-[10px] font-black text-slate-450 uppercase tracking-widest text-center">Proses Persetujuan Bertingkat</p>
                                 <div className="flex justify-between items-start max-w-md mx-auto">
-                                    {/* Staff */}
+                                    {/* Staf */}
                                     <div className="text-center flex-1">
                                         <div className="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center mx-auto mb-1.5 font-bold shadow-sm text-xs">
                                             ✓
@@ -388,7 +386,7 @@ const WorkPermitPage = () => {
                                                     : 'bg-slate-200 dark:bg-slate-800'
                                         }`} />
 
-                                    {/* Manager */}
+                                    {/* Manajer */}
                                     <div className="text-center flex-1">
                                         <div className={`w-9 h-9 rounded-full flex items-center justify-center mx-auto mb-1.5 font-bold shadow-sm text-xs transition-all ${selectedPermit.approver_sig
                                                 ? 'bg-emerald-500 text-white'
@@ -630,7 +628,7 @@ const WorkPermitPage = () => {
                 </div>
             )}
 
-            {/* Housekeeping Close Out Confirmation Modal */}
+            {/* Modal Konfirmasi Housekeeping Close Out */}
             {showCloseModal && selectedPermit && (
                 createPortal(<div 
                     onClick={() => setShowCloseModal(false)}

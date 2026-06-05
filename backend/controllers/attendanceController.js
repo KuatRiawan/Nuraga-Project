@@ -13,7 +13,6 @@ exports.clockIn = async (req, res) => {
         const id_user = req.user.id;
         const foto_bukti = req.file ? req.file.filename : null;
 
-        // Bounds check for sleep_hours and stress_level
         if (sleep_hours !== undefined && (sleep_hours < 0 || sleep_hours > 24)) {
             return res.status(400).json({ message: 'Sleep hours must be between 0 and 24.' });
         }
@@ -21,7 +20,6 @@ exports.clockIn = async (req, res) => {
             return res.status(400).json({ message: 'Stress level must be between 1 and 10.' });
         }
 
-        // Check if already clocked in today
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
         
@@ -37,7 +35,6 @@ exports.clockIn = async (req, res) => {
             return res.status(400).json({ message: "Anda sudah melakukan Absen Datang hari ini." });
         }
 
-        // Call AI Service for Fatigue Prediction
         let aiPrediction = { fatigue_status: 'Tidak Diketahui', recommendation: '' };
         if (AI_SERVICE_URL && sleep_hours && stress_level) {
             try {
@@ -49,10 +46,8 @@ exports.clockIn = async (req, res) => {
             } catch (error) {
                 if (error.code === 'ECONNABORTED') {
                     console.error("AI Service Timeout:", error.message);
-                    // We don't fail the clock-in, just record it as unknown
                 } else {
                     console.error("AI Service Error:", error.message);
-                    // We don't fail the clock-in, just record it as unknown
                 }
             }
         }
@@ -89,7 +84,6 @@ exports.clockOut = async (req, res) => {
     try {
         const id_user = req.user.id;
         
-        // Check if already clocked out today
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
         
@@ -217,7 +211,6 @@ exports.submitLeave = async (req, res) => {
         const document_proof = req.file ? req.file.filename : null;
         const io = req.app.get('io');
 
-        // Fetch user data
         const user = await User.findByPk(id_user, {
             attributes: ['id_user', 'nama', 'no_whatsapp', 'role']
         });
@@ -232,7 +225,7 @@ exports.submitLeave = async (req, res) => {
             status: 'Pending'
         });
 
-        // ━━━ Notifikasi ke Admin/Supervisor/Manager ━━━
+        // Notifikasi ke Admin/Supervisor/Manajer
         try {
             const approvers = await User.findAll({
                 where: {
@@ -242,7 +235,6 @@ exports.submitLeave = async (req, res) => {
             });
 
             if (approvers && approvers.length > 0) {
-                // Send WhatsApp to each admin
                 const typeLabel = type === 'Izin' ? 'Izin' : (type === 'Cuti' ? 'Cuti' : 'Sakit');
                 const waMessage = `*[Nuraga] Pengajuan ${typeLabel} Baru*\n\n` +
                     `Pekerja: *${user.nama}*\n` +
@@ -263,7 +255,6 @@ exports.submitLeave = async (req, res) => {
                     });
                 });
 
-                // Emit WebSocket to all connected admins
                 if (io) {
                     io.emit('NEW_LEAVE_REQUEST', {
                         id_leave: leave.id_leave,
@@ -282,7 +273,6 @@ exports.submitLeave = async (req, res) => {
             }
         } catch (notifErr) {
             console.error('[Notifikasi] Gagal mengirim notifikasi:', notifErr.message);
-            // Jangan fail jika notifikasi gagal, request tetap berhasil dibuat
         }
 
         res.status(201).json({ message: "Pengajuan berhasil dikirim", data: leave });
@@ -295,10 +285,9 @@ exports.submitLeave = async (req, res) => {
 exports.approveLeave = async (req, res) => {
     try {
         const { id_leave } = req.params;
-        const { status } = req.body; // Approved or Rejected
+        const { status } = req.body; // Disetujui atau Ditolak
         const io = req.app.get('io');
         
-        // Fetch leave with user data
         const leave = await LeaveRequest.findByPk(id_leave, {
             include: [{ model: User, attributes: ['id_user', 'nama', 'no_whatsapp', 'email'] }]
         });
@@ -310,8 +299,8 @@ exports.approveLeave = async (req, res) => {
         leave.status = status;
         await leave.save();
 
-        // ━━━ Notifikasi ke User via WhatsApp ━━━
-        const statusLabel = status === 'Approved' ? 'Disetujui ✅' : 'Ditolak ❌';
+        // Notifikasi ke Pengguna via WhatsApp
+        const statusLabel = status === 'Approved' ? 'Disetujui ' : 'Ditolak ❌';
         const typeLabel = leave.type === 'Izin' ? 'Izin' : (leave.type === 'Cuti' ? 'Cuti' : 'Sakit');
         const waMessage = `*[Nuraga] Notifikasi ${typeLabel}*\n\n` +
             `Status: *${statusLabel}*\n` +
@@ -331,7 +320,7 @@ exports.approveLeave = async (req, res) => {
             });
         }
 
-        // ━━━ Emit WebSocket notification ke User ━━━
+        // Kirim notifikasi WebSocket ke Pengguna
         if (io) {
             io.emit('LEAVE_REQUEST_UPDATE', {
                 id_leave: leave.id_leave,
@@ -342,7 +331,7 @@ exports.approveLeave = async (req, res) => {
                 start_date: leave.start_date,
                 end_date: leave.end_date,
                 updatedAt: leave.updatedAt,
-                message: `Pengajuan ${leave.type} Anda telah ${status === 'Approved' ? 'Disetujui ✅' : 'Ditolak ❌'}`
+                message: `Pengajuan ${leave.type} Anda telah ${status === 'Approved' ? 'Disetujui ' : 'Ditolak ❌'}`
             });
             console.log(`[WebSocket] Event LEAVE_REQUEST_UPDATE dipancarkan untuk user ${leave.id_user}`);
         }

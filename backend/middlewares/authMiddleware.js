@@ -3,7 +3,6 @@ const jwt = require('jsonwebtoken');
 const protect = async (req, res, next) => {
     let token = req.cookies?.token;
 
-    // Security fix: Fallback to Bearer header for older clients
     if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         token = req.headers.authorization.split(' ')[1];
     }

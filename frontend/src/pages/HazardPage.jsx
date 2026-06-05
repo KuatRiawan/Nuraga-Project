@@ -81,7 +81,6 @@ const HazardPage = () => {
         };
     }, []);
 
-    // Auto open form if redirected from dashboard quick action
     useEffect(() => {
         if (location.state?.openForm) {
             setShowForm(true);
@@ -189,7 +188,7 @@ const HazardPage = () => {
                 </Button>
             </div>
 
-            {/* === FORM MODAL === */}
+            {/* === MODAL FORMULIR === */}
             {showForm && createPortal(
                 <div 
                     onClick={() => { stopCamera(); setShowForm(false); setPreview(null); }}
@@ -289,7 +288,7 @@ const HazardPage = () => {
                 </div>
             , document.body)}
 
-            {/* === HAZARD LIST === */}
+            {/* === DAFTAR BAHAYA === */}
             <div className="space-y-4">
                 {hazards.length === 0 ? (
                     <div className="p-16 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl">
@@ -362,7 +361,7 @@ const HazardPage = () => {
                     </div>
                 )}
 
-                {/* Pagination Controls */}
+                {/* Kontrol Halaman */}
                 {totalPages > 1 && (
                     <div className="flex justify-center items-center gap-4 mt-6">
                         <Button 
@@ -413,7 +412,7 @@ const HazardPage = () => {
                                 </button>
                             </div>
 
-                            {/* Details Grid */}
+                            {/* Grid Detail */}
                             <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
                                 <div>
                                     <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Dilaporkan Oleh</p>
@@ -460,7 +459,7 @@ const HazardPage = () => {
                                 </div>
                             </div>
 
-                             {/* HSE/Admin Validation Section */}
+                             {/* Bagian Validasi HSE/Admin */}
                              {(user?.role === 'HSE' || user?.role === 'Admin') && !selectedHazard.is_verified && (
                                  <div className="p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
                                      <div className="flex-1">
@@ -479,7 +478,7 @@ const HazardPage = () => {
                                  </div>
                              )}
 
-                            {/* HSE/Admin Risk Override Section */}
+                            {/* Bagian Override Risiko HSE/Admin */}
                             {(user?.role === 'HSE' || user?.role === 'Admin') && (
                                 <div className="p-4 bg-blue-500/5 border border-blue-500/10 rounded-2xl space-y-3">
                                     <div className="flex justify-between items-center">
@@ -508,7 +507,7 @@ const HazardPage = () => {
                                 </div>
                             )}
 
-                            {/* Description */}
+                            {/* Deskripsi */}
                             <div className="space-y-2">
                                 <h3 className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Deskripsi Bahaya</h3>
                                 <div className="p-4 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-800 text-sm text-slate-700 dark:text-slate-350 whitespace-pre-line leading-relaxed">
@@ -516,7 +515,7 @@ const HazardPage = () => {
                                 </div>
                             </div>
 
-                            {/* Image Attachment */}
+                            {/* Lampiran Gambar */}
                             {imageUrl && (
                                 <div className="space-y-2">
                                     <h3 className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Foto Bukti / Dokumentasi</h3>

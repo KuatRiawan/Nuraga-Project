@@ -40,15 +40,15 @@ const WorkPermit = sequelize.define('WorkPermit', {
         allowNull: false,
     },
     daftar_pekerja: {
-        type: DataTypes.JSON, // Array of names
+        type: DataTypes.JSON, // Array nama
         defaultValue: [],
     },
     bahaya: {
-        type: DataTypes.JSON, // Array of hazards
+        type: DataTypes.JSON, // Array bahaya
         defaultValue: [],
     },
     apd: {
-        type: DataTypes.JSON, // Array of PPE
+        type: DataTypes.JSON, // Array APD
         defaultValue: [],
     },
     sistem_isolasi: {
@@ -72,7 +72,7 @@ const WorkPermit = sequelize.define('WorkPermit', {
         allowNull: true,
     },
     approval_step: {
-        type: DataTypes.INTEGER, // 1: Applicant, 2: HSE, 3: Manager
+        type: DataTypes.INTEGER, // 1: Pemohon, 2: HSE, 3: Manajer
         defaultValue: 1,
     },
     status: {

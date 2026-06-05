@@ -14,7 +14,7 @@ const compileNotifications = (permits, hazards, actions, leaves, activeUser) => 
     const userRole = activeUser.role;
     const userId = activeUser.id_user || activeUser.id;
 
-    // 1. PTW Notifications
+    // 1. Notifikasi Izin Kerja
     permits.forEach(p => {
         const permitId = `permit-${p.id_permit}-${p.updatedAt || p.createdAt}`;
         const isOwner = p.id_user === userId;
@@ -34,7 +34,6 @@ const compileNotifications = (permits, hazards, actions, leaves, activeUser) => 
                 });
             }
 
-            // Approver notifications
             if (userRole === 'Supervisor' && p.approval_step === 1) {
                 compiled.push({
                     id: permitId,
@@ -73,7 +72,6 @@ const compileNotifications = (permits, hazards, actions, leaves, activeUser) => 
                 });
             }
         } else {
-            // Owner status updates
             if (isOwner) {
                 compiled.push({
                     id: permitId,
@@ -87,7 +85,7 @@ const compileNotifications = (permits, hazards, actions, leaves, activeUser) => 
         }
     });
 
-    // 2. Leave Notifications
+    // 2. Notifikasi Cuti
     leaves.forEach(l => {
         const leaveId = `leave-${l.id_leave}-${l.updatedAt || l.createdAt}`;
         const isOwner = l.id_user === userId;
@@ -116,7 +114,7 @@ const compileNotifications = (permits, hazards, actions, leaves, activeUser) => 
         }
     });
 
-    // 2. Hazard Notifications
+    // 2. Notifikasi Bahaya
     hazards.forEach(h => {
         const hazardId = `hazard-${h.id_hazard}-${h.updatedAt || h.createdAt}`;
         const isOwner = h.id_user === userId;
@@ -146,7 +144,7 @@ const compileNotifications = (permits, hazards, actions, leaves, activeUser) => 
         }
     });
 
-    // 3. CAPA Notifications
+    // 3. Notifikasi CAPA
     actions.forEach(a => {
         const actionId = `action-${a.id_action}-${a.updatedAt || a.createdAt}`;
         if (a.assigned_to === userId && a.status === 'Open') {
@@ -161,7 +159,6 @@ const compileNotifications = (permits, hazards, actions, leaves, activeUser) => 
         }
     });
 
-    // Sort by time descending
     return compiled.sort((a, b) => b.time - a.time);
 };
 
@@ -215,7 +212,7 @@ const DashboardLayout = ({ children }) => {
         if (!user) return;
 
         fetchNotifications();
-        const interval = setInterval(fetchNotifications, 60000); // Poll every 60 seconds (WebSocket handles real-time updates)
+        const interval = setInterval(fetchNotifications, 60000); // Polling setiap 60 detik (WebSocket menangani pembaruan real-time)
 
         return () => clearInterval(interval);
     }, [fetchNotifications, user]);
@@ -284,25 +281,25 @@ const DashboardLayout = ({ children }) => {
 
     return (
         <div className="flex h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-white overflow-hidden transition-colors duration-500">
-            {/* Desktop Sidebar */}
+            {/* Sidebar Desktop */}
             <div className="hidden lg:block w-72 h-full flex-shrink-0">
                 <Sidebar onLogoutClick={() => setShowLogoutModal(true)} />
             </div>
 
-            {/* Mobile Sidebar Overlay */}
+            {/* Overlay Sidebar Mobile */}
             <div
                 className={`fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-500 ${isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
                 onClick={() => setSidebarOpen(false)}
             />
 
-            {/* Mobile Sidebar Drawer */}
+            {/* Drawer Sidebar Mobile */}
             <div className={`fixed inset-y-0 left-0 w-72 bg-white dark:bg-slate-900 z-50 transform transition-transform duration-500 ease-in-out lg:hidden ${isSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}>
                 <Sidebar onClose={() => setSidebarOpen(false)} onLogoutClick={() => setShowLogoutModal(true)} />
             </div>
 
             <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
 
-                {/* Decorative background glow */}
+                {/* Efek cahaya dekoratif latar */}
                 <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-blue-500/5 blur-[120px] pointer-events-none -z-10"></div>
                 <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-indigo-500/5 blur-[120px] pointer-events-none -z-10"></div>
 
@@ -323,7 +320,7 @@ const DashboardLayout = ({ children }) => {
                             <Shield size={14} /> System Secure
                         </div>
 
-                        {/* Theme Toggle Button */}
+                        {/* Tombol Ganti Tema */}
                         <button
                             onClick={toggleTheme}
                             className="p-2.5 bg-slate-105 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl transition-all active:scale-95"
@@ -332,7 +329,7 @@ const DashboardLayout = ({ children }) => {
                             {theme === 'dark' ? <Sun size={20} className="text-amber-500" /> : <Moon size={20} className="text-indigo-600" />}
                         </button>
 
-                        {/* Notification Dropdown */}
+                        {/* Dropdown Notifikasi */}
                         <div className="relative" ref={notifRef}>
                             <button
                                 onClick={() => setNotifOpen(!isNotifOpen)}
@@ -427,7 +424,7 @@ const DashboardLayout = ({ children }) => {
                 </div>
             </main>
 
-            {/* Logout Confirmation Modal - Rendered at top level to escape sidebar overflow */}
+            {/* Modal Konfirmasi Logout */}
             {showLogoutModal && (
                 <div
                     onClick={() => setShowLogoutModal(false)}

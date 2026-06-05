@@ -16,7 +16,6 @@ const AttendancePage = () => {
   const [activeSubTab, setActiveSubTab] = useState('absensi'); // absensi, izin (untuk di dalam tab laporan)
   const [selectedImage, setSelectedImage] = useState(null);
 
-  // Helper for generating upload URL
   const getImageUrl = (filename) => {
       if (!filename) return null;
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '';
@@ -24,23 +23,19 @@ const AttendancePage = () => {
       return `${backendUrl}/uploads/${filename}`;
   };
 
-  // Clock In States
   const [sleepHours, setSleepHours] = useState(7);
   const [stressLevel, setStressLevel] = useState(3);
   const [fotoBukti, setFotoBukti] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
 
-  // Leave Request States
   const [leaveForm, setLeaveForm] = useState({ type: 'Izin', start_date: '', end_date: '', reason: '' });
   const [leaveDoc, setLeaveDoc] = useState(null);
 
-  // User & Date Filter state (Admin only — global attendance view)
   const [selectedUserId, setSelectedUserId] = useState('all');
   const [startDateFilter, setStartDateFilter] = useState('');
   const [endDateFilter, setEndDateFilter] = useState('');
   const [searchHistoryName, setSearchHistoryName] = useState('');
 
-  // Fetch today's status using React Query
   const { data: todayStatus = { clockedIn: false, clockedOut: false, fatigue_status: null } } = useQuery({
     queryKey: ['attendance', 'today'],
     queryFn: async () => {
@@ -53,7 +48,6 @@ const AttendancePage = () => {
   const [page, setPage] = useState(1);
   const limit = 20;
 
-  // Fetch my history using React Query
   const { data: myHistoryData = { attendance: [], leaves: [], totalPages: 1 } } = useQuery({
     queryKey: ['attendance', 'my-history', page],
     queryFn: async () => {
@@ -63,7 +57,6 @@ const AttendancePage = () => {
     enabled: !!user && !isAdmin
   });
 
-  // Fetch all history and users using React Query (Admin only)
   const { data: allHistoryData = { attendance: [], leaves: [], totalPages: 1 } } = useQuery({
     queryKey: ['attendance', 'all-history', page],
     queryFn: async () => {
@@ -82,11 +75,9 @@ const AttendancePage = () => {
     enabled: !!user && isAdmin
   });
 
-  // Use appropriate history data based on role (Fallback aman ke objek kosong)
   const historyData = asObject(isAdmin ? allHistoryData : myHistoryData);
   const safeAttendance = asArray(historyData.attendance);
 
-  // Extract unique users from historyData when no user list is available
   const uniqueUsers = Array.from(
     new Map(
       safeAttendance
@@ -138,13 +129,11 @@ const AttendancePage = () => {
     return matchesUser && matchesSearch;
   });
 
-  // Popup notification
   const [popup, setPopup] = useState(null); // { type: 'success'|'error', message: string }
   const showPopup = (type, message) => {
     setPopup({ type, message });
   };
 
-  // Live Camera states & refs
   const videoRef = useRef(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
 
@@ -181,7 +170,6 @@ const AttendancePage = () => {
     canvas.height = video.videoHeight || 480;
     const ctx = canvas.getContext('2d');
     
-    // Mirror image for natural selfie preview
     ctx.translate(canvas.width, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -195,7 +183,6 @@ const AttendancePage = () => {
     }, 'image/jpeg', 0.95);
   };
 
-  // Clean up camera on component unmount
   useEffect(() => {
     return () => {
       if (videoRef.current && videoRef.current.srcObject) {
@@ -205,33 +192,29 @@ const AttendancePage = () => {
     };
   }, []);
 
-  // ━━━ WebSocket listener untuk notifikasi approval & submit izin ━━━
+  // Listener WebSocket untuk notifikasi persetujuan // ━━━ WebSocket listener untuk notifikasi approval & submit izin ━━━ pengajuan izin
   useEffect(() => {
     if (!socket) return;
 
-    // Handle approval/rejection notifications untuk user
     const handleLeaveUpdate = (data) => {
       const userId = user?.id_user || user?.id;
       if (data.id_user === userId || user?.role === 'Admin') {
         const popupType = data.status === 'Approved' ? 'success' : 'error';
         const message = data.status === 'Approved'
-          ? `✅ ${data.userName}: Pengajuan ${data.type} disetujui!`
+          ? ` ${data.userName}: Pengajuan ${data.type} disetujui!`
           : `❌ ${data.userName}: Pengajuan ${data.type} ditolak.`;
         showPopup(popupType, message);
 
-        // Refresh history using queryClient
         setTimeout(() => {
           queryClient.invalidateQueries({ queryKey: isAdmin ? ['attendance', 'all-history'] : ['attendance', 'my-history'] });
         }, 1000);
       }
     };
 
-    // Handle new leave request submission untuk admin
     const handleNewLeaveRequest = (data) => {
       if (user?.role === 'Admin') {
         showPopup('success', `Pengajuan ${data.type} baru dari ${data.userName}\n${data.start_date} s/d ${data.end_date}`);
 
-        // Refresh history untuk admin
         setTimeout(() => {
           queryClient.invalidateQueries({ queryKey: ['attendance', 'all-history'] });
         }, 1000);
@@ -244,7 +227,6 @@ const AttendancePage = () => {
     return () => {
       socket.off('LEAVE_REQUEST_UPDATE', handleLeaveUpdate);
       socket.off('NEW_LEAVE_REQUEST', handleNewLeaveRequest);
-      // Don't disconnect - socket is managed by useSocket singleton
     };
   }, [socket, user, isAdmin, queryClient]);
 
@@ -256,7 +238,6 @@ const AttendancePage = () => {
     }
   };
 
-  // Clock In mutation
   const clockInMutation = useMutation({
     mutationFn: async (data) => {
       const formData = new FormData();
@@ -292,7 +273,6 @@ const AttendancePage = () => {
     clockInMutation.mutate({ sleepHours, stressLevel, fotoBukti });
   };
 
-  // Clock Out mutation
   const clockOutMutation = useMutation({
     mutationFn: async () => {
       const res = await api.post('/attendance/clock-out');
@@ -312,7 +292,6 @@ const AttendancePage = () => {
     clockOutMutation.mutate();
   };
 
-  // Leave Submit mutation
   const leaveSubmitMutation = useMutation({
     mutationFn: async (data) => {
       const formData = new FormData();
@@ -342,7 +321,6 @@ const AttendancePage = () => {
       leaveSubmitMutation.mutate({ leaveForm, leaveDoc });
   };
 
-  // Approve Leave mutation
   const approveLeaveMutation = useMutation({
     mutationFn: async ({ id, status }) => {
       if (!isAdmin) throw new Error('Unauthorized');
@@ -473,7 +451,7 @@ const AttendancePage = () => {
           </div>
         </div>, document.body)
       )}
-      {/* Header */}
+      {/* Bagian Atas */}
       <div className="bg-gradient-to-r from-blue-900 to-indigo-800 rounded-3xl p-8 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black mb-2 flex items-center gap-3">
@@ -493,7 +471,7 @@ const AttendancePage = () => {
 
       {activeTab === 'absensi' && (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Clock In Form */}
+        {/* Formulir Absen Masuk */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm p-8 relative overflow-hidden transition-colors duration-300">
           {todayStatus?.clockedIn ? (
               <div className="absolute inset-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6 text-center">
@@ -524,14 +502,14 @@ const AttendancePage = () => {
           </h2>
           <form onSubmit={handleClockIn} className="space-y-6">
             
-            {/* Selfie Section */}
+            {/* Bagian Selfie */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Foto Selfie Kehadiran</label>
               
               {isCameraActive ? (
                 <div className="relative w-full max-w-sm mx-auto overflow-hidden rounded-2xl bg-black border-4 border-blue-500 shadow-xl flex flex-col items-center justify-center aspect-[4/3] group animate-in zoom-in-95">
                     <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover transform -scale-x-100" />
-                    {/* Circle overlay/mask to guide user face */}
+                    {/* Overlay lingkaran untuk panduan wajah */}
                     <div className="absolute inset-0 border-[35px] border-black/45 rounded-xl flex items-center justify-center pointer-events-none">
                         <div className="w-44 h-56 border-2 border-dashed border-white/70 rounded-full" />
                     </div>
@@ -610,7 +588,7 @@ const AttendancePage = () => {
           </form>
         </div>
 
-        {/* Info Card */}
+        {/* Kartu Info */}
         <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 flex flex-col justify-center transition-colors">
             <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4">Mengapa AI Fatigue Tracker?</h3>
             <div className="space-y-4">
@@ -693,7 +671,7 @@ const AttendancePage = () => {
                     )}
                 </div>
 
-                {/* Sub-Tab Toggle Pills */}
+                {/* Tombol Sub-Tab */}
                 <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-full max-w-md mx-auto sm:mx-0">
                     <button 
                         onClick={() => setActiveSubTab('absensi')} 
@@ -847,7 +825,7 @@ const AttendancePage = () => {
             ) : <p className="text-slate-500 text-center py-8">Belum ada pengajuan izin/cuti.</p>
             )}
 
-            {/* Pagination Controls */}
+            {/* Kontrol Halaman */}
             {historyData.totalPages > 1 && (
                 <div className="flex items-center justify-between mt-6 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/50">
                     <button

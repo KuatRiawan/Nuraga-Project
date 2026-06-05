@@ -14,7 +14,6 @@ export const AuthProvider = ({ children }) => {
                 const res = await api.get('/auth/me');
                 setUser(res.data);
             } catch (error) {
-                // If 401, they don't have a valid cookie (or it expired and couldn't be refreshed)
                 setUser(null);
             } finally {
                 setLoading(false);
@@ -24,7 +23,6 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const login = async (email, password) => {
-        // Clear any existing auth state before new login
         setUser(null);
 
         const res = await api.post('/auth/login', { email, password });
@@ -38,7 +36,6 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             console.error('Logout error:', error);
         } finally {
-            // Disconnect WebSocket to prevent memory leak
             disconnectSocket();
             setUser(null);
         }

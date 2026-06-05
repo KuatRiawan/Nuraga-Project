@@ -36,13 +36,12 @@ const K3_CERTIFICATE_LIST = [
     "Dokter Pemeriksa Kesehatan Tenaga Kerja (Dokter Hiperkes)", "Auditor Internal SMK3", "Auditor Eksternal SMK3"
 ];
 
-// Helper to generate clustered dates heavily focused on the last 30 days
 function getClusteredDate(today, sixMonthsAgo) {
-    // 4 clusters in the last 30 days to create many spikes on the graph!
-    const cluster1 = new Date(today.getTime() - 5 * 24 * 60 * 60 * 1000); // 5 days ago
-    const cluster2 = new Date(today.getTime() - 12 * 24 * 60 * 60 * 1000); // 12 days ago
-    const cluster3 = new Date(today.getTime() - 20 * 24 * 60 * 60 * 1000); // 20 days ago
-    const cluster4 = new Date(today.getTime() - 28 * 24 * 60 * 60 * 1000); // 28 days ago
+    // 4 klaster dalam 30 hari terakhir untuk lonjakan di grafik
+    const cluster1 = new Date(today.getTime() - 5 * 24 * 60 * 60 * 1000); // 5 hari lalu
+    const cluster2 = new Date(today.getTime() - 12 * 24 * 60 * 60 * 1000); // 12 hari lalu
+    const cluster3 = new Date(today.getTime() - 20 * 24 * 60 * 60 * 1000); // 20 hari lalu
+    const cluster4 = new Date(today.getTime() - 28 * 24 * 60 * 60 * 1000); // 28 hari lalu
     
     const r = Math.random();
     let baseDate;
@@ -51,11 +50,9 @@ function getClusteredDate(today, sixMonthsAgo) {
     else if (r < 0.6) baseDate = cluster3;
     else if (r < 0.8) baseDate = cluster4;
     else {
-        // Uniform random over the last 30 days for the remaining 20%
         return new Date(today.getTime() - Math.random() * 30 * 24 * 60 * 60 * 1000);
     }
     
-    // Spread around baseDate by +/- 3 days
     const variance = (Math.random() - 0.5) * 6 * 24 * 60 * 60 * 1000;
     return new Date(baseDate.getTime() + variance);
 }
@@ -64,7 +61,7 @@ async function runSeed() {
     try {
         console.log('🌱 Starting Comprehensive Database Seeding...');
 
-        // 1. CLEAR TRANSACTION DATA
+        // 1. HAPUS DATA TRANSAKSI
         console.log('🧹 Clearing transaction tables...');
         await Attendance.destroy({ truncate: true, cascade: true });
         await CorrectiveAction.destroy({ truncate: true, cascade: true });
@@ -77,11 +74,10 @@ async function runSeed() {
         await Audit.destroy({ truncate: true, cascade: true });
         await Voucher.destroy({ truncate: true, cascade: true });
         
-        // Remove dummy users if any were generated previously
         await User.destroy({ where: { email: { [sequelize.Sequelize.Op.like]: '%@faker.local' } } });
-        console.log('✅ Cleaned transaction data.');
+        console.log(' Cleaned transaction data.');
 
-        // 2. GENERATE 500 USERS
+        // 2. BUAT 500 PENGGUNA
         console.log('👥 Generating 500 Users (80% Staff, 15% HSE/Supervisor, 5% Manager)...');
         
         const passwordHash = await bcrypt.hash('123456', 10);
@@ -92,7 +88,6 @@ async function runSeed() {
         for (let i = 0; i < 75; i++) roles.push(Math.random() > 0.5 ? 'Supervisor' : 'HSE');
         for (let i = 0; i < 25; i++) roles.push('Manager');
         
-        // Shuffle roles
         roles.sort(() => Math.random() - 0.5);
 
         for (let i = 0; i < 500; i++) {
@@ -118,35 +113,30 @@ async function runSeed() {
             });
         }
 
-        // Bulk insert users
         await User.bulkCreate(newUsers);
-        console.log('✅ 500 Users generated.');
+        console.log(' 500 Users generated.');
 
-        // Get ALL users (including original ones)
         const allUsers = await User.findAll();
         
-        // 3. GENERATE ATTENDANCE (Last 6 Months)
+        // 3. BUAT DATA ABSENSI (6 Bulan Terakhir)
         console.log('📅 Generating Attendances for the last 6 months...');
         const attendances = [];
         const today = new Date();
         const sixMonthsAgo = new Date();
         sixMonthsAgo.setMonth(today.getMonth() - 6);
         
-        // Approx 60 records per user
         for (const user of allUsers) {
             for (let i = 0; i < 60; i++) {
                 const recordDate = new Date(sixMonthsAgo.getTime() + Math.random() * (today.getTime() - sixMonthsAgo.getTime()));
-                // Skip weekends roughly
                 if (recordDate.getDay() === 0 || recordDate.getDay() === 6) continue;
                 
-                const sleepHours = Math.floor(Math.random() * 5) + 4; // 4 to 8 hours
-                const stressLevel = Math.floor(Math.random() * 10) + 1; // 1 to 10
+                const sleepHours = Math.floor(Math.random() * 5) + 4; // 4 sampai 8 jam
+                const stressLevel = Math.floor(Math.random() * 10) + 1; // 1 sampai 10
                 
                 let status = 'Aman';
                 if (sleepHours < 6 || stressLevel > 7) status = 'Waspada';
                 if (sleepHours < 4 && stressLevel > 8) status = 'Bahaya';
 
-                // Clock IN
                 attendances.push({
                     id_user: user.id_user,
                     type: 'Datang',
@@ -159,7 +149,6 @@ async function runSeed() {
                     updatedAt: recordDate
                 });
                 
-                // Clock OUT
                 const outDate = new Date(recordDate.getTime() + 9 * 60 * 60 * 1000);
                 attendances.push({
                     id_user: user.id_user,
@@ -179,10 +168,10 @@ async function runSeed() {
         for (let i = 0; i < attendances.length; i += chunkSize) {
             await Attendance.bulkCreate(attendances.slice(i, i + chunkSize));
         }
-        console.log(`✅ ${attendances.length} Attendances generated.`);
+        console.log(` ${attendances.length} Attendances generated.`);
 
-        // 4. GENERATE OTHER DATA
-        console.log('⚠️ Generating Hazards, Incidents, Permits, and more...');
+        // 4. BUAT DATA LAINNYA
+        console.log(' Generating Hazards, Incidents, Permits, and more...');
         const incidents = [];
         const hazards = [];
         const leaveRequests = [];
@@ -193,7 +182,6 @@ async function runSeed() {
         const audits = [];
         
         for (const user of allUsers) {
-            // Certifications (Only ~20% of users get certified)
             if (Math.random() <= 0.20) {
                 const certCount = Math.floor(Math.random() * 2) + 1;
                 for (let c = 0; c < certCount; c++) {
@@ -203,13 +191,12 @@ async function runSeed() {
                         jenis_sertifikasi: faker.helpers.arrayElement(K3_CERTIFICATE_LIST),
                         nomor_sertifikat: `CERT-${Math.floor(Math.random() * 100000)}`,
                         tanggal_terbit: sixMonthsAgo,
-                        tanggal_expired: new Date(today.getTime() + (Math.random() * 365 + 10) * 24 * 60 * 60 * 1000), // Random expiry in the future
+                        tanggal_expired: new Date(today.getTime() + (Math.random() * 365 + 10) * 24 * 60 * 60 * 1000), // Tanggal kadaluarsa acak
                         status: 'Active'
                     });
                 }
             }
 
-            // Vouchers
             if (user.points > 100 && Math.random() > 0.5) {
                 vouchers.push({
                     id_user: user.id_user,
@@ -222,7 +209,6 @@ async function runSeed() {
                 });
             }
             
-            // Leave Requests
             if (Math.random() > 0.8) {
                 const reportDate = new Date(sixMonthsAgo.getTime() + Math.random() * (today.getTime() - sixMonthsAgo.getTime()));
                 leaveRequests.push({
@@ -237,12 +223,10 @@ async function runSeed() {
                 });
             }
 
-            // Work Permits (WITH FULL RICH DATA: Pekerja, Bahaya, APD)
             if (user.role === 'Supervisor' || user.role === 'Staff') {
                 if (Math.random() > 0.8) {
                     const reportDate = new Date(sixMonthsAgo.getTime() + Math.random() * (today.getTime() - sixMonthsAgo.getTime()));
                     
-                    // Assign 2 to 5 random workers
                     const randomWorkers = [];
                     for(let w = 0; w < (Math.floor(Math.random() * 4) + 2); w++) {
                         randomWorkers.push(faker.helpers.arrayElement(allUsers).nama);
@@ -259,7 +243,6 @@ async function runSeed() {
                         supervisor_name: 'Supervisor',
                         status: faker.helpers.arrayElement(['Approved', 'Active', 'Closed']),
                         
-                        // RICH DATA INJECTIONS
                         daftar_pekerja: randomWorkers,
                         bahaya: faker.helpers.arrayElements(['Ledakan', 'Gas Beracun', 'Ketinggian Ekstrim', 'Listrik Tegangan Tinggi', 'Kebakaran', 'Tertimpa Material', 'Alat Berat', 'Bising'], 3),
                         apd: faker.helpers.arrayElements(['Helm Safety', 'Sepatu Safety', 'Kacamata Safety', 'Sarung Tangan Kulit', 'Masker Gas', 'Full Body Harness', 'Earplug', 'Face Shield'], 4),
@@ -279,7 +262,6 @@ async function runSeed() {
                 }
             }
 
-            // Audits
             if (user.role === 'HSE') {
                 for(let i=0; i<3; i++) {
                     const reportDate = new Date(sixMonthsAgo.getTime() + Math.random() * (today.getTime() - sixMonthsAgo.getTime()));
@@ -301,13 +283,11 @@ async function runSeed() {
             }
         }
 
-        // Generate exactly 80 Hazards and 80 Incidents overall with clustered dates in the last 30 days for nice graph spikes!
         for (let i = 0; i < 80; i++) {
             const randomUser = faker.helpers.arrayElement(allUsers);
             const reportDateHazard = getClusteredDate(today, sixMonthsAgo);
             const reportDateIncident = getClusteredDate(today, sixMonthsAgo);
             
-            // Hazard
             hazards.push({
                 id_user: randomUser.id_user,
                 lokasi: randomUser.area_kerja || 'Site',
@@ -318,14 +298,13 @@ async function runSeed() {
                     'Rak penyimpanan miring hampir roboh', 'Tumpahan bahan kimia di lab', 'Pegangan tangga licin'
                 ]),
                 risiko: faker.helpers.arrayElement(['Low', 'Medium', 'High', 'Critical']),
-                is_verified: Math.random() > 0.3, // 70% verified
+                is_verified: Math.random() > 0.3, // 70% terverifikasi
                 koordinat_gps: '-6.200000, 106.816666',
                 status: faker.helpers.arrayElement(['Open', 'In Progress', 'Resolved', 'Closed']),
                 createdAt: reportDateHazard,
                 updatedAt: reportDateHazard
             });
 
-            // Incident
             incidents.push({
                 id_user: randomUser.id_user,
                 kategori: faker.helpers.arrayElement(['Terjatuh/Terpeleset', 'Luka Bakar', 'Tersetrum', 'Tertimpa Barang', 'Tabrakan Unit', 'Terjepit Mesin']),
@@ -345,7 +324,6 @@ async function runSeed() {
             });
         }
 
-        // Emergency Calls (approx 20)
         for(let i=0; i<20; i++) {
             const reportDate = getClusteredDate(today, sixMonthsAgo);
             emergencyCalls.push({
@@ -368,7 +346,7 @@ async function runSeed() {
         await EmergencyCall.bulkCreate(emergencyCalls);
         await Voucher.bulkCreate(vouchers);
         
-        // 5. GENERATE CORRECTIVE ACTIONS (CAPA) linked to Hazards
+        // 5. BUAT DATA TINDAKAN PERBAIKAN (CAPA) terkait Bahaya
         console.log('🔧 Generating CAPA...');
         const capas = [];
         const hseUsers = allUsers.filter(u => u.role === 'HSE' || u.role === 'Supervisor');
@@ -382,15 +360,15 @@ async function runSeed() {
                     id_incident: null,
                     description: `Tindakan perbaikan dan pencegahan wajib untuk temuan bahaya: ${hazard.deskripsi}. Pastikan mengikuti standar operasional prosedur K3LH perusahaan.`,
                     assigned_to: assignee.id_user,
-                    deadline: new Date(hazard.createdAt.getTime() + 7 * 24 * 60 * 60 * 1000), // 7 days later
+                    deadline: new Date(hazard.createdAt.getTime() + 7 * 24 * 60 * 60 * 1000), // 7 hari kemudian
                     status: faker.helpers.arrayElement(['Open', 'In Progress', 'Closed', 'Closed'])
                 });
             }
         }
         await CorrectiveAction.bulkCreate(capas);
 
-        console.log(`✅ ${certs.length} Certs, ${incidents.length} Incidents, ${hazards.length} Hazards, ${leaveRequests.length} Leaves generated.`);
-        console.log(`✅ ${workPermits.length} Permits, ${audits.length} Audits, ${emergencyCalls.length} Emergencies, ${vouchers.length} Vouchers, ${capas.length} CAPAs generated.`);
+        console.log(` ${certs.length} Certs, ${incidents.length} Incidents, ${hazards.length} Hazards, ${leaveRequests.length} Leaves generated.`);
+        console.log(` ${workPermits.length} Permits, ${audits.length} Audits, ${emergencyCalls.length} Emergencies, ${vouchers.length} Vouchers, ${capas.length} CAPAs generated.`);
         console.log('🎉 Seeding Complete!');
         process.exit(0);
 

@@ -26,9 +26,8 @@ const updateConfig = async (req, res) => {
             return res.status(403).json({ message: 'Akses ditolak.' });
         }
 
-        const payload = req.body; // e.g. { whatsapp_gateway_number: '+62...', ... }
+        const payload = req.body; // contoh: { whatsapp_gateway_number: '+62...', ... }
 
-        // Whitelist of allowed config keys to prevent injection attacks
         const ALLOWED_KEYS = [
             'whatsapp_gateway_number',
             'whatsapp_api_key',

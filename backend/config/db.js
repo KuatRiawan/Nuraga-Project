@@ -3,8 +3,6 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-// CRITICAL: Validate essential database environment variables
-// Fail fast if critical env vars are missing to prevent zombie server
 if (!process.env.DB_NAME || process.env.DB_NAME.trim() === '') {
     console.error('FATAL: DB_NAME environment variable is missing or empty.');
     process.exit(1);
@@ -37,7 +35,7 @@ const sequelize = new Sequelize(
             acquire: 30000,
             idle: 10000
         },
-        // 👇 Sabuk pengaman SSL agar diterima oleh AWS RDS
+        //  Sabuk pengaman SSL agar diterima oleh AWS RDS
         dialectOptions: {
             ssl: {
                 require: true,

@@ -4,7 +4,6 @@ const User = require('../models/User');
 const addCertification = async (req, res) => {
     try {
         const { id_user, nama_sertifikasi, penerbit, tanggal_terbit, tanggal_kadaluarsa } = req.body;
-        // If Admin, they can assign it to any user via id_user payload, otherwise default to self
         const targetUserId = (req.user.role === 'Admin' && id_user) ? id_user : req.user.id;
         
         const certification = await Certification.create({

@@ -38,7 +38,6 @@ const SettingsPage = () => {
 
     const [activeTab, setActiveTab] = useState('account'); // 'account' or 'integration'
 
-    // Edit Profile Modal State
     const [showProfileModal, setShowProfileModal] = useState(false);
     const [email, setEmail] = useState(user?.email || '');
     const [noWhatsapp, setNoWhatsapp] = useState(user?.no_whatsapp || '');
@@ -49,7 +48,6 @@ const SettingsPage = () => {
     const [profileSuccess, setProfileSuccess] = useState('');
     const fileInputRef = useRef(null);
 
-    // Change Password Modal State
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
@@ -57,7 +55,6 @@ const SettingsPage = () => {
     const [passwordError, setPasswordError] = useState('');
     const [passwordSuccess, setPasswordSuccess] = useState('');
 
-    // System Configurations State (Admin-only)
     const [configs, setConfigs] = useState({
         whatsapp_gateway_number: '',
         whatsapp_api_key: '',
@@ -67,7 +64,6 @@ const SettingsPage = () => {
     const [configSuccess, setConfigSuccess] = useState('');
     const [configError, setConfigError] = useState('');
 
-    // WhatsApp Baileys State
     const [waStatus, setWaStatus] = useState('disconnected'); // 'disconnected' | 'qr_ready' | 'connected'
     const [waQR, setWaQR] = useState(null);
     const [waNumber, setWaNumber] = useState('');
@@ -75,7 +71,6 @@ const SettingsPage = () => {
     const [waTestMsg, setWaTestMsg] = useState('');
     const eventSourceRef = useRef(null);
 
-    // Fetch configs using React Query (Admin only)
     const { data: configData, isLoading: configLoading } = useQuery({
         queryKey: ['config'],
         queryFn: async () => {
@@ -103,7 +98,6 @@ const SettingsPage = () => {
     }, [user]);
 
     const initWaStream = () => {
-        // Close any existing stream
         if (eventSourceRef.current) eventSourceRef.current.close();
 
         const es = new EventSource(
@@ -127,11 +121,9 @@ const SettingsPage = () => {
         };
 
         es.onerror = () => {
-            // SSE will auto-reconnect; just keep trying
         };
     };
 
-    // WhatsApp Logout mutation
     const waLogoutMutation = useMutation({
         mutationFn: async () => {
             const res = await api.post('/wa/logout');
@@ -151,14 +143,13 @@ const SettingsPage = () => {
         waLogoutMutation.mutate();
     };
 
-    // WhatsApp Test mutation
     const waTestMutation = useMutation({
         mutationFn: async (phone) => {
             const res = await api.post('/wa/test', { phone });
             return res.data;
         },
         onSuccess: () => {
-            setWaTestMsg('✅ Test message berhasil dikirim!');
+            setWaTestMsg(' Test message berhasil dikirim!');
             setTimeout(() => setWaTestMsg(''), 4000);
         },
         onError: (err) => {
@@ -171,7 +162,6 @@ const SettingsPage = () => {
         waTestMutation.mutate(waTestPhone);
     };
 
-    // Config Submit mutation
     const configSubmitMutation = useMutation({
         mutationFn: async (data) => {
             const res = await api.post('/config', data);
@@ -201,7 +191,6 @@ const SettingsPage = () => {
         }
     };
 
-    // Profile Submit mutation
     const profileSubmitMutation = useMutation({
         mutationFn: async (data) => {
             const formData = new FormData();
@@ -235,7 +224,6 @@ const SettingsPage = () => {
     const handleProfileSubmit = (e) => {
         e.preventDefault();
 
-        // Validate WhatsApp format
         if (noWhatsapp && !noWhatsapp.startsWith('+62')) {
             setProfileError('Nomor WhatsApp harus dimulai dengan +62 (contoh: +6281234567890)');
             return;
@@ -244,7 +232,6 @@ const SettingsPage = () => {
         profileSubmitMutation.mutate({ email, noWhatsapp, jenisKelamin, file });
     };
 
-    // Password Submit mutation
     const passwordSubmitMutation = useMutation({
         mutationFn: async (data) => {
             const res = await api.put('/auth/change-password', { oldPassword: data.currentPassword, newPassword: data.newPassword });
@@ -305,7 +292,7 @@ const SettingsPage = () => {
                 </div>
             </div>
 
-            {/* Tab Switched Header (Only visible for Admins) */}
+            {/* Bagian Atas Tab (Hanya untuk Admin) */}
             {user?.role === 'Admin' && (
                 <div className="flex border-b border-slate-200 dark:border-slate-800 gap-6">
                     <button
@@ -331,7 +318,7 @@ const SettingsPage = () => {
 
             {activeTab === 'account' ? (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {/* Profile Section */}
+                    {/* Bagian Profil */}
                     <div className="md:col-span-1 space-y-6">
                         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 text-center shadow-sm">
                             {avatarUrl ? (
@@ -361,7 +348,7 @@ const SettingsPage = () => {
                         </div>
                     </div>
 
-                    {/* Settings Sections */}
+                    {/* Bagian Pengaturan */}
                     <div className="md:col-span-2 space-y-6">
                         {/* Data Identitas Operasional K3 */}
                         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
@@ -402,7 +389,7 @@ const SettingsPage = () => {
                                 />
                             </div>
 
-                            {/* Contact - partially editable */}
+                            {/* Kontak - sebagian bisa diedit */}
                             <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Informasi Personal & Kontak</p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -445,7 +432,7 @@ const SettingsPage = () => {
                             </div>
                         </div>
 
-                        {/* Appearance */}
+                        {/* Tampilan */}
                         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
                             <div className="flex items-center gap-3 mb-8">
                                 <div className="p-2 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-lg">
@@ -472,7 +459,7 @@ const SettingsPage = () => {
                             </div>
                         </div>
 
-                        {/* Security */}
+                        {/* Keamanan */}
                         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
                             <div className="flex items-center gap-3 mb-8">
                                 <div className="p-2 bg-red-500/10 text-red-600 dark:text-red-400 rounded-lg">
@@ -493,7 +480,7 @@ const SettingsPage = () => {
                             </div>
                         </div>
 
-                        {/* Notifications */}
+                        {/* Notifikasi */}
                         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="p-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg">
@@ -525,7 +512,7 @@ const SettingsPage = () => {
                     </div>
                 </div>
             ) : (
-                /* INTEGRASI SISTEM TAB (ADMIN-ONLY) */
+                /* TAB INTEGRASI SISTEM (KHUSUS ADMIN) */
                 <div className="max-w-2xl mx-auto">
                     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
                         <div className="flex items-center gap-3 mb-6">
@@ -611,7 +598,7 @@ const SettingsPage = () => {
                         </form>
                     </div>
 
-                    {/* ── WhatsApp Baileys Connection Panel ── */}
+                    {/* Panel Koneksi WhatsApp Baileys */}
                     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm mt-6">
                         <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center gap-3">
@@ -691,7 +678,7 @@ const SettingsPage = () => {
                 </div>
             )}
 
-            {/* Edit Profile Modal */}
+            {/* Modal Edit Profil */}
             {showProfileModal && (
                 createPortal(<div
                     onClick={() => setShowProfileModal(false)}
@@ -712,7 +699,7 @@ const SettingsPage = () => {
                         </div>
 
                         <form onSubmit={handleProfileSubmit} className="space-y-5">
-                            {/* Avatar Picker */}
+                            {/* Pemilih Avatar */}
                             <div className="flex flex-col items-center gap-3">
                                 <input
                                     type="file"
@@ -744,7 +731,7 @@ const SettingsPage = () => {
                                 </button>
                             </div>
 
-                            {/* Read-only name info */}
+                            {/* Info nama (hanya baca) */}
                             <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-700/50">
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Nama Lengkap (Dikunci)</p>
                                 <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{user?.nama}</p>
@@ -816,7 +803,7 @@ const SettingsPage = () => {
                 </div>, document.body)
             )}
 
-            {/* Change Password Modal */}
+            {/* Modal Ganti Password */}
             {showPasswordModal && (
                 createPortal(<div
                     onClick={() => setShowPasswordModal(false)}

@@ -18,7 +18,6 @@ const AuditPage = () => {
     const [formData, setFormData] = useState({ area: '', tanggal: '', hasil: '', qr_code_asset: '' });
     const [selectedAudit, setSelectedAudit] = useState(null);
 
-    // Fetch audits using React Query
     const { data: audits = [], isLoading: auditsLoading } = useQuery({
         queryKey: ['audits'],
         queryFn: async () => {
@@ -27,7 +26,6 @@ const AuditPage = () => {
         }
     });
 
-    // Fetch checklist templates from API
     const { data: checklistTemplates = {} } = useQuery({
         queryKey: ['checklistTemplates'],
         queryFn: async () => {
@@ -49,7 +47,7 @@ const AuditPage = () => {
                         setQrValue(decodedText);
                         setFormData(prev => ({ ...prev, qr_code_asset: decodedText }));
                         setShowQrModal(false);
-                        setShowForm(true); // Open the audit checklist form immediately
+                        setShowForm(true); // Buka formulir checklist audit segera
                         
                         if (html5QrcodeScanner.isScanning) {
                             html5QrcodeScanner.stop().catch(err => console.error("Error stopping scanner:", err));
@@ -57,7 +55,6 @@ const AuditPage = () => {
                     };
 
                     const qrCodeErrorCallback = () => {
-                        // Ignore scan frame errors
                     };
 
                     const config = { 
@@ -86,7 +83,6 @@ const AuditPage = () => {
     }, [showQrModal]);
 
     useEffect(() => {
-        // Reset checklist when template changes
         const items = asArray(checklistTemplates[selectedTemplate]);
         const initial = {};
         items.forEach(item => { initial[item] = false; });
@@ -101,7 +97,6 @@ const AuditPage = () => {
         setShowQrModal(false);
     };
 
-    // Create audit mutation
     const createAuditMutation = useMutation({
         mutationFn: async (data) => {
             const checkedCount = Object.values(checklistState).filter(Boolean).length;
@@ -151,7 +146,7 @@ const AuditPage = () => {
                 </div>
             </div>
 
-            {/* QR Scanner Modal */}
+            {/* Modal Pemindai QR */}
             {showQrModal && (
                 createPortal(<div 
                     onClick={() => setShowQrModal(false)}
@@ -167,10 +162,10 @@ const AuditPage = () => {
                         <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">Pindai QR Code Aset</h3>
                         <p className="text-slate-500 text-sm mb-6">Arahkan kamera belakang ke stiker QR Code aset K3 Anda.</p>
                         
-                        {/* Live video scanner stream wrapper */}
+                        {/* Pembungkus stream video pemindai */}
                         <div className="overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 mb-6 bg-slate-950 aspect-square flex items-center justify-center relative">
                             <div id="reader" className="w-full h-full" />
-                            {/* Target frame indicator */}
+                            {/* Indikator bingkai target */}
                             <div className="absolute w-48 h-48 border-2 border-blue-500 rounded-2xl pointer-events-none z-10 flex items-center justify-center">
                                 <div className="absolute w-4 h-4 border-t-4 border-l-4 border-blue-500 -top-1 -left-1 rounded-tl-md"></div>
                                 <div className="absolute w-4 h-4 border-t-4 border-r-4 border-blue-500 -top-1 -right-1 rounded-tr-md"></div>
@@ -187,7 +182,7 @@ const AuditPage = () => {
                 </div>, document.body)
             )}
 
-            {/* Scanned Asset Banner */}
+            {/* Banner Aset yang Dipindai */}
             {qrValue && (
                 <div className="flex items-center gap-4 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl animate-in slide-in-from-top-4 duration-300">
                     <CheckSquare size={20} className="text-emerald-500" />
@@ -198,7 +193,7 @@ const AuditPage = () => {
                 </div>
             )}
 
-            {/* Audit Form Modal */}
+            {/* Modal Formulir Audit */}
             {showForm && (
                 createPortal(<div 
                     onClick={() => setShowForm(false)}
@@ -239,7 +234,7 @@ const AuditPage = () => {
                                 </div>
                             </div>
 
-                            {/* Checklist Template */}
+                            {/* Template Checklist */}
                             <div className="flex flex-col gap-3">
                                 <label className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest px-1">Template Inspeksi</label>
                                 <div className="flex flex-wrap gap-2">
@@ -296,7 +291,7 @@ const AuditPage = () => {
                 </div>, document.body)
             )}
 
-            {/* Audit List Table */}
+            {/* Tabel Daftar Audit */}
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-x-auto shadow-sm">
                 <table className="w-full text-left min-w-[600px]">
                     <thead className="bg-slate-50 dark:bg-slate-950/50 border-b border-slate-200 dark:border-slate-800">
@@ -347,7 +342,7 @@ const AuditPage = () => {
                 )}
             </div>
 
-            {/* Audit Detail Modal */}
+            {/* Modal Detail Audit */}
             {selectedAudit && (() => {
                 let checklist = null;
                 if (selectedAudit.checklist_items) {
@@ -378,7 +373,7 @@ const AuditPage = () => {
                                 </button>
                             </div>
 
-                            {/* Details Grid */}
+                            {/* Grid Detail */}
                             <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
                                 <div>
                                     <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Tanggal Audit</p>
@@ -400,7 +395,7 @@ const AuditPage = () => {
                                 )}
                             </div>
 
-                            {/* Checklist Items */}
+                            {/* Item Checklist */}
                             {checklist && (
                                 <div className="space-y-3">
                                     <div className="flex justify-between items-center">
@@ -426,7 +421,7 @@ const AuditPage = () => {
                                 </div>
                             )}
 
-                            {/* Findings & Notes */}
+                            {/* Temuan {/* Findings & Notes */} Catatan */}
                             <div className="space-y-2">
                                 <h3 className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Temuan & Catatan</h3>
                                 <div className="p-4 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-800 text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed">

@@ -24,7 +24,7 @@ const EmergencyCall = sequelize.define('EmergencyCall', {
         defaultValue: 'Triggered',
     },
     handled_by: {
-        type: DataTypes.INTEGER, // User ID of the responder
+        type: DataTypes.INTEGER, // ID Pengguna responden
         allowNull: true,
     },
 }, {

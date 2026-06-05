@@ -10,10 +10,9 @@ const getGlobalHistory = async (req, res) => {
                 attributes: ['id_user', 'nama', 'role']
             }],
             order: [['createdAt', 'DESC']],
-            limit: 100 // Load last 100 messages for MVP
+            limit: 100 // Muat 100 pesan terakhir
         });
 
-        // Reverse to chronological order for UI
         res.json(messages.reverse());
     } catch (error) {
         console.error('[Chat] Fetch error:', error);

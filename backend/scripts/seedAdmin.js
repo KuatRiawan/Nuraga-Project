@@ -16,15 +16,13 @@ const seedAdmin = async () => {
         await sequelize.authenticate();
         console.log('[SeedAdmin] Database connection established.');
 
-        // Delete existing admin to avoid duplicate error
         await User.destroy({ where: { email: 'admin@nuraga.com' } });
         console.log('[SeedAdmin] Old admin user deleted (if existed).');
 
-        // Create admin user with PLAINTEXT password (model will hash it via hook)
         const admin = await User.create({
             nama: 'Kuat Riawan (Admin)',
             email: 'admin@nuraga.com',
-            password: 'password123', // PLAINTEXT - model hook will hash this
+            password: 'password123', // PLAINTEXT - akan di-hash oleh model
             role: 'Admin',
             jenis_kelamin: 'Laki-laki',
             points: 0,

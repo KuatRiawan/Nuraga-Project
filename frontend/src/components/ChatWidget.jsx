@@ -14,9 +14,8 @@ const ChatWidget = () => {
     const [unreadCount, setUnreadCount] = useState(0);
     const [activeUsers, setActiveUsers] = useState([]);
 
-    // Mentions state
     const [allUsers, setAllUsers] = useState([]);
-    const [mentionSearch, setMentionSearch] = useState(null); // null means not searching
+    const [mentionSearch, setMentionSearch] = useState(null); // null berarti tidak mencari
     const [cursorPosition, setCursorPosition] = useState(0);
     const [firstUnreadId, setFirstUnreadId] = useState(null);
 
@@ -26,7 +25,6 @@ const ChatWidget = () => {
     const widgetRef = useRef(null);
     const justOpenedRef = useRef(false);
 
-    // Fetch initial history and users list
     useEffect(() => {
         if (isOpen) {
             justOpenedRef.current = true;
@@ -55,13 +53,11 @@ const ChatWidget = () => {
                 .catch(err => console.error('Failed to load users for mention', err));
         }
 
-        // Request browser notification permission
         if ('Notification' in window && Notification.permission === 'default') {
             Notification.requestPermission();
         }
     }, [isOpen]);
 
-    // Setup socket listeners
     useEffect(() => {
         if (!socket || !user) return;
 
@@ -101,14 +97,13 @@ const ChatWidget = () => {
                 setUnreadCount(prev => prev + 1);
             }
 
-            // Trigger Browser Notification if not from me, and tab is hidden or chat closed
             if (msg.id_user !== user.id) {
                 playPopSound();
                 if ('Notification' in window && Notification.permission === 'granted') {
                     if (document.hidden || !isOpen) {
                         new Notification('Nuraga Safety Chat', {
                             body: `${msg.User?.nama || 'Someone'}: ${msg.pesan}`,
-                            icon: '/favicon.ico' // Or any app icon
+                            icon: '/favicon.ico' // atau ikon aplikasi lainnya
                         });
                     }
                 }
@@ -116,7 +111,6 @@ const ChatWidget = () => {
         };
 
         const handleActiveUsersUpdate = (users) => {
-            // Deduplicate users by id_user
             const uniqueMap = new Map();
             users.forEach(u => {
                 if (!uniqueMap.has(u.id_user)) {
@@ -135,17 +129,14 @@ const ChatWidget = () => {
         };
     }, [socket, user, isOpen]);
 
-    // Auto-scroll logic
     useEffect(() => {
         if (isOpen) {
             setUnreadCount(0);
 
-            // If we just opened and have a first unread, scroll to it instantly
             if (firstUnreadId && unreadMarkerRef.current && justOpenedRef.current) {
                 unreadMarkerRef.current.scrollIntoView({ behavior: 'auto', block: 'center' });
                 justOpenedRef.current = false;
             } else if (messagesEndRef.current) {
-                // Use 'auto' if just opened to avoid long scrolling, 'smooth' for new messages
                 const scrollBehavior = justOpenedRef.current ? 'auto' : 'smooth';
                 messagesEndRef.current.scrollIntoView({ behavior: scrollBehavior });
                 justOpenedRef.current = false;
@@ -153,7 +144,6 @@ const ChatWidget = () => {
         }
     }, [messages, isOpen, firstUnreadId]);
 
-    // Close on click outside and save last read
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (widgetRef.current && !widgetRef.current.contains(event.target) && document.contains(event.target)) {
@@ -195,7 +185,6 @@ const ChatWidget = () => {
         setInput(val);
         setCursorPosition(cursorPos);
 
-        // Detect mention typing
         const textBeforeCursor = val.substring(0, cursorPos);
         const words = textBeforeCursor.split(' ');
         const lastWord = words[words.length - 1];
@@ -212,7 +201,7 @@ const ChatWidget = () => {
         const textAfterCursor = input.substring(cursorPosition);
 
         const words = textBeforeCursor.split(' ');
-        words.pop(); // Remove the typed @search
+        words.pop(); // Hapus pencarian @yang diketik
 
         const newTextBefore = words.length > 0 ? words.join(' ') + ` @${username} ` : `@${username} `;
 
@@ -243,7 +232,7 @@ const ChatWidget = () => {
         <div ref={widgetRef} className="z-[100]">
             {isOpen && (
                 <div className="fixed inset-0 sm:inset-auto sm:bottom-28 sm:right-6 w-full h-[100dvh] sm:w-96 sm:h-[30rem] bg-white dark:bg-slate-900 sm:border border-slate-200 dark:border-slate-800 sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in sm:slide-in-from-bottom-5 duration-300 z-[100]">
-                    {/* Header */}
+                    {/* Bagian Atas */}
                     <div className="bg-blue-600 dark:bg-blue-700 p-4 flex items-center justify-between shadow-sm z-10">
                         <div className="flex items-center gap-3 flex-1">
                             <div className="bg-white/20 p-2 rounded-xl shrink-0">
@@ -283,7 +272,7 @@ const ChatWidget = () => {
                         </button>
                     </div>
 
-                    {/* Chat Area */}
+                    {/* Area Chat */}
                     <div className="flex-1 overflow-y-auto p-4 bg-slate-50 dark:bg-slate-900/50 space-y-4 custom-scrollbar">
                         {loading ? (
                             <div className="flex justify-center items-center h-full">
@@ -292,7 +281,7 @@ const ChatWidget = () => {
                         ) : (
                             messages.map((msg, i) => {
                                 const isMe = msg.id_user === user.id;
-                                const isSystem = !msg.User; // Safety check
+                                const isSystem = !msg.User; // Pengecekan keamanan
                                 const isFirstUnread = msg.id_message === firstUnreadId;
 
                                 return (
@@ -341,10 +330,10 @@ const ChatWidget = () => {
                         <div ref={messagesEndRef} />
                     </div>
 
-                    {/* Input Area */}
+                    {/* Area Input */}
                     <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 z-10 relative">
 
-                        {/* Mention Dropdown */}
+                        {/* Dropdown Mention */}
                         {mentionSearch !== null && (
                             <div className="absolute bottom-full left-0 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg rounded-t-xl max-h-40 overflow-y-auto z-20">
                                 {allUsers
@@ -357,11 +346,11 @@ const ChatWidget = () => {
                                                 key={u.id_user}
                                                 type="button"
                                                 onMouseDown={(e) => {
-                                                    e.preventDefault(); // Prevent input blur
+                                                    e.preventDefault(); // Cegah kehilangan fokus input
                                                     handleMentionSelect(username);
                                                 }}
                                                 onTouchStart={(e) => {
-                                                    e.preventDefault(); // Prevent input blur on mobile
+                                                    e.preventDefault(); // Cegah kehilangan fokus input di mobile
                                                     handleMentionSelect(username);
                                                 }}
                                                 className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2"

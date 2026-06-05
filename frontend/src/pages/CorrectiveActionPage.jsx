@@ -97,7 +97,7 @@ const CorrectiveActionPage = () => {
                 )}
             </div>
 
-            {/* Filter Buttons */}
+            {/* Tombol Filter */}
             <div className="flex flex-wrap gap-2 pb-2">
                 {[
                     { id: 'All', label: 'Semua Tiket' },
@@ -207,7 +207,7 @@ const CorrectiveActionPage = () => {
                 )}
             </div>
 
-            {/* Corrective Action Detail Modal */}
+            {/* Modal Detail Tindakan Perbaikan */}
             {selectedAction && (
                 createPortal(<div 
                     onClick={() => setSelectedAction(null)}
@@ -227,7 +227,7 @@ const CorrectiveActionPage = () => {
                             </button>
                         </div>
 
-                        {/* Description */}
+                        {/* Deskripsi */}
                         <div className="space-y-2">
                             <h3 className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Tindakan Perbaikan</h3>
                             <div className="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 text-slate-900 dark:text-white font-bold leading-relaxed text-base">
@@ -235,7 +235,7 @@ const CorrectiveActionPage = () => {
                             </div>
                         </div>
 
-                        {/* Action Details Grid */}
+                        {/* Grid Detail Tindakan */}
                         <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-800">
                             <div>
                                 <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Penanggung Jawab</p>
@@ -258,7 +258,7 @@ const CorrectiveActionPage = () => {
                             </div>
                         </div>
 
-                        {/* Related Hazard Info */}
+                        {/* Info Bahaya Terkait */}
                         {selectedAction.HazardReport && (
                             <div className="space-y-3">
                                 <h3 className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1">

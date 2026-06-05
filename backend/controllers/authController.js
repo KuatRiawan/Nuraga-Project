@@ -7,14 +7,13 @@ const SystemConfig = require('../models/SystemConfig');
 const { recordLog } = require('./logController');
 const sequelize = require('../config/db');
 
-/** Public self-registration: role is never taken from the client (C1). */
+/** Registrasi mandiri publik: role tidak pernah diambil dari klien (C1). */
 const PUBLIC_REGISTER_ROLE = 'Staff';
 
 const register = async (req, res) => {
     try {
         const { nama, email, password, no_whatsapp, jenis_kelamin } = req.body;
 
-        // Email format validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (email && !emailRegex.test(email)) {
             return res.status(400).json({ message: 'Invalid email format' });
@@ -54,31 +53,26 @@ const login = async (req, res) => {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        // Generate access token (short-lived: 1 hour)
         const token = jwt.sign(
             { id: user.id_user, role: user.role, nama: user.nama },
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
         );
 
-        // Generate refresh token (long-lived: 7 days)
         const refreshToken = jwt.sign(
             { id: user.id_user, role: user.role, nama: user.nama },
             process.env.JWT_SECRET,
             { expiresIn: '7d' }
         );
 
-        // Hash refresh token before storing in database (security fix)
         const salt = await bcrypt.genSalt(10);
         const hashedRefreshToken = await bcrypt.hash(refreshToken, salt);
 
-        // Store hashed refresh token in database
-        const refreshTokenExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+        const refreshTokenExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 hari dari sekarang
         user.refresh_token = hashedRefreshToken;
         user.refresh_token_expires = refreshTokenExpires;
         await user.save();
 
-        // Record Audit Trail Log
         await recordLog(
             { user: { id: user.id_user, nama: user.nama, role: user.role }, headers: req.headers, ip: req.ip, socket: req.socket },
             'LOGIN',
@@ -88,13 +82,13 @@ const login = async (req, res) => {
         const cookieOptions = {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax', // Must be lax or none (with secure) for cross-origin if needed
-            maxAge: 60 * 60 * 1000 // 1 hour
+            sameSite: 'lax', // Harus lax atau none (dengan secure) untuk cross-origin
+            maxAge: 60 * 60 * 1000 // 1 jam
         };
 
         const refreshCookieOptions = {
             ...cookieOptions,
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 hari
         };
 
         res.cookie('token', token, cookieOptions);
@@ -158,7 +152,6 @@ const forgotPassword = async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: 'Email not found' });
         }
-        // In a real app, send email with reset link. Here we just mock success.
         res.json({ message: 'Password reset link sent to your email' });
     } catch (error) {
         console.error('[Internal] Error:', error);
@@ -174,9 +167,6 @@ const updateProfile = async (req, res) => {
             return res.status(404).json({ message: 'User tidak ditemukan' });
         }
 
-        // === FIELD-LEVEL ACCESS CONTROL ===
-        // Users can ONLY change: email, no_whatsapp, foto, jenis_kelamin
-        // nama, nik, jabatan, area_kerja -> ADMIN ONLY (via /api/users/:id)
         if (email && email !== user.email) {
             const userExists = await User.findOne({ where: { email } });
             if (userExists) {
@@ -214,7 +204,7 @@ const updateProfile = async (req, res) => {
     }
 };
 
-/** Authenticated password change only — requires current password (C2). */
+/** Ganti password hanya saat terautentikasi - memerlukan password saat ini (C2). */
 const changePassword = async (req, res) => {
     try {
         const { oldPassword, newPassword, currentPassword } = req.body;
@@ -287,7 +277,6 @@ const redeemPoints = async (req, res) => {
         user.points -= points;
         await user.save({ transaction: t });
 
-        // Generate unique code, e.g. VCH-ABCD12
         const code = 'VCH-' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
         const voucher = await Voucher.create({
@@ -315,7 +304,6 @@ const getLeaderboard = async (req, res) => {
     try {
         const { Sequelize } = require('sequelize');
 
-        // Single query with aggregation to get users and their verified report counts
         const users = await User.findAll({
             attributes: [
                 'id_user',
@@ -339,7 +327,7 @@ const getLeaderboard = async (req, res) => {
             dept: u.role,
             points: u.points || 0,
             reports: parseInt(u.dataValues.reportsCount) || 0,
-            badge: '' // Removed hardcoded badge logic
+            badge: '' // Logika badge hardcoded dihapus
         }));
 
         res.json(leaderboardData);
@@ -351,11 +339,9 @@ const getLeaderboard = async (req, res) => {
 
 const getRewards = async (req, res) => {
     try {
-        // Fetch REWARDS_CONFIG from SystemConfig database
         const rewardsConfig = await SystemConfig.findOne({ where: { key: 'rewards_config' } });
 
         if (!rewardsConfig) {
-            // Return empty array if no rewards config in database
             res.json([]);
             return;
         }
@@ -392,12 +378,10 @@ const getUserStats = async (req, res) => {
     try {
         const userId = req.user.id_user || req.user.id;
 
-        // Count rewards claimed (vouchers)
         const rewardsClaimed = await Voucher.count({
             where: { id_user: userId }
         });
 
-        // Count hazards reported
         const hazardsReported = await HazardReport.count({
             where: { id_user: userId }
         });
@@ -420,47 +404,39 @@ const refreshToken = async (req, res) => {
             return res.status(401).json({ message: 'Refresh token is required' });
         }
 
-        // Verify refresh token
         const decoded = jwt.verify(refreshTokenStr, process.env.JWT_SECRET);
 
-        // Find user with this refresh token
         const user = await User.findOne({ where: { id_user: decoded.id } });
 
         if (!user || !user.refresh_token) {
             return res.status(401).json({ message: 'Invalid refresh token' });
         }
 
-        // Compare provided refresh token with hashed token in database
         const isMatch = await bcrypt.compare(refreshTokenStr, user.refresh_token);
         if (!isMatch) {
             return res.status(401).json({ message: 'Invalid refresh token' });
         }
 
-        // Check if refresh token is expired
         if (user.refresh_token_expires && new Date() > new Date(user.refresh_token_expires)) {
             return res.status(401).json({ message: 'Refresh token expired' });
         }
 
-        // Generate new access token
         const newAccessToken = jwt.sign(
             { id: user.id_user, role: user.role, nama: user.nama },
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
         );
 
-        // Generate new refresh token (rotate refresh token for security)
         const newRefreshToken = jwt.sign(
             { id: user.id_user, role: user.role, nama: user.nama },
             process.env.JWT_SECRET,
             { expiresIn: '7d' }
         );
 
-        // Hash new refresh token before storing in database (security fix)
         const salt = await bcrypt.genSalt(10);
         const hashedNewRefreshToken = await bcrypt.hash(newRefreshToken, salt);
 
-        // Update hashed refresh token in database
-        const newRefreshTokenExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+        const newRefreshTokenExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 hari dari sekarang
         user.refresh_token = hashedNewRefreshToken;
         user.refresh_token_expires = newRefreshTokenExpires;
         await user.save();
@@ -469,12 +445,12 @@ const refreshToken = async (req, res) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
-            maxAge: 60 * 60 * 1000 // 1 hour
+            maxAge: 60 * 60 * 1000 // 1 jam
         };
 
         const refreshCookieOptions = {
             ...cookieOptions,
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 hari
         };
 
         res.cookie('token', newAccessToken, cookieOptions);
@@ -497,7 +473,6 @@ const logout = async (req, res) => {
     try {
         const userId = req.user.id_user || req.user.id;
 
-        // Clear refresh token from database
         const user = await User.findByPk(userId);
         if (user) {
             user.refresh_token = null;
@@ -505,7 +480,6 @@ const logout = async (req, res) => {
             await user.save();
         }
 
-        // Record Audit Trail Log
         await recordLog(
             req,
             'LOGOUT',
@@ -526,7 +500,6 @@ module.exports = {
     register,
     login,
     getMe,
-    // forgotPassword, // Removed for security (H10) - mock endpoint disabled
     updateProfile,
     changePassword,
     redeemPoints,

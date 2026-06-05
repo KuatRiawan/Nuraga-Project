@@ -71,7 +71,6 @@ const PermitForm = ({ onSubmit, onCancel }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Filter out empty worker entries before submitting
         const cleanedData = {
             ...formData,
             daftar_pekerja: formData.daftar_pekerja.filter(worker => worker.trim() !== ''),
@@ -112,7 +111,7 @@ const PermitForm = ({ onSubmit, onCancel }) => {
             {renderStepNumbers()}
 
             <form onSubmit={handleSubmit} className="space-y-8">
-                {/* Step 1: Jenis Permit */}
+                {/* Langkah 1: Jenis Permit */}
                 {step === 1 && (
                     <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
                         <div className="col-span-1 md:col-span-2">
@@ -142,7 +141,7 @@ const PermitForm = ({ onSubmit, onCancel }) => {
                     </div>
                 )}
 
-                {/* Step 2: JSA Ringkas (Hazards & APD) */}
+                {/* Langkah 2: JSA Ringkas (Bahaya {/* Step 2: JSA Ringkas (Hazards & APD) */} APD) */}
                 {step === 2 && (
                     <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
                         <div>
@@ -189,7 +188,7 @@ const PermitForm = ({ onSubmit, onCancel }) => {
                     </div>
                 )}
 
-                {/* Step 3: Administrasi & Pekerjaan */}
+                {/* Langkah 3: Administrasi {/* Step 3: Administrasi & Pekerjaan */} Pekerjaan */}
                 {step === 3 && (
                     <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -229,7 +228,7 @@ const PermitForm = ({ onSubmit, onCancel }) => {
                     </div>
                 )}
 
-                {/* Step 4: Lingkungan & Foto Kesiapan */}
+                {/* Langkah 4: Lingkungan {/* Step 4: Lingkungan & Foto Kesiapan */} Foto Kesiapan */}
                 {step === 4 && (
                     <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
                         {formData.jenis_permit === 'Confined Space' && (
@@ -287,7 +286,7 @@ const PermitForm = ({ onSubmit, onCancel }) => {
                     </div>
                 )}
 
-                {/* Step 5: Otorisasi */}
+                {/* Langkah 5: Otorisasi */}
                 {step === 5 && (
                     <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
                         <div className="p-8 bg-blue-600 rounded-3xl text-white space-y-6 shadow-xl shadow-blue-500/20">

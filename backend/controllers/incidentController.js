@@ -9,13 +9,11 @@ const createIncident = async (req, res) => {
     try {
         const { kategori, kronologi, korban, loss_cost, five_whys } = req.body;
 
-        // Data length validation
         if (kronologi && kronologi.length > 5000) {
             await t.rollback();
             return res.status(400).json({ message: 'Kronologi terlalu panjang. Maksimal 5000 karakter.' });
         }
 
-        // Guard JSON parsing for five_whys
         let parsedFiveWhys = null;
         if (five_whys) {
             try {
@@ -39,11 +37,10 @@ const createIncident = async (req, res) => {
         await t.commit();
         clearStatsCache();
 
-        // WA: notify HSE/Admin about new incident
         try {
             const hsePics = await User.findAll({ where: { role: ['HSE', 'Admin', 'Manager'] } });
             const msg =
-                `⚠️ *[NURAGA SAFETY — Laporan Insiden Baru]*\n\n` +
+                ` *[NURAGA SAFETY — Laporan Insiden Baru]*\n\n` +
                 `Kategori: *${kategori}*\n` +
                 `Pelapor: *${req.user.nama}* (${req.user.role})\n` +
                 `Korban: ${korban || '-'}\n` +
@@ -56,7 +53,6 @@ const createIncident = async (req, res) => {
             console.error('[WhatsApp] Incident notification failed:', waErr.message);
         }
 
-        // Emit WebSocket event
         const io = req.app.get('io');
         if (io) {
             io.emit('INCIDENT_CREATED', {
@@ -91,7 +87,6 @@ const getIncidents = async (req, res) => {
             offset,
         };
 
-        // Vendors may only view their own incident reports.
         if (req.user.role === 'Vendor') {
             queryOptions.where = { id_user: req.user.id };
         }
@@ -117,7 +112,6 @@ const updateIncident = async (req, res) => {
         const { id } = req.params;
         const { loss_cost, five_whys } = req.body;
 
-        // Check if user is HSE or Admin
         if (req.user.role !== 'HSE' && req.user.role !== 'Admin') {
             await t.rollback();
             return res.status(403).json({ message: 'Only HSE Officers or Admins can update incident investigation details.' });
@@ -133,7 +127,6 @@ const updateIncident = async (req, res) => {
             incident.loss_cost = parseFloat(loss_cost) || 0;
         }
         if (five_whys !== undefined) {
-            // Guard JSON parsing for five_whys
             try {
                 incident.five_whys = typeof five_whys === 'string' ? JSON.parse(five_whys) : five_whys;
             } catch (parseError) {
@@ -152,7 +145,6 @@ const updateIncident = async (req, res) => {
         await t.commit();
         clearStatsCache();
 
-        // Emit WebSocket event
         const io = req.app.get('io');
         if (io) {
             io.emit('INCIDENT_UPDATED', {

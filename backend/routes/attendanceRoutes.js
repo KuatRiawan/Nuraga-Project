@@ -6,20 +6,18 @@ const { clockIn, clockOut, getTodayStatus, getMyHistory, getAllHistory, submitLe
 const { protect, authorize } = require('../middlewares/authMiddleware');
 const upload = require('../middlewares/uploadMiddleware');
 
-// Rate limiters for attendance endpoints
 const clockInLimiter = rateLimit({
-    windowMs: 60 * 1000, // 1 minute
-    max: 5, // 5 requests per minute
+    windowMs: 60 * 1000, // 1 menit
+    max: 5, // 5 permintaan per menit
     message: { message: 'Terlalu banyak percobaan clock-in. Harap tunggu 1 menit.' }
 });
 
 const sosLimiter = rateLimit({
-    windowMs: 60 * 1000, // 1 minute
-    max: 5, // 5 requests per minute
+    windowMs: 60 * 1000, // 1 menit
+    max: 5, // 5 permintaan per menit
     message: { message: 'Terlalu banyak permintaan darurat. Harap tunggu 1 menit.' }
 });
 
-// Wrap multer upload to return clean JSON errors instead of HTML
 const handleUpload = (field) => (req, res, next) => {
     upload.single(field)(req, res, (err) => {
         if (err instanceof multer.MulterError) {

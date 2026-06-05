@@ -3,7 +3,7 @@ const path = require('path');
 const { UPLOADS_DIR } = require('./paths');
 
 const MAX_FILE_AGE_DAYS = 90;
-const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 jam
 
 const cleanupOldFiles = () => {
     console.log('[FileCleanup] Starting file cleanup check...');
@@ -45,7 +45,6 @@ const cleanupOldFiles = () => {
 const startFileCleanupScheduler = () => {
     console.log('[FileCleanup] Scheduler started. Running every 24 hours.');
     
-    // Run immediately on startup, then schedule daily
     cleanupOldFiles();
     
     setInterval(cleanupOldFiles, CLEANUP_INTERVAL_MS);

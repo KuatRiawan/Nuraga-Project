@@ -125,7 +125,7 @@ const AuditLogPage = () => {
                 </div>
             )}
 
-            {/* Filters */}
+            {/* Filter */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-800">
                 <div className="relative md:col-span-2 group">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
@@ -163,7 +163,7 @@ const AuditLogPage = () => {
                 </div>
             </div>
 
-            {/* Table */}
+            {/* Tabel */}
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                     <table className="w-full border-collapse text-left">

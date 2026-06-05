@@ -8,11 +8,10 @@ const router = express.Router();
 const { protect, authorize } = require('../middlewares/authMiddleware');
 const { getStatus, stream, logout, testMessage, manualReconnect } = require('../controllers/whatsappController');
 
-// All WA management routes require Admin authentication
 router.get('/status', protect, authorize('Admin'), getStatus);
 router.get('/stream', stream);          // SSE — uses token validation in controller (no rate limit to prevent blocking)
 router.post('/logout', protect, authorize('Admin'), logout);
-router.post('/reconnect', protect, authorize('Admin'), manualReconnect); // NEW: force reconnect
-router.post('/test',   protect, authorize('Admin'), testMessage);
+router.post('/reconnect', protect, authorize('Admin'), manualReconnect); // sambung ulang paksa
+router.post('/test', protect, authorize('Admin'), testMessage);
 
 module.exports = router;

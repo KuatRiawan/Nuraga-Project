@@ -13,7 +13,7 @@ exports.logFatigue = async (req, res) => {
             return res.status(503).json({ message: "AI Service belum dikonfigurasi." });
         }
 
-        // 1. Call AI Service to get prediction
+        // 1. Panggil layanan AI untuk prediksi
         let aiPrediction;
         try {
             const aiResponse = await axios.post(`${AI_SERVICE_URL}/predict-fatigue`, {
@@ -31,7 +31,7 @@ exports.logFatigue = async (req, res) => {
             }
         }
 
-        // 2. Save to database
+        // 2. Simpan ke database
         const fatigueLog = await FatigueLog.create({
             id_user,
             sleep_hours,

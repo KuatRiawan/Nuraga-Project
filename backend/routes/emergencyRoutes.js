@@ -4,10 +4,9 @@ const rateLimit = require('express-rate-limit');
 const { triggerEmergency, getEmergencies, resolveEmergency } = require('../controllers/emergencyController');
 const { protect, authorize } = require('../middlewares/authMiddleware');
 
-// Rate limiter for SOS emergency endpoint
 const sosLimiter = rateLimit({
-    windowMs: 60 * 1000, // 1 minute
-    max: 5, // 5 requests per minute
+    windowMs: 60 * 1000, // 1 menit
+    max: 5, // 5 permintaan per menit
     message: { message: 'Terlalu banyak permintaan darurat. Harap tunggu 1 menit.' }
 });
 

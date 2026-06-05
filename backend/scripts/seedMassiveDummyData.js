@@ -1,4 +1,3 @@
-// JANGAN LUPA RUN: npm install @faker-js/faker
 
 const { faker } = require('@faker-js/faker');
 const sequelize = require('../config/db');
@@ -13,12 +12,10 @@ const EmergencyCall = require('../models/EmergencyCall');
 const Audit = require('../models/Audit');
 const CorrectiveAction = require('../models/CorrectiveAction');
 
-// Utility functions
 const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 const randomChoice = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const getRandomPastDate = (days) => new Date(Date.now() - Math.floor(Math.random() * days) * 24 * 60 * 60 * 1000);
 
-// Dummy data arrays
 const certifications = ['Ahli K3 Umum', 'P3K', 'Fire Safety', 'Working at Height', 'Confined Space', 'Electrical Safety', 'Crane Operator', 'Forklift Operator'];
 const permitTypes = ['Hot Work', 'Cold Work', 'Confined Space', 'Working at Height', 'Electrical Work'];
 const locations = ['Workshop A', 'Warehouse B', 'Loading Dock', 'Production Line 1', 'Office Building', 'Parking Area', 'Factory Floor', 'Storage Area', 'Maintenance Bay', 'Quality Control'];
@@ -32,11 +29,9 @@ const seedMassiveDummyData = async () => {
     try {
         console.log('🚀 Starting MASSIVE Dummy Data Seeding for Stress Testing...\n');
 
-        // Step 1: Database connection
         await sequelize.authenticate();
-        console.log('✅ Step 1: Database connected successfully\n');
+        console.log(' Step 1: Database connected successfully\n');
 
-        // Step 2: Clean operational data (NOT Users)
         console.log('🧹 Step 2: Cleaning operational data...');
         await Certification.destroy({ where: {} });
         await Attendance.destroy({ where: {} });
@@ -47,14 +42,12 @@ const seedMassiveDummyData = async () => {
         await EmergencyCall.destroy({ where: {} });
         await Audit.destroy({ where: {} });
         await CorrectiveAction.destroy({ where: {} });
-        console.log('   ✅ Operational data cleaned\n');
+        console.log('    Operational data cleaned\n');
 
-        // Step 3: Fetch existing users and create 100 new users
         console.log('👥 Step 3: Creating 100 new users...');
         const existingUsers = await User.findAll();
         console.log(`   ℹ️  Found ${existingUsers.length} existing users`);
 
-        // Create 100 new users with role distribution: 80 Staff, 15 SPV, 5 HSE
         const newUsers = [];
         for (let i = 0; i < 100; i++) {
             let role;
@@ -65,7 +58,7 @@ const seedMassiveDummyData = async () => {
             newUsers.push({
                 nama: faker.person.fullName(),
                 email: faker.internet.email().toLowerCase(),
-                password: 'password123', // Default password for testing
+                password: 'password123', // Password default untuk pengujian
                 role: role,
                 perusahaan: 'PT Nuraga Safety',
                 points: 0
@@ -74,9 +67,8 @@ const seedMassiveDummyData = async () => {
 
         const createdUsers = await User.bulkCreate(newUsers);
         const allUsers = [...existingUsers, ...createdUsers];
-        console.log(`   ✅ Created ${createdUsers.length} new users (Total: ${allUsers.length})\n`);
+        console.log(`    Created ${createdUsers.length} new users (Total: ${allUsers.length})\n`);
 
-        // Step 4: Seed Certifications
         console.log('📜 Step 4: Seeding Certifications...');
         let certCount = 0;
         const certData = [];
@@ -106,21 +98,18 @@ const seedMassiveDummyData = async () => {
         }
         
         await Certification.bulkCreate(certData);
-        console.log(`   ✅ Created ${certCount} certifications\n`);
+        console.log(`    Created ${certCount} certifications\n`);
 
-        // Step 5: Seed Attendance with Chunking (180 days, all users)
         console.log('📅 Step 5: Seeding Attendance (180 days, chunked)...');
         let attendanceCount = 0;
         const attendanceData = [];
         const CHUNK_SIZE = 5000;
         
-        // Generate attendance data for 180 days back
         for (const user of allUsers) {
             for (let day = 180; day >= 1; day--) {
                 const date = new Date();
                 date.setDate(date.getDate() - day);
                 
-                // Clock-in record
                 const clockIn = new Date(date);
                 clockIn.setHours(randomInt(7, 9), randomInt(0, 59));
                 
@@ -137,7 +126,6 @@ const seedMassiveDummyData = async () => {
                 });
                 attendanceCount++;
 
-                // Clock-out record
                 const clockOut = new Date(date);
                 clockOut.setHours(randomInt(16, 18), randomInt(0, 59));
                 
@@ -156,7 +144,6 @@ const seedMassiveDummyData = async () => {
             }
         }
 
-        // Chunk and bulk insert attendance data
         const totalChunks = Math.ceil(attendanceData.length / CHUNK_SIZE);
         for (let i = 0; i < attendanceData.length; i += CHUNK_SIZE) {
             const chunk = attendanceData.slice(i, i + CHUNK_SIZE);
@@ -164,9 +151,8 @@ const seedMassiveDummyData = async () => {
             console.log(`   📦 Inserting Attendance Chunk ${chunkNumber}/${totalChunks} (${chunk.length} records)...`);
             await Attendance.bulkCreate(chunk);
         }
-        console.log(`   ✅ Created ${attendanceCount} attendance records\n`);
+        console.log(`    Created ${attendanceCount} attendance records\n`);
 
-        // Step 6: Seed Work Permits (150 permits)
         console.log('📋 Step 6: Seeding Work Permits...');
         let permitCount = 0;
         const permitData = [];
@@ -211,10 +197,9 @@ const seedMassiveDummyData = async () => {
         }
         
         await WorkPermit.bulkCreate(permitData);
-        console.log(`   ✅ Created ${permitCount} work permits\n`);
+        console.log(`    Created ${permitCount} work permits\n`);
 
-        // Step 7: Seed Hazard Reports (200 reports)
-        console.log('⚠️  Step 7: Seeding Hazard Reports...');
+        console.log('  Step 7: Seeding Hazard Reports...');
         let hazardCount = 0;
         const hazardData = [];
         
@@ -236,9 +221,8 @@ const seedMassiveDummyData = async () => {
         }
         
         await HazardReport.bulkCreate(hazardData);
-        console.log(`   ✅ Created ${hazardCount} hazard reports\n`);
+        console.log(`    Created ${hazardCount} hazard reports\n`);
 
-        // Step 8: Seed Incident Reports (2 incidents for normalized TRIR)
         console.log('🚨 Step 8: Seeding Incident Reports (Normalized TRIR)...');
         let incidentCount = 0;
         const incidentData = [];
@@ -268,18 +252,15 @@ const seedMassiveDummyData = async () => {
         }
         
         await IncidentReport.bulkCreate(incidentData);
-        console.log(`   ✅ Created ${incidentCount} incident reports\n`);
+        console.log(`    Created ${incidentCount} incident reports\n`);
 
-        // Step 9: Seed Gamification Data
         console.log('🎮 Step 9: Seeding Gamification Data...');
         
-        // Add random points to users
         for (const user of allUsers) {
             const points = randomInt(100, 2000);
             await user.update({ points: user.points + points });
         }
 
-        // Create claimed vouchers
         const voucherCount = randomInt(30, 50);
         const voucherData = [];
         for (let i = 0; i < voucherCount; i++) {
@@ -300,9 +281,8 @@ const seedMassiveDummyData = async () => {
         }
         
         await Voucher.bulkCreate(voucherData);
-        console.log(`   ✅ Added points to users and created ${voucherCount} vouchers\n`);
+        console.log(`    Added points to users and created ${voucherCount} vouchers\n`);
 
-        // Step 10: Seed Emergency Calls (30 calls)
         console.log('🆘 Step 10: Seeding Emergency Calls...');
         let emergencyCount = 0;
         const emergencyData = [];
@@ -324,10 +304,9 @@ const seedMassiveDummyData = async () => {
         }
         
         await EmergencyCall.bulkCreate(emergencyData);
-        console.log(`   ✅ Created ${emergencyCount} emergency calls\n`);
+        console.log(`    Created ${emergencyCount} emergency calls\n`);
 
-        // Step 11: Seed Safety Audits (40 audits)
-        console.log('🔍 Step 11: Seeding Safety Audits...');
+        console.log(' Step 11: Seeding Safety Audits...');
         let auditCount = 0;
         const auditData = [];
         
@@ -354,18 +333,15 @@ const seedMassiveDummyData = async () => {
         }
         
         await Audit.bulkCreate(auditData);
-        console.log(`   ✅ Created ${auditCount} safety audits\n`);
+        console.log(`    Created ${auditCount} safety audits\n`);
 
-        // Step 12: Seed Corrective Actions (50 actions)
         console.log('🔧 Step 12: Seeding Corrective Actions...');
         let actionCount = 0;
         const actionData = [];
         
-        // Fetch created hazards for proper foreign key references
         const hazardRecords = await HazardReport.findAll({ attributes: ['id_hazard'] });
         const incidentRecords = await IncidentReport.findAll({ attributes: ['id_incident'] });
 
-        // Create corrective actions for hazards
         for (let i = 0; i < 35; i++) {
             const assignedTo = randomChoice(allUsers);
             const deadline = new Date();
@@ -384,7 +360,6 @@ const seedMassiveDummyData = async () => {
             actionCount++;
         }
 
-        // Create corrective actions for incidents
         for (let i = 0; i < 15; i++) {
             const assignedTo = randomChoice(allUsers);
             const deadline = new Date();
@@ -404,9 +379,8 @@ const seedMassiveDummyData = async () => {
         }
         
         await CorrectiveAction.bulkCreate(actionData);
-        console.log(`   ✅ Created ${actionCount} corrective actions\n`);
+        console.log(`    Created ${actionCount} corrective actions\n`);
 
-        // Summary
         console.log('✨ MASSIVE Dummy Data Seeding Completed Successfully!\n');
         console.log('📊 Summary:');
         console.log(`   - Total Users: ${allUsers.length} (${createdUsers.length} new)`);

@@ -8,7 +8,7 @@ module.exports = {
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
     dialect: process.env.DB_DIALECT || 'postgres',
-    /* 👇 Tambahkan baris di bawah ini untuk mengaktifkan SSL 👇 */
+    /* untuk mengaktifkan SSL  */
     dialectOptions: {
       ssl: {
         require: true,

@@ -14,21 +14,20 @@ const cleanData = async () => {
         await sequelize.authenticate();
         console.log('[CleanData] Database connection established.\n');
 
-        // Transactional tables to truncate (order matters for foreign key dependencies)
         const tablesToTruncate = [
-            'Vouchers',              // Gamification vouchers
-            'CorrectiveActions',     // CAPA records
-            'HazardReports',         // Hazard reports
-            'IncidentReports',       // Incident reports
-            'WorkPermits',           // e-PTW permits
-            'Attendances',           // Attendance records
-            'LeaveRequests',         // Leave/Izin requests
-            'Certifications',        // Safety certifications
-            'Audits',               // Audit records
-            'AuditLogs',            // Audit trail logs
-            'EmergencyCalls',       // Emergency SOS calls
-            'FatigueLogs',          // Fatigue monitoring logs
-            'ContractorCSMS',       // Contractor safety management
+            'Vouchers',              // Voucher gamifikasi
+            'CorrectiveActions',     // Data CAPA
+            'HazardReports',         // Laporan bahaya
+            'IncidentReports',       // Laporan insiden
+            'WorkPermits',           // Izin kerja e-PTW
+            'Attendances',           // Data absensi
+            'LeaveRequests',         // Pengajuan izin/cuti
+            'Certifications',        // Sertifikasi keselamatan
+            'Audits',               // Data audit
+            'AuditLogs',            // Log jejak audit
+            'EmergencyCalls',       // Panggilan darurat SOS
+            'FatigueLogs',          // Log pemantauan kelelahan
+            'ContractorCSMS',       // Manajemen keselamatan kontraktor
         ];
 
         console.log('[CleanData] Starting cleanup of transactional tables...\n');

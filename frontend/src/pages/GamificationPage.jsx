@@ -25,7 +25,6 @@ const GamificationPage = () => {
     const [showClaimModal, setShowClaimModal] = useState(false);
     const [selectedVoucherId, setSelectedVoucherId] = useState(null);
 
-    // Fetch real leaderboard and rewards from backend
     const [leaderboard, setLeaderboard] = useState([]);
     const [rewards, setRewards] = useState([]);
     const [leaderboardLoading, setLeaderboardLoading] = useState(false);
@@ -92,7 +91,6 @@ const GamificationPage = () => {
             setUserStats(asObject(res.data?.data || res.data));
         } catch (err) {
             console.error('Failed to fetch user stats:', err);
-            // Fallback to counting from vouchers if endpoint doesn't exist
             try {
                 const voucherRes = await api.get('/vouchers/my');
                 setUserStats({ rewardsClaimed: asArray(voucherRes.data?.data || voucherRes.data).length, hazardsReported: 0 });
@@ -112,9 +110,9 @@ const GamificationPage = () => {
             });
             updateUser({ ...user, points: res.data.points });
             showNotification(`Berhasil menukarkan poin dengan: ${reward.title}!\nKode Voucher: ${res.data.voucher.code}`, 'success');
-            fetchRewards(); // Update quotas
-            fetchLeaderboard(); // Update positions
-            fetchUserStats(); // Update user stats
+            fetchRewards(); // Perbarui kuota
+            fetchLeaderboard(); // Perbarui posisi
+            fetchUserStats(); // Perbarui statistik pengguna
             setShowRewards(false);
         } catch (err) {
             console.error(err);
@@ -158,7 +156,7 @@ const GamificationPage = () => {
 
     return (
         <div className="space-y-8  relative">
-            {/* AlertModal instead of Toast */}
+            {/* Modal Peringatan */}
             <AlertModal
                 isOpen={alertConfig.isOpen}
                 onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
@@ -167,7 +165,7 @@ const GamificationPage = () => {
                 type={alertConfig.type}
             />
 
-            {/* Header */}
+            {/* Bagian Atas */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter flex items-center gap-3">
@@ -192,7 +190,7 @@ const GamificationPage = () => {
                 </div>
             </div>
 
-            {/* My Points Card */}
+            {/* Kartu Poin Saya */}
             <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-[2rem] p-4 md:p-6 lg:p-8 text-white shadow-2xl shadow-blue-500/20">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8">
                     <div>
@@ -221,7 +219,7 @@ const GamificationPage = () => {
                 </div>
             </div>
 
-            {/* Leaderboard */}
+            {/* Papan Peringkat */}
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm">
                 <div className="px-4 md:px-6 lg:px-8 py-4 md:py-6 border-b border-slate-100 dark:border-slate-800">
                     <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tighter flex items-center gap-3">
@@ -267,7 +265,7 @@ const GamificationPage = () => {
                 </div>
             </div>
 
-            {/* Rewards Modal */}
+            {/* Modal Hadiah */}
             {showRewards && (
                 createPortal(<div
                     onClick={() => setShowRewards(false)}
@@ -316,13 +314,13 @@ const GamificationPage = () => {
                 </div>, document.body)
             )}
 
-            {/* Vouchers Slide-out Drawer */}
+            {/* Drawer Voucher Geser */}
             {showVouchersDrawer && (
                 createPortal(<div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] transition-opacity duration-300" onClick={() => setShowVouchersDrawer(false)} />, document.body)
             )}
             {createPortal(
                 <div className={`fixed inset-y-0 right-0 w-full sm:w-[400px] md:w-[480px] bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 z-[10000] transform transition-transform duration-300 ease-in-out shadow-2xl flex flex-col ${showVouchersDrawer ? 'translate-x-0' : 'translate-x-full'}`}>
-                {/* Header */}
+                {/* Bagian Atas */}
                 <div className="p-4 md:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
                     <div className="flex-1 min-w-0">
                         <h2 className="text-lg md:text-xl font-black uppercase tracking-tighter text-slate-900 dark:text-white flex items-center gap-2">
@@ -338,7 +336,7 @@ const GamificationPage = () => {
                     </button>
                 </div>
 
-                {/* Search for HSE/Admin */}
+                {/* Pencarian untuk HSE/Admin */}
                 {isHseOrAdmin && (
                     <div className="px-4 md:px-6 py-4 border-b border-slate-100 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-900/50">
                         <div className="relative">
@@ -354,7 +352,7 @@ const GamificationPage = () => {
                     </div>
                 )}
 
-                {/* Content */}
+                {/* Konten */}
                 <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 md:space-y-4">
                     {filteredVouchers.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center text-center p-6 md:p-10 opacity-60">
@@ -390,7 +388,7 @@ const GamificationPage = () => {
                                         </p>
                                     )}
 
-                                    {/* Voucher Code Box */}
+                                    {/* Kotak Kode Voucher */}
                                     <div className="flex items-center gap-2 mt-4">
                                         <div className="flex-1 font-mono font-black text-center bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 py-3 rounded-xl text-base md:text-lg tracking-wider text-slate-800 dark:text-slate-200 select-all relative group">
                                             {v.code}
@@ -425,7 +423,7 @@ const GamificationPage = () => {
                 </div>
             </div>, document.body)}
 
-            {/* Claim Confirmation Modal */}
+            {/* Modal Konfirmasi Klaim */}
             {showClaimModal && (
                 createPortal(<div
                     onClick={() => setShowClaimModal(false)}

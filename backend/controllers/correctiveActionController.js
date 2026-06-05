@@ -14,7 +14,6 @@ const createAction = async (req, res) => {
         });
         clearStatsCache();
 
-        // Emit WebSocket event
         const io = req.app.get('io');
         if (io) {
             io.emit('ACTION_CREATED', {
@@ -63,7 +62,6 @@ const updateActionStatus = async (req, res) => {
         await action.save();
         clearStatsCache();
 
-        // Emit WebSocket event
         const io = req.app.get('io');
         if (io) {
             io.emit('ACTION_UPDATED', {

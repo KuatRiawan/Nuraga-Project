@@ -21,7 +21,7 @@ const AlertModal = ({ isOpen, onClose, title, message, type = 'error', buttonTex
             iconColor: 'text-emerald-500',
             buttonShadow: 'shadow-emerald-500/20',
             Icon: CheckCircle,
-            buttonVariant: 'primary' // Assuming primary is okay or define a success variant in Button
+            buttonVariant: 'primary' // Varian tombol utama
         },
         info: {
             borderColor: 'border-blue-500',

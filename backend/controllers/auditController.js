@@ -15,7 +15,6 @@ const createAudit = async (req, res) => {
         });
         clearStatsCache();
 
-        // Emit WebSocket event
         const io = req.app.get('io');
         if (io) {
             io.emit('AUDIT_CREATED', {

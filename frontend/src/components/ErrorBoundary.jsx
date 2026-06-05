@@ -7,12 +7,10 @@ class ErrorBoundary extends React.Component {
     }
 
     static getDerivedStateFromError(error) {
-        // Update state so the next render will show the fallback UI
         return { hasError: true };
     }
 
     componentDidCatch(error, errorInfo) {
-        // Log error details for debugging
         console.error('ErrorBoundary caught an error:', error, errorInfo);
         this.setState({
             error: error,
@@ -22,12 +20,11 @@ class ErrorBoundary extends React.Component {
 
     render() {
         if (this.state.hasError) {
-            // Fallback UI when an error occurs
             return (
                 <div className="min-h-screen bg-slate-100 dark:bg-slate-900 flex items-center justify-center p-4">
                     <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-md w-full shadow-xl">
                         <div className="text-center">
-                            <div className="text-6xl mb-4">⚠️</div>
+                            <div className="text-6xl mb-4"></div>
                             <h1 className="text-2xl font-black text-slate-900 dark:text-white mb-2">
                                 Something went wrong
                             </h1>

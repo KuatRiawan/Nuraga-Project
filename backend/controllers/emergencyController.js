@@ -6,7 +6,6 @@ const WorkPermit = require('../models/WorkPermit');
 const ChatMessage = require('../models/ChatMessage');
 const wa = require('../services/whatsappService');
 
-// Simple in-memory cooldown cache for SOS spam prevention
 const sosCooldownCache = new Map();
 const COOLDOWN_SECONDS = 60;
 const COOLDOWN_MS = COOLDOWN_SECONDS * 1000;
@@ -19,24 +18,21 @@ const triggerEmergency = async (req, res) => {
         const now = new Date();
         let victimZone = lokasi || 'Main Production Zone (Auto-detected)';
 
-        // Check cooldown for SOS spam prevention
         const userId = req.user.id;
         const lastTriggerTime = sosCooldownCache.get(userId);
         if (lastTriggerTime) {
-            const timeSinceLastTrigger = (now - lastTriggerTime) / 1000; // Convert to seconds
+            const timeSinceLastTrigger = (now - lastTriggerTime) / 1000; // Konversi ke detik
             if (timeSinceLastTrigger < COOLDOWN_SECONDS) {
                 return res.status(429).json({ message: "Terlalu banyak permintaan darurat. Harap tunggu 60 detik." });
             }
         }
-        // Update the cooldown cache with auto-cleanup to prevent memory leak
         sosCooldownCache.set(userId, now);
-        // Schedule automatic cleanup after cooldown period expires
         setTimeout(() => {
             sosCooldownCache.delete(userId);
             console.log(`[EmergencyController] Cooldown expired for user ${userId}`);
         }, COOLDOWN_MS);
 
-        // 1. Static location routing: retrieve the user's active work permit zone today
+        // 1. Routing lokasi statis: ambil zona izin kerja aktif pengguna hari ini
         const activePermits = await WorkPermit.findAll({
             where: {
                 status: { [Op.in]: ['Approved', 'Active'] },
@@ -48,7 +44,6 @@ const triggerEmergency = async (req, res) => {
         const victimUser = await User.findByPk(req.user.id);
         const victimName = victimUser ? victimUser.nama : '';
 
-        // Find if victim (req.user) is the applicant or listed as a worker
         const victimPermit = activePermits.find(permit => {
             if (permit.id_user === req.user.id) return true;
             let workers = [];
@@ -66,13 +61,12 @@ const triggerEmergency = async (req, res) => {
             victimZone = victimUser.area_kerja;
         }
 
-        // Create emergency log in the database
         const emergency = await EmergencyCall.create({
             jenis_kejadian,
             lokasi: victimZone,
         });
 
-        // 2. Find certified responders in the system
+        // 2. Cari responden bersertifikat dalam sistem
         const activeCertifications = await Certification.findAll({
             where: { status: 'Active' },
             include: [{
@@ -99,7 +93,7 @@ const triggerEmergency = async (req, res) => {
             .map(cert => cert.User)
             .filter((u, index, self) => u && self.findIndex(x => x.id_user === u.id_user) === index);
 
-        // 3. Match responders to the victim's current active permit zone
+        // 3. Cocokkan responden dengan zona izin kerja aktif korban
         const zoneResponders = [];
         for (const responder of allResponders) {
             let zoneMatch = false;
@@ -128,10 +122,8 @@ const triggerEmergency = async (req, res) => {
             }
         }
 
-        // Fallback to all responders if no responder is currently assigned to this zone
         const finalResponders = zoneResponders.length > 0 ? zoneResponders : allResponders;
 
-        // Broadcast to all active clients via WebSockets
         const io = req.app.get('io');
         if (io) {
             io.emit('EMERGENCY_SOS', {
@@ -147,7 +139,6 @@ const triggerEmergency = async (req, res) => {
                 responders: finalResponders
             });
 
-            // AUTO SEND MESSAGE TO GLOBAL CHAT
             try {
                 const systemMessageContent = `🚨 LAPORAN DARURAT SOS! 🚨\n\nPELAPOR: ${victimName.toUpperCase()}\nKEJADIAN: ${(jenis_kejadian || 'Tidak Diketahui').toUpperCase()}\nLOKASI: ${victimZone.toUpperCase()}\n\nMohon segera merespons ke lokasi atau berikan koordinasi di grup ini!`;
 
@@ -214,7 +205,6 @@ const resolveEmergency = async (req, res) => {
 
         const resolverName = req.user.nama;
 
-        // Broadcast WebSockets to ALL clients
         const io = req.app.get('io');
         if (io) {
             io.emit('EMERGENCY_RESOLVED', {
@@ -224,9 +214,8 @@ const resolveEmergency = async (req, res) => {
             });
         }
 
-        // AUTO SEND RESOLVE MESSAGE TO GLOBAL CHAT
         try {
-            const systemMessageContent = `✅ STATUS AMAN ✅\n\nPeringatan Darurat untuk kejadian ${(emergency.jenis_kejadian || 'Tidak Diketahui').toUpperCase()} di ${emergency.lokasi.toUpperCase()} telah dicabut.\n\nKondisi dinyatakan Kondusif oleh: ${resolverName.toUpperCase()}\nWaktu Selesai: ${new Date().toLocaleString('id-ID')}`;
+            const systemMessageContent = ` STATUS AMAN \n\nPeringatan Darurat untuk kejadian ${(emergency.jenis_kejadian || 'Tidak Diketahui').toUpperCase()} di ${emergency.lokasi.toUpperCase()} telah dicabut.\n\nKondisi dinyatakan Kondusif oleh: ${resolverName.toUpperCase()}\nWaktu Selesai: ${new Date().toLocaleString('id-ID')}`;
 
             const chatMsg = await ChatMessage.create({
                 id_user: req.user.id,

@@ -5,22 +5,21 @@ const { register, login, getMe, forgotPassword, updateProfile, changePassword, r
 const { protect } = require('../middlewares/authMiddleware');
 const upload = require('../middlewares/uploadMiddleware');
 
-// Rate limiters for auth endpoints
 const loginLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 20, // Increased to 20 for development/normal usage
+    windowMs: 15 * 60 * 1000, // 15 menit
+    max: 20, // Ditingkatkan ke 20
     message: { message: 'Terlalu banyak percobaan login, silakan coba lagi setelah 15 menit.' }
 });
 
 const registerLimiter = rateLimit({
-    windowMs: 60 * 1000, // 1 minute
-    max: 20, // Increased to 20
+    windowMs: 60 * 1000, // 1 menit
+    max: 20, // Ditingkatkan ke 20
     message: { message: 'Terlalu banyak percobaan registrasi. Harap tunggu 1 menit.' }
 });
 
 const refreshTokenLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 50, // Increased
+    windowMs: 15 * 60 * 1000, // 15 menit
+    max: 50, // Ditingkatkan
     message: { message: 'Terlalu banyak percobaan refresh token. Harap tunggu 15 menit.' }
 });
 
@@ -28,8 +27,6 @@ router.post('/register', registerLimiter, register);
 router.post('/login', loginLimiter, login);
 router.post('/refresh-token', refreshTokenLimiter, refreshToken);
 router.post('/logout', protect, logout);
-// Mock forgot password endpoint removed for security (H10)
-// router.post('/forgot-password', forgotPassword);
 router.get('/me', protect, getMe);
 router.put('/profile', protect, upload.single('foto'), updateProfile);
 router.put('/change-password', protect, changePassword);

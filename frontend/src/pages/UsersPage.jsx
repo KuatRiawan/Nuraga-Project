@@ -33,10 +33,8 @@ const UsersPage = () => {
         const lines = text.split(/\r?\n/);
         if (lines.length < 2) return [];
 
-        // Clean UTF-8 BOM if present
         const firstLine = lines[0].replace(/^\uFEFF/, '');
 
-        // Detect separator: check if first line has ';' or ','
         let separator = ',';
         if (firstLine.includes(';') && (firstLine.split(';').length > firstLine.split(',').length)) {
             separator = ';';
@@ -121,12 +119,10 @@ const UsersPage = () => {
                         continue;
                     }
 
-                    // Check if user already exists (by email) in local state
                     const existingUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
 
                     try {
                         if (existingUser) {
-                            // Update existing user details
                             await api.put(`/users/${existingUser.id_user}`, {
                                 nama,
                                 role,
@@ -137,7 +133,6 @@ const UsersPage = () => {
                                 jenis_kelamin
                             });
                         } else {
-                            // Create new user with password
                             await api.post('/users', {
                                 nama,
                                 email,
@@ -211,14 +206,12 @@ const UsersPage = () => {
         setTimeout(() => setSuccessMessage(''), 3000);
     };
 
-    // Modal control
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editingUserId, setEditingUserId] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [userToDelete, setUserToDelete] = useState(null);
 
-    // Helper to auto-generate worker ID / NIK based on role
     const generateAutoNik = (roleName) => {
         const prefixes = {
             Admin: 'ADM',
@@ -233,7 +226,6 @@ const UsersPage = () => {
         return `${prefix}-${randomNum}`;
     };
 
-    // Form data
     const [formData, setFormData] = useState({
         nama: '',
         email: '',
@@ -317,7 +309,6 @@ const UsersPage = () => {
         setSuccessMessage('');
         try {
             if (isEditing) {
-                // If editing and password is left empty, omit it from the payload
                 const payload = { ...formData };
                 if (!payload.password) delete payload.password;
 
@@ -330,7 +321,6 @@ const UsersPage = () => {
             setShowModal(false);
             fetchUsers();
 
-            // Clear alert after 3 seconds
             setTimeout(() => setSuccessMessage(''), 3000);
         } catch (err) {
             setError(err.response?.data?.message || 'Terjadi kesalahan saat menyimpan data.');
@@ -419,7 +409,7 @@ const UsersPage = () => {
                 </div>
             </div>
 
-            {/* Success Alert */}
+            {/* Peringatan Sukses */}
             {successMessage && (
                 <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl animate-in slide-in-from-top-4 duration-300">
                     <div className="p-1.5 bg-emerald-500 rounded-xl text-white shrink-0">
@@ -429,7 +419,7 @@ const UsersPage = () => {
                 </div>
             )}
 
-            {/* Error Alert */}
+            {/* Peringatan Error */}
             {error && (
                 <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl animate-in slide-in-from-top-4 duration-300">
                     <div className="p-1.5 bg-red-500 rounded-xl text-white shrink-0">
@@ -439,7 +429,7 @@ const UsersPage = () => {
                 </div>
             )}
 
-            {/* Filter and Search */}
+            {/* Filter dan Pencarian */}
             <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-800">
                 <div className="relative w-full md:max-w-md group">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
@@ -456,7 +446,7 @@ const UsersPage = () => {
                 </div>
             </div>
 
-            {/* User List/Table */}
+            {/* Daftar/Tabel Pengguna */}
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                     <table className="w-full border-collapse text-left">
@@ -575,7 +565,7 @@ const UsersPage = () => {
                 </div>
             </div>
 
-            {/* Add/Edit Modal */}
+            {/* Modal Tambah/Edit */}
             {showModal && (
                 createPortal(<div 
                     onClick={() => setShowModal(false)}
@@ -667,7 +657,7 @@ const UsersPage = () => {
                                 required={!isEditing}
                             />
 
-                            {/* Admin-only Operational Fields */}
+                            {/* Field Operasional Khusus Admin */}
                             <div className="pt-2 border-t border-slate-100 dark:border-slate-700">
                                 <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
                                     <BadgeCheck size={12} /> Data Operasional K3 (Hanya Admin)
@@ -719,7 +709,7 @@ const UsersPage = () => {
                     </div>
                 </div>, document.body)
             )}
-            {/* Delete Confirmation Modal */}
+            {/* Modal Konfirmasi Hapus */}
             {showDeleteModal && (
                 createPortal(<div 
                     onClick={() => setShowDeleteModal(false)}

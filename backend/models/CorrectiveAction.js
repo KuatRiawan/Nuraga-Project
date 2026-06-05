@@ -20,7 +20,7 @@ const CorrectiveAction = sequelize.define('CorrectiveAction', {
         allowNull: false,
     },
     assigned_to: {
-        type: DataTypes.INTEGER, // User ID
+        type: DataTypes.INTEGER, // ID Pengguna
         allowNull: false,
     },
     deadline: {

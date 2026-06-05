@@ -4,14 +4,12 @@ const User = require('../models/User');
 const { recordLog } = require('./logController');
 const wa = require('../services/whatsappService');
 
-// Helper: send WA if user has a phone number stored
 const notifyUser = async (user, message) => {
     if (user && user.no_whatsapp) {
         await wa.sendMessage(user.no_whatsapp, message);
     }
 };
 
-// Helper: notify all users of given roles
 const notifyRoles = async (roles, message) => {
     try {
         const users = await User.findAll({ where: { role: roles } });
@@ -27,10 +25,8 @@ const requestPermit = async (req, res) => {
     try {
         const io = req.app.get('io');
         
-        // Handle FormData (multipart/form-data) or JSON
         let permitData;
         if (req.file) {
-            // FormData with file
             permitData = {
                 jenis_permit: req.body.jenis_permit,
                 perusahaan: req.body.perusahaan,
@@ -49,7 +45,6 @@ const requestPermit = async (req, res) => {
                 waktu_selesai: req.body.waktu_selesai
             };
         } else {
-            // JSON without file
             permitData = {
                 jenis_permit: req.body.jenis_permit,
                 perusahaan: req.body.perusahaan,
@@ -94,7 +89,6 @@ const requestPermit = async (req, res) => {
             });
         }
 
-        // WA: notify supervisors about new PTW request
         setImmediate(() => {
             notifyRoles(['Supervisor', 'Admin'],
                 `📋 *[NURAGA SAFETY — Pengajuan PTW Baru]*\n\n` +
@@ -129,8 +123,6 @@ const getPermits = async (req, res) => {
             offset,
         };
 
-        // Staff and Vendors can only see their own permits.
-        // Admins, HSE, Supervisors, and Managers can see all permits.
         if (req.user.role === 'Staff' || req.user.role === 'Vendor') {
             queryOptions.where = { id_user: req.user.id };
         }
@@ -138,7 +130,6 @@ const getPermits = async (req, res) => {
         const results = await WorkPermit.findAndCountAll(queryOptions);
         const totalPages = Math.ceil(results.count / limit);
 
-        // Parse JSON fields if they are stored as strings
         const parsedRows = results.rows.map(permit => ({
             ...permit.dataValues,
             daftar_pekerja: typeof permit.daftar_pekerja === 'string' ? JSON.parse(permit.daftar_pekerja) : permit.daftar_pekerja,
@@ -163,7 +154,7 @@ const getPermits = async (req, res) => {
 const approvePermit = async (req, res) => {
     try {
         const io = req.app.get('io');
-        const { status } = req.body; // 'Approved' or 'Rejected'
+        const { status } = req.body; // 'Disetujui' atau 'Ditolak'
         const permit = await WorkPermit.findByPk(req.params.id);
         if (!permit) return res.status(404).json({ message: 'Permit not found' });
 
@@ -192,7 +183,6 @@ const approvePermit = async (req, res) => {
             await recordLog(req, 'REJECT_PTW', `${approverNama} (${req.user.role}) menolak Izin Kerja (PTW) #${permit.id_permit}.`);
             emitPermitUpdate(`e-PTW #${permit.id_permit} ditolak oleh ${approverNama}`);
 
-            // WA: notify the requester about rejection
             const requester = await User.findByPk(permit.id_user);
             setImmediate(() => {
                 notifyUser(requester,
@@ -209,7 +199,6 @@ const approvePermit = async (req, res) => {
 
         const userRole = req.user.role;
 
-        // Step 1: Wait for Supervisor (SPV)
         if (permit.approval_step === 1) {
             if (userRole !== 'Supervisor' && userRole !== 'Admin') {
                 return res.status(403).json({ message: 'Only Supervisor can approve this step.' });
@@ -221,21 +210,19 @@ const approvePermit = async (req, res) => {
             await recordLog(req, 'APPROVE_PTW_STEP1', `${approverNama} (${req.user.role}) menyetujui Izin Kerja (PTW) #${permit.id_permit} pada Tahap 1 (Supervisor).`);
             emitPermitUpdate(`e-PTW #${permit.id_permit} disetujui Supervisor dan menunggu HSE`, ['HSE', 'Admin']);
 
-            // WA: notify HSE about step 1 completion
             setImmediate(() => {
                 notifyRoles(['HSE', 'Admin'],
-                    `✅ *[NURAGA SAFETY — PTW Disetujui Supervisor]*\n\n` +
+                    ` *[NURAGA SAFETY — PTW Disetujui Supervisor]*\n\n` +
                     `PTW #${permit.id_permit} telah disetujui oleh *${approverNama}* (Supervisor).\n` +
                     `Jenis Pekerjaan: ${permit.jenis_permit}\n` +
                     `Lokasi: ${permit.lokasi}\n` +
                     `Status: Menunggu persetujuan HSE Officer.`
                 ).catch((err) => console.error('[WA Notify] Failed to notify HSE:', err.message));
             });
-            // Notify requester
             const req1 = await User.findByPk(permit.id_user);
             setImmediate(() => {
                 notifyUser(req1,
-                    `✅ *[NURAGA SAFETY — PTW Tahap 1 Disetujui]*\n\n` +
+                    ` *[NURAGA SAFETY — PTW Tahap 1 Disetujui]*\n\n` +
                     `PTW #${permit.id_permit} Anda telah disetujui oleh Supervisor.\n` +
                     `Status berikutnya: Menunggu persetujuan HSE Officer.`
                 ).catch((err) => console.error('[WA Notify] Failed to notify PTW requester:', err.message));
@@ -244,7 +231,6 @@ const approvePermit = async (req, res) => {
             return res.json(permit);
         }
 
-        // Step 2: Wait for HSE
         if (permit.approval_step === 2) {
             if (userRole !== 'HSE' && userRole !== 'Admin') {
                 return res.status(403).json({ message: 'Only HSE Officer can approve this step.' });
@@ -256,21 +242,19 @@ const approvePermit = async (req, res) => {
             await recordLog(req, 'APPROVE_PTW_STEP2', `${approverNama} (${req.user.role}) menyetujui Izin Kerja (PTW) #${permit.id_permit} pada Tahap 2 (HSE).`);
             emitPermitUpdate(`e-PTW #${permit.id_permit} disetujui HSE dan menunggu Manager`, ['Manager', 'Admin']);
 
-            // WA: notify Manager about step 2 completion
             setImmediate(() => {
                 notifyRoles(['Manager', 'Admin'],
-                    `✅ *[NURAGA SAFETY — PTW Disetujui HSE]*\n\n` +
+                    ` *[NURAGA SAFETY — PTW Disetujui HSE]*\n\n` +
                     `PTW #${permit.id_permit} telah disetujui oleh *${approverNama}* (HSE Officer).\n` +
                     `Jenis Pekerjaan: ${permit.jenis_permit}\n` +
                     `Lokasi: ${permit.lokasi}\n` +
                     `Status: Menunggu persetujuan final Manager.`
                 ).catch((err) => console.error('[WA Notify] Failed to notify Manager:', err.message));
             });
-            // Notify requester
             const req2 = await User.findByPk(permit.id_user);
             setImmediate(() => {
                 notifyUser(req2,
-                    `✅ *[NURAGA SAFETY — PTW Tahap 2 Disetujui]*\n\n` +
+                    ` *[NURAGA SAFETY — PTW Tahap 2 Disetujui]*\n\n` +
                     `PTW #${permit.id_permit} Anda telah disetujui oleh HSE Officer.\n` +
                     `Status berikutnya: Menunggu persetujuan final Manager.`
                 ).catch((err) => console.error('[WA Notify] Failed to notify PTW requester:', err.message));
@@ -279,7 +263,6 @@ const approvePermit = async (req, res) => {
             return res.json(permit);
         }
 
-        // Step 3: Wait for Manager
         if (permit.approval_step === 3) {
             if (userRole !== 'Manager' && userRole !== 'Admin') {
                 return res.status(403).json({ message: 'Only Manager can approve this step.' });
@@ -293,7 +276,6 @@ const approvePermit = async (req, res) => {
             await recordLog(req, 'APPROVE_PTW_FINAL', `${approverNama} (${req.user.role}) menyetujui Izin Kerja (PTW) #${permit.id_permit} pada Tahap 3 (Final Approval). Status menjadi Approved.`);
             emitPermitUpdate(`e-PTW #${permit.id_permit} disetujui penuh oleh Manager`);
 
-            // WA: notify requester — PTW fully approved!
             const req3 = await User.findByPk(permit.id_user);
             setImmediate(() => {
                 notifyUser(req3,
@@ -302,7 +284,7 @@ const approvePermit = async (req, res) => {
                     `Jenis Pekerjaan: ${permit.jenis_permit}\n` +
                     `Lokasi: ${permit.lokasi}\n` +
                     `Waktu Berlaku: s/d ${new Date(permit.waktu_selesai).toLocaleString('id-ID')}\n\n` +
-                    `⚠️ Pastikan semua prosedur K3 dipatuhi selama pekerjaan berlangsung.`
+                    ` Pastikan semua prosedur K3 dipatuhi selama pekerjaan berlangsung.`
                 ).catch((err) => console.error('[WA Notify] Failed to notify PTW requester:', err.message));
             });
 

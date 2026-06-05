@@ -19,7 +19,6 @@ const createUser = async (req, res) => {
     try {
         const { nama, email, password, role, nik, jabatan, area_kerja, no_whatsapp, jenis_kelamin } = req.body;
 
-        // Validasi format email
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (email && !emailRegex.test(email)) {
             return res.status(400).json({ message: 'Invalid email format' });
@@ -34,7 +33,6 @@ const createUser = async (req, res) => {
         const userResponse = user.toJSON();
         delete userResponse.password;
 
-        // Penyesuaian agar tidak error saat bikin akun pertama (belum login)
         const pembuat = req.user ? 'Admin' : 'Sistem (Setup Pertama)';
         await recordLog(req, 'CREATE_USER', `${pembuat} mendaftarkan user baru: ${nama} (${email}) dengan peran ${role}.`);
         
@@ -105,7 +103,6 @@ const deleteUser = async (req, res) => {
     }
 };
 
-// TAMBAHAN BARU: FUNGSI LOGIN
 const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -126,7 +123,6 @@ const loginUser = async (req, res) => {
             { expiresIn: '1d' }
         );
 
-        // Rekayasa sementara agar recordLog tidak error
         req.user = { id: user.id_user || user.id, nama: user.nama, email: user.email };
         await recordLog(req, 'LOGIN', `User ${user.nama} (${user.email}) berhasil login.`);
         
@@ -148,7 +144,6 @@ const loginUser = async (req, res) => {
     }
 };
 
-// Jangan lupa di-export semua fungsinya!
 module.exports = {
     getAllUsers,
     createUser,

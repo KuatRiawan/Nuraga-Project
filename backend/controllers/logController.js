@@ -6,7 +6,6 @@ const recordLog = async (req, action, details) => {
         const nama_user = req.user ? req.user.nama : 'SYSTEM';
         const role_user = req.user ? req.user.role : 'SYSTEM';
         
-        // Handle direct IP address extraction
         let ip_address = 'unknown';
         if (req && req.ip) {
             ip_address = req.ip;
@@ -29,7 +28,6 @@ const recordLog = async (req, action, details) => {
 
 const getLogs = async (req, res) => {
     try {
-        // Only Admin role is allowed (checked in routes middleware, but good defense here)
         if (req.user.role !== 'Admin') {
             return res.status(403).json({ message: 'Akses ditolak. Hanya Admin yang dapat melihat log sistem.' });
         }

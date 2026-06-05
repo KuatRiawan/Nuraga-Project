@@ -61,7 +61,6 @@ const EmergencyListener = () => {
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
                     osc.start();
-                    // Memory leak fix: properly close AudioContext and stop oscillator
                     setTimeout(() => {
                         osc.stop();
                         osc.disconnect();
@@ -76,10 +75,8 @@ const EmergencyListener = () => {
         };
 
         const handleResolved = (data) => {
-            // Dismiss red alert if it's open
             setAlertData(null);
             setResolveData(data);
-            // Auto dismiss green alert after 5 seconds
             setTimeout(() => {
                 setResolveData(null);
             }, 5000);
@@ -87,7 +84,6 @@ const EmergencyListener = () => {
 
         const handlePTWRequestCreated = (data) => {
             queryClient.invalidateQueries(['permits']);
-            // Simple browser notification
             if (Notification.permission === 'granted') {
                 new Notification('Permit-to-Work Baru', {
                     body: `${data.requester_name} mengajukan permit ${data.permit_type}`,
@@ -350,7 +346,7 @@ function App() {
                                 </DashboardLayout>
                             </ProtectedRoute>
                         } />
-                        {/* legacy alias */}
+                        {/* alias lama */}
                         <Route path="/actions" element={<Navigate to="/corrective-actions" />} />
                         <Route path="/permits" element={
                             <ProtectedRoute>
@@ -408,7 +404,7 @@ function App() {
                                 </DashboardLayout>
                             </ProtectedRoute>
                         } />
-                        {/* Default Route */}
+                        {/* Rute Default */}
                         <Route path="*" element={<Navigate to="/" />} />
                     </Routes>
                 </Router>

@@ -5,7 +5,7 @@ import { asArray } from '../utils/safeData';
 
 const EmergencyControls = ({ compact = false, onTriggered }) => {
     const [loading, setLoading] = useState(false);
-    const [holding, setHolding] = useState(null); // Type of emergency being held
+    const [holding, setHolding] = useState(null); // Jenis darurat yang sedang ditahan
     const [progress, setProgress] = useState(0);
     const [alertModal, setAlertModal] = useState({ show: false, type: '', respondersList: '', isError: false });
     const [gpsStatus, setGpsStatus] = useState('idle'); // 'idle' | 'fetching' | 'success' | 'error'
@@ -86,7 +86,6 @@ const EmergencyControls = ({ compact = false, onTriggered }) => {
         setGpsMessage('📍 Mendapatkan lokasi GPS...');
 
         try {
-            // Get GPS location
             let locationData;
             try {
                 locationData = await getLocation();
@@ -95,8 +94,7 @@ const EmergencyControls = ({ compact = false, onTriggered }) => {
             } catch (gpsError) {
                 console.warn('[GPS] Failed to get location:', gpsError.message);
                 setGpsStatus('error');
-                setGpsMessage(`⚠️ ${gpsError.message}`);
-                // Fallback to default location
+                setGpsMessage(` ${gpsError.message}`);
                 locationData = {
                     latitude: null,
                     longitude: null,
@@ -137,7 +135,7 @@ const EmergencyControls = ({ compact = false, onTriggered }) => {
 
     return (
         <div className="space-y-4">
-            {/* GPS Status Indicator */}
+            {/* Indikator Status GPS */}
             {gpsStatus !== 'idle' && (
                 <div className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold ${
                     gpsStatus === 'fetching' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400' :
@@ -163,7 +161,7 @@ const EmergencyControls = ({ compact = false, onTriggered }) => {
                         onTouchEnd={cancelHolding}
                         className={`relative overflow-hidden ${btn.color} ${compact ? 'p-4 rounded-2xl' : 'p-10 rounded-[2.5rem]'} flex flex-col items-center justify-center gap-4 text-white shadow-xl transition-all active:scale-95 disabled:opacity-50 select-none`}
                     >
-                        {/* Progress Overlay */}
+                        {/* Overlay Progres */}
                         {holding === btn.type && (
                             <div
                                 className="absolute bottom-0 left-0 h-full bg-white/20 transition-all duration-75 pointer-events-none"
@@ -186,7 +184,7 @@ const EmergencyControls = ({ compact = false, onTriggered }) => {
                 ))}
             </div>
 
-            {/* Custom Alert Modal */}
+            {/* Modal Peringatan Kustom */}
             {alertModal.show && (
                 <div 
                     onClick={() => setAlertModal({ show: false, type: '', respondersList: '', isError: false })}

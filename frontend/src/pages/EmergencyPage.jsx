@@ -16,7 +16,7 @@ const ZONE_COORDINATES = {
 
 const getZoneCoordinates = (locationName, index = 0) => {
     const name = (locationName || '').toLowerCase();
-    let base = { x: 150, y: 105 }; // Default Production
+    let base = { x: 150, y: 105 }; // Default Produksi
     let matchedZone = 'Main Production Zone';
 
     if (name.includes('chemical') || name.includes('kimia')) {
@@ -30,7 +30,6 @@ const getZoneCoordinates = (locationName, index = 0) => {
         matchedZone = 'Office';
     }
 
-    // Distribute overlapping pins in a small offset circle
     const angle = (index * 60) * (Math.PI / 180);
     const radius = index === 0 ? 0 : 25 + (index * 5);
     return {
@@ -63,7 +62,6 @@ const EmergencyPage = () => {
         fetchEmergencies();
         fetchHazards();
 
-        // Auto poll every 60 seconds to keep live map/log updated (WebSocket handles real-time updates)
         const timer = setInterval(() => {
             fetchEmergencies();
             fetchHazards();
@@ -90,11 +88,9 @@ const EmergencyPage = () => {
         }
     };
 
-    // Filter active emergencies and unverified hazards for display on the GIS Map
     const activeEmergencies = asArray(emergencies).filter(e => e.status === 'Triggered' || e.status === 'Active');
     const unverifiedHazards = asArray(hazards).filter(h => !h.is_verified);
 
-    // Build pin arrays
     const pins = [];
     const zoneCounts = {};
 
@@ -140,10 +136,10 @@ const EmergencyPage = () => {
                 <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Picuan alarm darurat real-time, pantau koordinasi responders, dan petakan mitigasi bahaya.</p>
             </div>
 
-            {/* Emergency trigger controls */}
+            {/* Kontrol pemicu darurat */}
             <EmergencyControls onTriggered={() => { fetchEmergencies(); fetchHazards(); }} />
 
-            {/* View Selector Tab */}
+            {/* Tab Pemilih Tampilan */}
             <div className="flex justify-center">
                 <div className="flex p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 shadow-sm">
                     <button
@@ -241,7 +237,7 @@ const EmergencyPage = () => {
                     </div>
 
                     <div className="relative w-full max-w-4xl mx-auto border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden bg-slate-950">
-                        {/* High-tech Interactive SVG Floor Plan */}
+                        {/* Denah Lantai SVG Interaktif */}
                         <svg viewBox="0 0 600 400" className="w-full h-auto bg-slate-950">
                             <defs>
                                 <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
@@ -267,58 +263,58 @@ const EmergencyPage = () => {
 
                             <rect width="600" height="400" fill="url(#grid)" />
 
-                            {/* Zone 1: Main Production Zone */}
+                            {/* Zona 1: Zona Produksi Utama */}
                             <g>
                                 <rect x="30" y="30" width="240" height="150" rx="15" fill="url(#blueGrad)" stroke="#3b82f6" strokeWidth="2" strokeDasharray="5,5" className="transition-all duration-300 hover:fill-blue-500/10" />
                                 <text x="150" y="60" textAnchor="middle" fill="#93c5fd" className="text-xs font-black uppercase tracking-wider select-none pointer-events-none">Main Production Zone</text>
                                 <path d="M 40 100 H 260" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
                             </g>
 
-                            {/* Zone 2: Chemical Storage Room */}
+                            {/* Zona 2: Ruang Penyimpanan Bahan Kimia */}
                             <g>
                                 <rect x="330" y="30" width="240" height="150" rx="15" fill="url(#amberGrad)" stroke="#f59e0b" strokeWidth="2" strokeDasharray="5,5" className="transition-all duration-300 hover:fill-amber-500/10" />
                                 <text x="450" y="60" textAnchor="middle" fill="#fde047" className="text-xs font-black uppercase tracking-wider select-none pointer-events-none">Chemical Storage Room</text>
                                 <path d="M 340 100 H 560" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
                             </g>
 
-                            {/* Zone 3: Warehouse & Cargo */}
+                            {/* Zona 3: Gudang {/* Zone 3: Warehouse & Cargo */} Kargo */}
                             <g>
                                 <rect x="30" y="220" width="240" height="150" rx="15" fill="url(#indigoGrad)" stroke="#6366f1" strokeWidth="2" strokeDasharray="5,5" className="transition-all duration-300 hover:fill-indigo-500/10" />
                                 <text x="150" y="250" textAnchor="middle" fill="#c7d2fe" className="text-xs font-black uppercase tracking-wider select-none pointer-events-none">Warehouse & Cargo</text>
                                 <path d="M 40 290 H 260" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
                             </g>
 
-                            {/* Zone 4: Office & Control Room */}
+                            {/* Zona 4: Kantor {/* Zone 4: Office & Control Room */} Ruang Kontrol */}
                             <g>
                                 <rect x="330" y="220" width="240" height="150" rx="15" fill="url(#emeraldGrad)" stroke="#10b981" strokeWidth="2" strokeDasharray="5,5" className="transition-all duration-300 hover:fill-emerald-500/10" />
                                 <text x="450" y="250" textAnchor="middle" fill="#a7f3d0" className="text-xs font-black uppercase tracking-wider select-none pointer-events-none">Office & Control Room</text>
                                 <path d="M 340 290 H 560" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
                             </g>
 
-                            {/* Central Path */}
+                            {/* Jalur Pusat */}
                             <rect x="285" y="30" width="30" height="340" fill="rgba(255,255,255,0.02)" />
                             <line x1="300" y1="30" x2="300" y2="370" stroke="rgba(255,255,255,0.1)" strokeWidth="1" strokeDasharray="10,10" />
 
-                            {/* Render GIS Pins */}
+                            {/* Render Pin GIS */}
                             {pins.map((pin) => (
                                 <g key={pin.id}>
                                     {pin.type === 'emergency' ? (
                                         <>
-                                            {/* Outer pulsing ring */}
+                                            {/* Cincin berdenyut luar */}
                                             <circle cx={pin.x} cy={pin.y} r="16" fill="rgba(239, 68, 68, 0.4)" className="animate-ping" />
-                                            {/* Solid red pin */}
+                                            {/* Pin merah solid */}
                                             <circle cx={pin.x} cy={pin.y} r="8" fill="#ef4444" className="stroke-white stroke-2" />
                                             <circle cx={pin.x} cy={pin.y} r="3" fill="#ffffff" />
                                         </>
                                     ) : (
                                         <>
-                                            {/* Warning amber pin */}
+                                            {/* Pin kuning peringatan */}
                                             <circle cx={pin.x} cy={pin.y} r="10" fill="#f59e0b" className="stroke-white stroke-2" />
                                             <path d={`M ${pin.x} ${pin.y - 4} L ${pin.x - 4} ${pin.y + 3} H ${pin.x + 4} Z`} fill="#ffffff" />
                                         </>
                                     )}
 
-                                    {/* 48px hit target area for mobile & ease of interaction */}
+                                    {/* Area target 48px untuk mobile */}
                                     <circle
                                         cx={pin.x}
                                         cy={pin.y}
@@ -333,7 +329,7 @@ const EmergencyPage = () => {
                             ))}
                         </svg>
 
-                        {/* Interactive HUD Overlay for hovered/selected pin details */}
+                        {/* Overlay HUD untuk detail pin yang dipilih */}
                         {hoveredPin && (
                             <div
                                 className="absolute bg-slate-950/95 text-white p-4 rounded-2xl border border-slate-800 shadow-2xl z-20 max-w-xs animate-in fade-in slide-in-from-bottom-2 duration-200"

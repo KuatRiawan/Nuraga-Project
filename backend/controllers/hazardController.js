@@ -23,13 +23,11 @@ const createHazard = async (req, res) => {
     try {
         const { lokasi, deskripsi, risiko, koordinat_gps } = req.body;
 
-        // Data length validation
         if (deskripsi && deskripsi.length > 5000) {
             await t.rollback();
             return res.status(400).json({ message: 'Deskripsi terlalu panjang. Maksimal 5000 karakter.' });
         }
 
-        // Manual enum validation for risiko
         const validRisks = ['Low', 'Medium', 'High', 'Critical'];
         if (risiko && !validRisks.includes(risiko)) {
             await t.rollback();
@@ -46,14 +44,13 @@ const createHazard = async (req, res) => {
             foto: req.file ? req.file.filename : null,
         }, { transaction: t });
 
-        // Auto-create CAPA for High/Critical risks
         if (risiko === 'High' || risiko === 'Critical') {
             const assignedTo = await resolveCapaAssignee(t);
             await CorrectiveAction.create({
                 id_hazard: hazard.id_hazard,
                 description: `Immediate corrective action required for: ${deskripsi}`,
                 assigned_to: assignedTo,
-                deadline: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hour deadline
+                deadline: new Date(Date.now() + 24 * 60 * 60 * 1000), // batas waktu 24 jam
                 status: 'Open'
             }, { transaction: t });
         }
@@ -62,7 +59,6 @@ const createHazard = async (req, res) => {
         clearStatsCache();
         await recordLog(req, 'CREATE_HAZARD', `User ${req.user.nama} (${req.user.role}) melaporkan temuan bahaya baru di ${lokasi} (Tingkat Risiko: ${risiko}).`);
 
-        // Emit WebSocket event
         const io = req.app.get('io');
         if (io) {
             io.emit('HAZARD_CREATED', {
@@ -96,7 +92,6 @@ const getHazards = async (req, res) => {
             offset,
         };
 
-        // Vendors may only view their own hazard reports.
         if (req.user.role === 'Vendor') {
             queryOptions.where = { id_user: req.user.id };
         }
@@ -127,7 +122,6 @@ const updateStatus = async (req, res) => {
         clearStatsCache();
         await recordLog(req, 'UPDATE_HAZARD_STATUS', `${req.user.nama} (${req.user.role}) memperbarui status Laporan Bahaya #${hazard.id_hazard} menjadi: ${status}.`);
 
-        // Emit WebSocket event
         const io = req.app.get('io');
         if (io) {
             io.emit('HAZARD_UPDATED', {
@@ -151,9 +145,8 @@ const updateStatus = async (req, res) => {
 
 const overrideRisk = async (req, res) => {
     try {
-        const { risiko } = req.body; // 'Low', 'Medium', 'High', 'Critical'
+        const { risiko } = req.body; // 'Rendah', 'Sedang', 'Tinggi', 'Kritis'
 
-        // Manual enum validation for risiko
         const validRisks = ['Low', 'Medium', 'High', 'Critical'];
         if (risiko && !validRisks.includes(risiko)) {
             return res.status(400).json({ message: 'Invalid risk level. Valid values: Low, Medium, High, Critical' });
@@ -166,7 +159,6 @@ const overrideRisk = async (req, res) => {
         hazard.is_overridden = true;
         await hazard.save();
 
-        // Manage CAPA based on new risk rating
         if (risiko === 'High' || risiko === 'Critical') {
             const existingCapa = await CorrectiveAction.findOne({ where: { id_hazard: hazard.id_hazard } });
             if (!existingCapa) {
@@ -175,7 +167,7 @@ const overrideRisk = async (req, res) => {
                     id_hazard: hazard.id_hazard,
                     description: `Immediate corrective action required (Overridden) for: ${hazard.deskripsi}`,
                     assigned_to: assignedTo,
-                    deadline: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hour deadline
+                    deadline: new Date(Date.now() + 24 * 60 * 60 * 1000), // batas waktu 24 jam
                     status: 'Open'
                 });
             } else if (existingCapa.status === 'Closed' || existingCapa.status === 'Resolved') {
@@ -193,7 +185,6 @@ const overrideRisk = async (req, res) => {
         clearStatsCache();
         await recordLog(req, 'OVERRIDE_HAZARD_RISK', `${req.user.nama} (${req.user.role}) mengubah paksa tingkat risiko Laporan Bahaya #${hazard.id_hazard} menjadi ${risiko}.`);
 
-        // Emit WebSocket event
         const io = req.app.get('io');
         if (io) {
             io.emit('HAZARD_UPDATED', {
@@ -233,7 +224,6 @@ const verifyHazard = async (req, res) => {
         hazard.is_verified = true;
         await hazard.save({ transaction: t });
 
-        // Award points to the reporter (hazard.id_user)
         const reporter = await User.findByPk(hazard.id_user, { transaction: t });
         if (reporter) {
             reporter.points = (reporter.points || 0) + 100;
@@ -244,7 +234,6 @@ const verifyHazard = async (req, res) => {
         clearStatsCache();
         await recordLog(req, 'VERIFY_HAZARD', `${req.user.nama} (${req.user.role}) memvalidasi Laporan Bahaya #${hazard.id_hazard} (+100 Poin diberikan kepada pelapor).`);
 
-        // Emit WebSocket event
         const io = req.app.get('io');
         if (io) {
             io.emit('HAZARD_UPDATED', {

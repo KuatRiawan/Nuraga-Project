@@ -84,7 +84,7 @@ const Sidebar = ({ onClose, onLogoutClick }) => {
                     </button>
                 )}
             </div>
-            {/* Navigation Sections */}
+            {/* Bagian Navigasi */}
             <div className="flex-1 px-3 space-y-4 overflow-y-auto pb-4">
                 {allMenuItems.map((section) => {
                     const visibleItems = section.items.filter(item => item.roles.includes(user?.role));
@@ -117,7 +117,7 @@ const Sidebar = ({ onClose, onLogoutClick }) => {
                 })}
             </div>
 
-            {/* User Profile */}
+            {/* Profil Pengguna */}
             <div className="p-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
                 <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700/50">
                     {user?.foto ? (

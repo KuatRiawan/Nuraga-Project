@@ -8,8 +8,7 @@ export const generateMonthlyReport = (data) => {
     const details = asObject(data?.details);
     const today = new Date().toLocaleDateString('id-ID');
 
-    // Header
-    doc.setFillColor(30, 41, 59); // Slate-800
+    doc.setFillColor(30, 41, 59); // Abu-800
     doc.rect(0, 0, 210, 40, 'F');
 
     doc.setTextColor(255, 255, 255);
@@ -25,7 +24,6 @@ export const generateMonthlyReport = (data) => {
     doc.text(`Monthly Performance Report`, 140, 20);
     doc.text(`Date: ${today}`, 140, 27);
 
-    // Summary Section
     doc.setTextColor(30, 41, 59);
     doc.setFontSize(16);
     doc.text('Safety Summary (Last 30 Days)', 20, 55);
@@ -42,7 +40,6 @@ export const generateMonthlyReport = (data) => {
         headStyles: { fillColor: [30, 41, 59] },
     });
 
-    // Hazards Table
     doc.setFontSize(14);
     doc.text('Detailed Hazards Log', 20, doc.lastAutoTable.finalY + 15);
     autoTable(doc, {
@@ -56,10 +53,9 @@ export const generateMonthlyReport = (data) => {
             new Date(h.createdAt).toLocaleDateString('id-ID')
         ]),
         theme: 'striped',
-        headStyles: { fillColor: [245, 158, 11] }, // Amber-500
+        headStyles: { fillColor: [245, 158, 11] }, // Kuning-500
     });
 
-    // Incidents Table
     if (asArray(details.incidents).length > 0) {
         doc.addPage();
         doc.setFontSize(14);
@@ -76,13 +72,11 @@ export const generateMonthlyReport = (data) => {
                 new Date(i.createdAt).toLocaleDateString('id-ID')
             ]),
             theme: 'striped',
-            headStyles: { fillColor: [239, 68, 68] }, // Red-500
+            headStyles: { fillColor: [239, 68, 68] }, // Merah-500
         });
     }
 
-    // Audits Table
     if (asArray(details.audits).length > 0) {
-        // Only add page if they are not already on a new page (or if table fits)
         doc.addPage();
         doc.setFontSize(14);
         doc.setTextColor(30, 41, 59);
@@ -96,7 +90,7 @@ export const generateMonthlyReport = (data) => {
                 new Date(a.tanggal).toLocaleDateString('id-ID')
             ]),
             theme: 'striped',
-            headStyles: { fillColor: [59, 130, 246] }, // Blue-500
+            headStyles: { fillColor: [59, 130, 246] }, // Biru-500
         });
     }
 
@@ -107,8 +101,7 @@ export const generateIncidentReport = (incident) => {
     const doc = new jsPDF();
     const today = new Date().toLocaleDateString('id-ID');
 
-    // Header
-    doc.setFillColor(239, 68, 68); // Red-500 for Incident
+    doc.setFillColor(239, 68, 68); // Merah-500 untuk Insiden
     doc.rect(0, 0, 210, 40, 'F');
 
     doc.setTextColor(255, 255, 255);
@@ -123,7 +116,6 @@ export const generateIncidentReport = (incident) => {
     doc.setFontSize(12);
     doc.text(`Date Generated: ${today}`, 140, 25);
 
-    // Incident Details
     doc.setTextColor(30, 41, 59);
     doc.setFontSize(16);
     doc.text('Incident Investigation Details', 20, 55);
@@ -142,14 +134,13 @@ export const generateIncidentReport = (incident) => {
         headStyles: { fillColor: [239, 68, 68] },
     });
 
-    // Kronologi
     doc.setFontSize(14);
     doc.text('Kronologi Kejadian', 20, doc.lastAutoTable.finalY + 15);
     doc.setFontSize(11);
     const splitKronologi = doc.splitTextToSize(incident.kronologi || '', 170);
     doc.text(splitKronologi, 20, doc.lastAutoTable.finalY + 23);
 
-    // 5 Whys Analysis
+    // Analisis 5 Why
     let yPos = doc.lastAutoTable.finalY + 23 + (splitKronologi.length * 5) + 10;
     
     if (incident.five_whys) {
@@ -166,10 +157,9 @@ export const generateIncidentReport = (incident) => {
             ['Why 3', whys.why3],
             ['Why 4', whys.why4],
             ['Why 5', whys.why5],
-        ].filter(item => item[1]); // only keep non-empty
+        ].filter(item => item[1]); // hanya simpan yang tidak kosong
 
         if (whyList.length > 0) {
-            // Check page overflow
             if (yPos > 240) {
                 doc.addPage();
                 yPos = 20;

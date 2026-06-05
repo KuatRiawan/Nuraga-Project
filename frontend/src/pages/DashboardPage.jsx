@@ -265,7 +265,6 @@ const DashboardPage = () => {
                     setTotalUsersCount(asArray(dashboardData.users).length);
                 }
 
-                // Fetch attendance status & trigger popup/banner
                 (async () => {
                     try {
                         const attRes = await api.get('/attendance/today');
@@ -278,13 +277,11 @@ const DashboardPage = () => {
                             }
                         }
                     } catch (err) {
-                        // Silently ignore attendance fetch errors
                     }
                 })();
             }
         }
 
-        // Get weather data dynamically
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
@@ -341,8 +338,6 @@ const DashboardPage = () => {
     const hazardTrendStr = calculateTrend(hazards30Days, hazardsPrev30Days);
     const hazardTrendIsUp = hazards30Days > hazardsPrev30Days;
 
-    // For TRIR and LTI Rate, since backend doesn't provide historical data easily, we leave the trend static or hide it.
-    // We'll show standard benchmarks for TRIR instead.
 
     const statCards = [
         {
@@ -405,10 +400,10 @@ const DashboardPage = () => {
 
     if (loading) return (
         <div className="space-y-8 animate-pulse">
-            {/* Header/Banner Skeleton */}
+            {/* Skeleton Bagian Atas/Banner */}
             <div className="h-40 bg-slate-200 dark:bg-slate-800 rounded-[2.5rem]"></div>
 
-            {/* Grid Stats Skeleton */}
+            {/* Skeleton Grid Statistik */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="h-32 bg-slate-200 dark:bg-slate-800 rounded-3xl"></div>
                 <div className="h-32 bg-slate-200 dark:bg-slate-800 rounded-3xl"></div>
@@ -416,7 +411,7 @@ const DashboardPage = () => {
                 <div className="h-32 bg-slate-200 dark:bg-slate-800 rounded-3xl"></div>
             </div>
 
-            {/* Split Page Columns Skeleton */}
+            {/* Skeleton Kolom Halaman */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-6">
                     <div className="h-64 bg-slate-200 dark:bg-slate-800 rounded-[2.5rem]"></div>
@@ -485,7 +480,7 @@ const DashboardPage = () => {
                 </div>
             )}
 
-            {/* === SYSTEM ALERT BAR (Admin) === */}
+            {/* === BAR PERINGATAN SISTEM (Admin) === */}
             {user?.role === 'Admin' && (
                 <div className="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] shadow-sm flex flex-col md:flex-row items-stretch justify-between gap-6">
                     <div className="flex-1 flex flex-col justify-center">
@@ -523,11 +518,8 @@ const DashboardPage = () => {
             )}
 
             {isFieldRole ? (
-                // ==========================================
-                // === STAFF & VENDOR LAYOUT (TAKTIK) ===
-                // ==========================================
                 <>
-                    {/* Greeting & Quick Emergency */}
+                    {/* Sapaan {/* Greeting & Quick Emergency */} Darurat Cepat */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
                         <div className="lg:col-span-2 flex flex-col justify-center bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800/60 p-8 rounded-[2rem]">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -562,7 +554,7 @@ const DashboardPage = () => {
                         </div>
                     </div>
 
-                    {/* Quick Actions (Lapor Bahaya Cepat & Lapor Insiden) */}
+                    {/* Aksi Cepat (Lapor Bahaya {/* Quick Actions (Lapor Bahaya Cepat & Lapor Insiden) */} Lapor Insiden) */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {/* Lapor Bahaya */}
                         <div
@@ -617,7 +609,7 @@ const DashboardPage = () => {
 
                     {/* Status Izin Kerja & Tugas Perbaikan Saya */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-                        {/* PTW Card */}
+                        {/* Kartu Izin Kerja */}
                         <div className="glass-card p-4 md:p-6 flex flex-col justify-between">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="p-3 bg-blue-500/10 rounded-xl text-blue-500">
@@ -662,7 +654,7 @@ const DashboardPage = () => {
                             </button>
                         </div>
 
-                        {/* CAPA Card */}
+                        {/* Kartu CAPA */}
                         <div className="glass-card p-4 md:p-6 flex flex-col justify-between">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="p-3 bg-purple-500/10 rounded-xl text-purple-500">
@@ -845,11 +837,8 @@ const DashboardPage = () => {
                     </div>
                 </>
             ) : (
-                // ==========================================
-                // === HSE & MANAGEMENT LAYOUT (ANALITIS) ===
-                // ==========================================
                 <>
-                    {/* === HEADER & EMERGENCY CONTROLS === */}
+                    {/* === BAGIAN ATAS {/* === HEADER & EMERGENCY CONTROLS === */} KONTROL DARURAT === */}
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                         <div>
                             <h1 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">
@@ -877,7 +866,7 @@ const DashboardPage = () => {
                         </div>
                     </div>
 
-                    {/* === STAT CARDS === */}
+                    {/* === KARTU STATISTIK === */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         {statCards.map((stat, i) => (
                             <div key={i} className="glass-card p-6 group">
@@ -896,10 +885,10 @@ const DashboardPage = () => {
                         ))}
                     </div>
 
-                    {/* === ANALYTICS CHARTS === */}
+                    {/* === GRAFIK ANALITIK === */}
                     <SafetyCharts />
 
-                    {/* === ENVIRONMENT & READINESS === */}
+                    {/* === LINGKUNGAN {/* === ENVIRONMENT & READINESS === */} KESIAPAN === */}
                     <div className="p-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm ">
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             {/* Left: Kesiapan Personel & Alat */}
@@ -911,7 +900,7 @@ const DashboardPage = () => {
                                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Memantau kelayakan izin lisensi staff (SIO) dan sertifikasi.</p>
                                 </div>
 
-                                {/* License Expiration Alerts */}
+                                {/* Peringatan Sertifikasi Kadaluarsa */}
                                 <div className="space-y-3">
                                     <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider">Masa Berlaku SIO / Lisensi (30 Hari)</h4>
                                     {expiringCertifications.length > 0 ? (
@@ -957,7 +946,7 @@ const DashboardPage = () => {
                                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Parameter kondisi fisik lingkungan area luar ruangan.</p>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
-                                    {/* Weather Card */}
+                                    {/* Kartu Cuaca */}
                                     <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-800/50 flex items-center gap-3">
                                         <Thermometer className="text-orange-500" size={24} />
                                         <div>
@@ -965,7 +954,7 @@ const DashboardPage = () => {
                                             <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Suhu Luar Ruangan</p>
                                         </div>
                                     </div>
-                                    {/* AQI Card */}
+                                    {/* Kartu Kualitas Udara */}
                                     <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-800/50 flex items-center gap-3">
                                         <Activity className="text-emerald-500" size={24} />
                                         <div>
@@ -975,7 +964,7 @@ const DashboardPage = () => {
                                     </div>
                                 </div>
 
-                                {/* Environmental Status Alarm */}
+                                {/* Alarm Status Lingkungan */}
                                 <div className={`p-4 rounded-2xl flex items-center gap-3 ${weatherData.heatStress === 'AMAN' ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400' : 'bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400'}`}>
                                     <CheckCircle size={16} />
                                     <div>
@@ -991,11 +980,11 @@ const DashboardPage = () => {
                         </div>
                     </div>
 
-                    {/* === SYSTEM HEALTH + CONTRACTOR LEADERBOARD === */}
+                    {/* === KESEHATAN SISTEM + PAPAN PERINGKAT KONTRAKTOR === */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {user?.role === 'Admin' ? (
                             <div className="space-y-6 flex flex-col justify-between h-full">
-                                {/* System Health Card */}
+                                {/* Kartu Kesehatan Sistem */}
                                 <div className="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm flex-1">
                                     <h3 className="text-base font-black mb-4 text-slate-900 dark:text-white uppercase tracking-tighter">System Health</h3>
                                     <div className="space-y-3">
@@ -1017,7 +1006,7 @@ const DashboardPage = () => {
                                     </div>
                                 </div>
 
-                                {/* Manajemen User Widget */}
+                                {/* Widget Manajemen Pengguna */}
                                 <div className="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm flex-1">
                                     <h3 className="text-base font-black mb-4 text-slate-900 dark:text-white uppercase tracking-tighter flex items-center gap-2">
                                         <Users className="text-blue-500" size={18} /> Manajemen Pengguna
